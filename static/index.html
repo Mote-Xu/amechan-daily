@@ -124,8 +124,20 @@ body {
 .live-text { color:red; font-size:0.75rem; font-weight:bold; }
 .live-viewers { color:#ccc; font-size:0.7rem; }
 .danmaku-bar { height:24px; overflow:hidden; position:relative; margin-bottom:1rem; border-bottom:1px solid #333; }
-.danmaku { position:absolute; white-space:nowrap; font-size:0.65rem; color:#aaa; animation:scroll 8s linear infinite; }
+.danmaku { position:absolute; white-space:nowrap; font-size:0.65rem; color:#aaa; animation:scroll 8s linear infinite; cursor:default; }
+.danmaku.toxic { color:#ff6347; cursor:pointer; }
+.danmaku.toxic:hover { color:#ff0000; text-shadow:0 0 6px rgba(255,0,0,0.5); }
 @keyframes scroll { from { transform:translateX(700px); } to { transform:translateX(-200px); } }
+@keyframes flyToTrash { 0% { opacity:1; transform:scale(1); } 50% { opacity:0.5; transform:scale(0.3) translateY(-20px); } 100% { opacity:0; transform:scale(0) translateY(-40px); } }
+.danmaku.trashed { animation:flyToTrash 0.4s ease-out forwards; pointer-events:none; }
+
+/* TRASH CAN */
+.trash-widget { position:fixed; bottom:20px; right:20px; z-index:100; text-align:center; }
+.trash-can { width:48px; height:48px; background:rgba(0,0,0,0.6); border:2px solid #555; display:flex; align-items:center; justify-content:center; font-size:1.5rem; cursor:default; transition:all 0.2s; }
+.trash-can.active { border-color:var(--pink); box-shadow:0 0 12px rgba(255,105,180,0.4); }
+.trash-can.shake { animation:shake 0.3s ease; }
+.trash-count { font-size:0.55rem; color:#888; margin-top:2px; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
 
 /* F7 BUTTON */
 .f7-area { text-align:center; margin:0.8rem 0; }
@@ -195,6 +207,9 @@ body {
     <div class="win95-body" id="feed-container"></div>
 </div>
 
+<!-- TRASH CAN -->
+<div class="trash-widget"><div class="trash-can" id="trash-can">🗑️</div><div class="trash-count" id="trash-count">0</div></div>
+
 <div class="footer"><div class="divider"></div>超天酱日常推文小站 · v2.0<br>游戏素材 © WSS playground / xemono</div>
 
 </div>
@@ -215,28 +230,86 @@ var ameSelfies = ['ame_home','ame_happy','ame_talk','ame_game','ame_cool','ame_h
 function pickSelfie(list, idx) { return list[idx % list.length]; }
 
 // Danmaku pool
-var danmakuPool = ['超天酱贴贴！','天使酱我可以！','升天🙏✨','草','www','盐我','鸽了','又在卖惨？','互联网天使','恐怖游戏尖叫','kirakira💖','888888','阿P出来挨打','守护','啊啊啊啊','糖糖呢','？？？','好可爱好可爱','主播别走','草生'];
+var danmakuPool = {
+    normal: ['超天酱贴贴！','天使酱我可以！','升天🙏✨','kirakira💖','888888','守护','好可爱好可爱','互联网天使','主播别走','www'],
+    toxic:  ['盐我','鸽了','又在卖惨？','草','？？？','草生','阿P出来挨打','好无聊','假的吧']
+};
 var danmakuEls = [];
+var trashCount = 0;
 
 function initDanmaku() {
     var bar = document.getElementById('danmaku-bar');
-    for (var i = 0; i < 6; i++) {
+    for (var i = 0; i < 7; i++) {
         var el = document.createElement('span');
-        el.className = 'danmaku';
+        var isToxic = Math.random() < 0.35;
+        var pool = isToxic ? danmakuPool.toxic : danmakuPool.normal;
+        el.className = 'danmaku' + (isToxic ? ' toxic' : '');
         el.style.top = (i * 4) + 'px';
         el.style.animationDuration = (6 + Math.random() * 8) + 's';
         el.style.animationDelay = (Math.random() * 6) + 's';
-        el.textContent = danmakuPool[Math.floor(Math.random() * danmakuPool.length)];
+        el.textContent = pool[Math.floor(Math.random() * pool.length)];
+        if (isToxic) { el.title = '点击扔进垃圾桶'; el.addEventListener('click', function() { trashDanmaku(el); }); }
         bar.appendChild(el);
         danmakuEls.push(el);
     }
-    setInterval(function() {
-        danmakuEls.forEach(function(el) {
-            if (Math.random() < 0.15) {
-                el.textContent = danmakuPool[Math.floor(Math.random() * danmakuPool.length)];
+    // Refresh danmaku periodically
+    setInterval(refreshDanmaku, 5000);
+    // Auto-clean stuck toxic danmaku
+    setInterval(autoCleanDanmaku, 12000);
+}
+
+function refreshDanmaku() {
+    danmakuEls.forEach(function(el) {
+        if (el.classList.contains('trashed')) return;
+        if (Math.random() < 0.2) {
+            var isToxic = Math.random() < 0.35;
+            var pool = isToxic ? danmakuPool.toxic : danmakuPool.normal;
+            el.className = 'danmaku' + (isToxic ? ' toxic' : '');
+            el.textContent = pool[Math.floor(Math.random() * pool.length)];
+            el.title = isToxic ? '点击扔进垃圾桶' : '';
+            if (isToxic) {
+                el.addEventListener('click', function() { trashDanmaku(el); });
+            } else {
+                el.onclick = null;
             }
-        });
-    }, 4000);
+        }
+    });
+}
+
+function autoCleanDanmaku() {
+    // Simulate toxic danmaku occasionally disappearing (stress relief)
+    danmakuEls.forEach(function(el) {
+        if (el.classList.contains('toxic') && !el.classList.contains('trashed') && Math.random() < 0.15) {
+            trashDanmaku(el, true);
+        }
+    });
+}
+
+function trashDanmaku(el, silent) {
+    if (el.classList.contains('trashed')) return;
+    el.classList.add('trashed');
+    trashCount++;
+    document.getElementById('trash-count').textContent = trashCount;
+
+    var can = document.getElementById('trash-can');
+    can.classList.add('shake');
+    if (!silent) { can.classList.add('active'); }
+    setTimeout(function() { can.classList.remove('shake','active'); }, 400);
+
+    // HUD: stress decreases slightly
+    var stressBar = document.getElementById('bar-stress');
+    var curStress = parseInt(stressBar.style.width) || 42;
+    stressBar.style.width = Math.max(10, curStress - 3) + '%';
+
+    // Refresh danmaku after removal
+    setTimeout(function() {
+        el.classList.remove('trashed');
+        var isToxic = Math.random() < 0.35;
+        var pool = isToxic ? danmakuPool.toxic : danmakuPool.normal;
+        el.className = 'danmaku' + (isToxic ? ' toxic' : '');
+        el.textContent = pool[Math.floor(Math.random() * pool.length)];
+        el.title = isToxic ? '点击扔进垃圾桶' : '';
+    }, 500);
 }
 
 // Live viewer count
