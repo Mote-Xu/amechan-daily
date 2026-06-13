@@ -17,6 +17,7 @@ body {
     background-size: 20px 20px;
     color: #fff; font-family: 'DotGothic16','Microsoft YaHei',sans-serif;
     overflow-x: hidden; min-height: 100vh;
+    box-shadow: inset 0 0 120px rgba(0,0,0,0.5);
 }
 .crt::before {
     content:""; display:block; position:fixed; top:0;left:0;bottom:0;right:0;
@@ -132,6 +133,8 @@ body {
 .f7-btn:hover { background:rgba(255,105,180,0.3); border-style:solid; }
 .f7-btn:active { transform:scale(0.96); }
 .f7-btn .count { font-size:0.6rem; color:var(--purple); display:block; margin-top:2px; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-3px)} 75%{transform:translateX(3px)} }
+.f7-btn.shaking { animation:shake 0.3s ease; }
 
 /* EMPTY */
 .empty-state { text-align:center; padding:3rem 1rem; color:var(--purple); }
@@ -156,7 +159,7 @@ body {
 <!-- STATUS BAR -->
 <div class="status-bar">
     <div class="status-item"><img src="img/icon_status_follower_res.png"><span>Followers</span><span class="val" id="stat-f">999K</span></div>
-    <div class="status-item"><img src="img/icon_status_love_res.png"><span>Affection</span><div class="bar-wrap"><div class="bar-fill love" id="bar-love" style="width:78%"></div></div></div>
+    <div class="status-item"><img src="img/icon_status_love_res.png"><span>Affection</span><div class="bar-wrap"><div class="bar-fill love" id="bar-love" style="width:65%"></div></div><span class="val" style="font-size:0.6rem;color:var(--pink);">78</span></div>
     <div class="status-item"><img src="img/icon_status_stress_res.png"><span>Stress</span><div class="bar-wrap"><div class="bar-fill stress" id="bar-stress" style="width:42%"></div></div></div>
     <div class="status-item"><img src="img/icon_status_yami_res.png"><span>Darkness</span><div class="bar-wrap"><div class="bar-fill yami" id="bar-yami" style="width:55%"></div></div></div>
 </div>
@@ -177,7 +180,7 @@ body {
 </div>
 
 <!-- F7 BUTTON -->
-<div class="f7-area"><button class="f7-btn" id="f7-btn" onclick="doRelease()">戳一戳超天酱 ✨<span class="count" id="f7-count">--</span></button></div>
+<div class="f7-area"><button class="f7-btn" id="f7-btn" onclick="doRelease()">[ F7 ] 戳一戳 ✨<span class="count" id="f7-count">--</span></button></div>
 
 <!-- TABS -->
 <div class="tabs">
@@ -188,7 +191,7 @@ body {
 
 <!-- WIN95 WINDOW -->
 <div class="win95-outer window-border">
-    <div class="win95-titlebar"><span>Poketter.exe</span><div class="btns"><span class="btn">─</span><span class="btn">□</span><span class="btn">✕</span></div></div>
+    <div class="win95-titlebar"><span>推博 / Poketter</span><div class="btns"><span class="btn">─</span><span class="btn">□</span><span class="btn">✕</span></div></div>
     <div class="win95-body" id="feed-container"></div>
 </div>
 
@@ -212,7 +215,7 @@ var ameSelfies = ['ame_home','ame_happy','ame_talk','ame_game','ame_cool','ame_h
 function pickSelfie(list, idx) { return list[idx % list.length]; }
 
 // Danmaku pool
-var danmakuPool = ['草','可爱','天使！！','阿P出来挨打','www','888888','kirakira✨','升天','今天也超可爱','救命','啊啊啊啊','？？？','尊嘟假嘟','有画面了','糖糖呢','守护','这是谁家的小天使','awsl','主播别走','草生','666','好可爱好可爱','不要再发了好害羞','阿P呢','超天酱世界第一'];
+var danmakuPool = ['超天酱贴贴！','天使酱我可以！','升天🙏✨','草','www','盐我','鸽了','又在卖惨？','互联网天使','恐怖游戏尖叫','kirakira💖','888888','阿P出来挨打','守护','啊啊啊啊','糖糖呢','？？？','好可爱好可爱','主播别走','草生'];
 var danmakuEls = [];
 
 function initDanmaku() {
@@ -238,7 +241,7 @@ function initDanmaku() {
 
 // Live viewer count
 function jiggleLive() {
-    var base = 12000 + Math.floor(Math.random() * 2000);
+    var base = 12000 + Math.floor(Math.random() * 20) - 10;
     var el = document.getElementById('live-count');
     if (el) el.textContent = base.toLocaleString();
 }
@@ -247,7 +250,7 @@ setInterval(jiggleLive, 3000);
 // Stats jiggle
 function jiggleStats() {
     document.getElementById('stat-f').textContent = (980 + Math.floor(Math.random()*50)) + 'K';
-    document.getElementById('bar-love').style.width = (65 + Math.floor(Math.random()*25)) + '%';
+    document.getElementById('bar-love').style.width = (54 + Math.floor(Math.random()*20)) + '%';
     document.getElementById('bar-stress').style.width = (30 + Math.floor(Math.random()*40)) + '%';
     document.getElementById('bar-yami').style.width = (35 + Math.floor(Math.random()*45)) + '%';
 }
@@ -308,25 +311,26 @@ function renderFeed(items) {
             lastBatch = e.batch_id;
         }
 
+        var dayN = Math.floor(i / 3) + 1;
         if (e.layer === 'poketter') {
             var selfie = 'img/' + pickSelfie(choSelfies, i) + '.png';
+            var likes = Math.floor(dayN * 12 + Math.random() * 30);
+            var rts = Math.floor(dayN * 4 + Math.random() * 15);
             html += '<div class="tweet-pair"><div class="card-kangel kangel-card">' +
                 '<div class="card-header"><div class="avatar"><img src="img/icon_cho.png"></div>' +
-                '<div><div class="username">超天酱 <span class="badge">官方认证</span></div>' +
-                '<div class="timestamp">@x_angelkawaii_x · ' + esc(e.time||'') + '</div></div></div>' +
+                '<div><div class="username">🎀超绝最可爱🎁天使酱 <span class="badge">✨认证</span></div>' +
+                '<div class="timestamp">@x_angelkawaii_x · 第' + dayN + '天 · ' + esc(e.time||'') + '</div></div></div>' +
                 '<div class="card-body">' + esc(e.text) + '</div>' +
                 '<div class="card-selfie"><img src="' + selfie + '" onerror="this.style.display=\'none\'"></div>' +
-                '<div class="card-actions"><span>💬 ' + rnd(1000,9999) + '</span><span>🔁 ' + rnd(500,9999) + '</span><span>❤️ ' + rnd(100,999) + 'K</span></div>' +
+                '<div class="card-actions"><span>⭐ ' + likes + '</span><span>🔁 ' + rts + '</span></div>' +
                 '</div></div>';
         } else if (e.layer === 'diary') {
-            var selfie2 = 'img/' + pickSelfie(ameSelfies, i) + '.png';
             html += '<div class="tweet-pair"><div class="card-ame ame-card">' +
                 '<div class="card-header"><div class="avatar"><img src="img/icon_ame.png"></div>' +
-                '<div><div class="username">糖糖</div>' +
-                '<div class="timestamp">@ame_chan_xx · ' + esc(e.time||'') + '</div></div></div>' +
+                '<div><div class="username">💙糖糖💙</div>' +
+                '<div class="timestamp">@raincandy_U · 第' + dayN + '天 · ' + esc(e.time||'') + '</div></div></div>' +
                 '<div class="card-body">' + esc(e.text) + '</div>' +
-                '<div class="card-selfie"><img src="' + selfie2 + '" onerror="this.style.display=\'none\'"></div>' +
-                '<div class="card-actions"><span>💬 ' + rnd(0,3) + '</span><span>🔁 0</span><span>💔 ' + rnd(1,5) + '</span></div>' +
+                '<div class="card-actions"><span>💬 ' + rnd(0,2) + '</span></div>' +
                 '</div></div>';
         }
     });
@@ -372,20 +376,22 @@ function updatePoolCount() {
 // F7 Release
 window.doRelease = function() {
     var btn = document.getElementById('f7-btn');
+    btn.classList.add('shaking');
     btn.textContent = '...';
     btn.disabled = true;
     fetch(API + '/api/release', { method: 'POST' }).then(function(r) { return r.json(); }).then(function(data) {
         if (data.ok) {
             fetchTimeline();
             btn.textContent = '已发送! ✨';
-            setTimeout(function() { btn.textContent = '戳一戳超天酱 ✨'; btn.disabled = false; }, 2000);
+            setTimeout(function() { btn.textContent = '[ F7 ] 戳一戳 ✨'; btn.disabled = false; btn.classList.remove('shaking'); }, 2000);
         } else {
             btn.textContent = '生成中...';
             // Trigger generation then retry
             fetch(API + '/api/generate', { method: 'POST', body: '{}' }).then(function() {
                 fetchTimeline();
-                btn.textContent = '戳一戳超天酱 ✨';
+                btn.textContent = '[ F7 ] 戳一戳 ✨';
                 btn.disabled = false;
+                btn.classList.remove('shaking');
             });
         }
     }).catch(function() {
@@ -393,6 +399,11 @@ window.doRelease = function() {
         btn.disabled = false;
     });
 };
+
+// F7 keyboard shortcut
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'F7') { e.preventDefault(); doRelease(); }
+});
 
 // Init
 initDanmaku();
