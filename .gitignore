@@ -1,0 +1,10 @@
+# API Key
+.env
+
+# Generated data
+data/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
