@@ -1,13 +1,10 @@
 """
-HTTP 服务器 — API + 静态文件服务
-使用 Python 内置 http.server，零新依赖。
-启动后访问 http://127.0.0.1:7860
+HTTP 服务器 v2 — Poketter 三层时间线 API
 """
 import json
 import sys
 import time
 
-# 修复 Windows 控制台 UTF-8 编码
 try:
     sys.stdout.reconfigure(encoding="utf-8")
 except Exception:
@@ -18,18 +15,15 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from config import HOST, PORT, STATIC_DIR
-from feed import get_feed, feed_count
-from generator import generate_and_save
+from feed import get_timeline, pool_count, pop_from_pool, feed_count, clear_feed
+from generator import generate_and_save, generate_single
 
 
 class AmechanHandler(SimpleHTTPRequestHandler):
-    """自定义请求处理器：路由 API + 静态文件。"""
 
     def __init__(self, *args, **kwargs):
-        # 静态文件根目录设为 static/
         super().__init__(*args, directory=str(STATIC_DIR), **kwargs)
 
-    # ---- CORS & 通用头部 ----
     def _set_cors(self):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
@@ -45,7 +39,6 @@ class AmechanHandler(SimpleHTTPRequestHandler):
         self.wfile.write(body)
 
     def _send_html(self, path: str):
-        """发送 HTML 文件。"""
         full_path = STATIC_DIR / path
         if not full_path.exists():
             self.send_error(404, "Not Found")
@@ -58,12 +51,10 @@ class AmechanHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    # ---- 日志 ----
     def log_message(self, format, *args):
         ts = time.strftime("%H:%M:%S")
         print(f"[{ts}] {args[0]}")
 
-    # ---- 路由 ----
     def do_OPTIONS(self):
         self.send_response(204)
         self._set_cors()
@@ -75,13 +66,17 @@ class AmechanHandler(SimpleHTTPRequestHandler):
 
         if path == "/" or path == "/index.html":
             self._send_html("index.html")
+        elif path == "/api/timeline":
+            timeline = get_timeline()
+            self._send_json({"count": len(timeline), "pool_remaining": pool_count(), "timeline": timeline})
         elif path == "/api/feed":
-            feed = get_feed()
-            self._send_json({"count": len(feed), "feed": feed})
+            # 旧版兼容
+            timeline = get_timeline()
+            pool = pool_count()
+            self._send_json({"count": len(timeline), "pool": pool, "feed": timeline})
         elif path == "/api/stats":
-            self._send_json({"count": feed_count(), "status": "ok"})
+            self._send_json({"count": feed_count(), "pool": pool_count(), "status": "ok"})
         else:
-            # 尝试作为静态文件处理
             super().do_GET()
 
     def do_POST(self):
@@ -97,48 +92,77 @@ class AmechanHandler(SimpleHTTPRequestHandler):
                 body = {}
 
             topic = body.get("topic", None)
-            print(f"\n[*] POST /api/generate 触发 | topic: {topic or '随机'}")
+            print(f"\n[*] POST /api/generate | topic: {topic or '随机'}")
 
             try:
-                entry = generate_and_save(topic)
-                self._send_json({"ok": True, "entry": entry})
+                data = generate_and_save(topic)
+                self._send_json({"ok": True, "event": data.get("event"), "timeline_count": len(data.get("timeline", [])), "pool_count": len(data.get("hidden_pool", []))})
             except Exception as e:
                 print(f"  [X] 生成失败: {e}")
-                self._send_json({"ok": False, "error": str(e)}, status=500)
+                # 降级到旧版生成
+                try:
+                    print("  -> 降级到旧版生成...")
+                    kangel, ame, topic = generate_single(topic)
+                    from feed import save_tweet_pair
+                    entry = save_tweet_pair(kangel, ame, topic)
+                    self._send_json({"ok": True, "fallback": True, "entry": entry})
+                except Exception as e2:
+                    self._send_json({"ok": False, "error": str(e2)}, status=500)
+
+        elif path == "/api/release":
+            print("\n[*] POST /api/release — F7 伪生成")
+            entry = pop_from_pool()
+            if entry:
+                print(f"  [OK] 释放: [{entry['layer']}] {entry['text'][:40]}... (剩余 {pool_count()})")
+                self._send_json({"ok": True, "entry": entry, "pool_remaining": pool_count()})
+            else:
+                print("  [!] hidden_pool 已空，尝试生成...")
+                try:
+                    data = generate_and_save()
+                    # 从新的 hidden_pool 再试一次
+                    entry2 = pop_from_pool()
+                    if entry2:
+                        self._send_json({"ok": True, "entry": entry2, "pool_remaining": pool_count(), "regenerated": True})
+                    else:
+                        self._send_json({"ok": False, "error": "pool exhausted after regenerate"}, status=500)
+                except Exception as e:
+                    self._send_json({"ok": False, "error": str(e)}, status=500)
+
+        elif path == "/api/clear":
+            clear_feed()
+            print("\n[*] 数据已清空")
+            self._send_json({"ok": True})
+
         else:
             self.send_error(404, "Not Found")
 
 
 def main():
-    """启动 HTTP 服务器。"""
-    # 确保数据目录存在
     from config import DATA_DIR
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
     print("=" * 50)
-    print("  + 超天酱日常推文小站 -- Amechan Daily +")
+    print("  + Poketter v2.0 -- 三层时间线 +")
     print("=" * 50)
     print(f"  地址: http://{HOST}:{PORT}")
-    print(f"  API:  GET  /api/feed     -> 获取推文列表")
-    print(f"       POST /api/generate  -> 生成新推文对")
+    print(f"  API:  GET  /api/timeline  -> 获取时间线")
+    print(f"       POST /api/generate   -> 生成新批次")
+    print(f"       POST /api/release    -> F7 释放 hidden_pool")
     print("=" * 50)
 
-    # 首次启动时如果 feed 为空，自动生成一条
     if feed_count() == 0:
-        print("\n[!] Feed 为空，自动生成首条推文...")
+        print("\n[!] Feed 为空，自动生成首条...")
         try:
             generate_and_save()
         except Exception as e:
-            print(f"  [!] 首条生成失败（可能是 API Key 未配置）: {e}")
-            print("  服务器仍会启动，但需要先配置 .env 中的 API Key")
+            print(f"  [!] 生成失败: {e}")
 
     print(f"\n[*] 服务器启动中...\n")
-
     server = HTTPServer((HOST, PORT), AmechanHandler)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
-        print("\n[~] 超天酱下线啦~ 明天见!")
+        print("\n[~] 超天酱下线~ 明天见!")
         server.shutdown()
 
 

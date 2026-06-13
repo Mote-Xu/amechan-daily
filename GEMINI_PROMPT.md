@@ -44,13 +44,13 @@
 | 项 | 选型 |
 |------|------|
 | LLM | DeepSeek API (deepseek-v4-pro) |
-| 前端 | 纯 HTML/CSS/JS（Poketter v1.1，含 CRT + Win95 + 像素风） |
+| 前端 | 纯 HTML/CSS/JS（Poketter v1.2，含 CRT + Win95 + 像素风） |
 | 后端 | Python `http.server`（内置模块） |
 | 存储 | 本地 JSON 文件 |
 | 游戏素材 | UnityPy 从 Steam 版提取（52 张自拍 + 30+ UI 图标 + 400+ FanArts） |
 | 环境 | WSL2, Python 3.11, conda: deepseek_v4_api |
 
-## 当前状态：v1.1 — 基础可用，待加互动
+## 当前状态：v1.2 — 基础可用，待加互动
 
 ### 已完成（v1.2）
 - [x] `config.py` + `prompts.py` — 配置 + 双人格提示词（含 10% 专属话题）
