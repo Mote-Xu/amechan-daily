@@ -1940,9 +1940,71 @@ function fetchJineChat() {
     if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
 }
 
-// Enter key also sends
+// Send text from textarea
+window.sendText = function() {
+    var input = document.getElementById('jine-text-input');
+    if (!input || jineSending) return;
+    var text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+    jineSending = true;
+    var now = new Date();
+    var timeStr = ('0'+now.getHours()).slice(-2) + ':' + ('0'+now.getMinutes()).slice(-2);
+    jineChatMsgs.push({ time: timeStr, player_text: text, reply: '', recall: false });
+    if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
+
+    var trigger = checkTriggerWords(text);
+    if (trigger) {
+        var typingEl = document.getElementById('jine-typing');
+        setTimeout(function() { if (typingEl) typingEl.style.display = 'flex'; }, 600);
+        setTimeout(function() {
+            if (typingEl) typingEl.style.display = 'none';
+            var last = jineChatMsgs[jineChatMsgs.length - 1];
+            if (last && !last.reply) {
+                last.reply = trigger.reply; last.ame_sticker = trigger.ame_sticker || null;
+                last.time = ('0'+new Date().getHours()).slice(-2) + ':' + ('0'+new Date().getMinutes()).slice(-2);
+            }
+            if (last) SaveManager.addJineMessage(last);
+            if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
+            jineSending = false; input.focus();
+        }, 1800);
+        return;
+    }
+
+    var typingEl = document.getElementById('jine-typing');
+    setTimeout(function() { if (typingEl) typingEl.style.display = 'flex'; }, 800);
+    fetch(API + '/api/jine/text', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({text: text})
+    }).then(function(r) { return r.json(); }).then(function(data) {
+        var last = jineChatMsgs[jineChatMsgs.length - 1];
+        if (last && !last.reply) {
+            last.reply = data.reply || ''; last.ame_sticker = data.ame_sticker || null;
+            last.time = data.time; last.recall = data.recall || false;
+            SaveManager.addJineMessage(last);
+        }
+        setTimeout(function() {
+            if (typingEl) typingEl.style.display = 'none';
+            if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
+            jineSending = false; input.focus();
+        }, 1200);
+    }).catch(function() {
+        if (typingEl) typingEl.style.display = 'none';
+        var last = jineChatMsgs[jineChatMsgs.length - 1];
+        if (last && !last.reply) last.reply = ['...','嗯','哼','哦'][Math.floor(Math.random()*4)];
+        if (last) SaveManager.addJineMessage(last);
+        if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
+        jineSending = false;
+    });
+};
+
+// Enter sends, Shift+Enter newline
 document.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' && document.activeElement === document.getElementById('jine-text-input')) { if (e.shiftKey) return; e.preventDefault(); sendText(); }
+    if (e.key === 'Enter' && document.activeElement === document.getElementById('jine-text-input')) {
+        if (e.shiftKey) return;
+        e.preventDefault();
+        sendText();
+    }
 });
 
 function sendSticker(stickerId) {
