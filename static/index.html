@@ -795,6 +795,9 @@ body {
 /* FOOTER */
 .footer { text-align:center; margin-top:1rem; color:var(--purple); font-size:0.55rem; opacity:0.5; }
 .footer .divider { margin:0.3rem auto; width:80px; border-top:2px dashed var(--purple); opacity:0.4; }
+
+.save-indicator{position:fixed;top:8px;left:10px;z-index:9998;display:flex;align-items:center;gap:0.4rem;font-size:0.6rem;background:rgba(0,0,0,0.55);border:1px solid rgba(255,105,180,0.2);padding:4px 10px;}.save-indicator:hover{border-color:var(--pink);}.save-indicator .save-label{color:#888;}.save-indicator .save-name{color:var(--pink);cursor:pointer;font-size:0.7rem;}.save-indicator .save-slot-count{color:#555;font-size:0.5rem;}.save-manage-btn{background:rgba(255,105,180,0.15);color:var(--pink);border:1px solid rgba(255,105,180,0.3);padding:1px 8px;font-size:0.7rem;font-family:inherit;cursor:pointer;}
+.save-modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:10000;justify-content:center;align-items:center;}.save-modal-overlay.open{display:flex;}.save-modal{background:var(--win-bg);border:2px solid #fff;border-right-color:#888;border-bottom-color:#888;box-shadow:4px 4px 0 #000;width:90%;max-width:420px;max-height:70vh;display:flex;flex-direction:column;}.save-modal-titlebar{background:var(--win-title);color:#fff;padding:0.3rem 0.6rem;display:flex;justify-content:space-between;font-size:0.75rem;}.save-modal-titlebar .close-btn{background:var(--win-bg);color:#000;padding:0 6px;font-size:0.6rem;border:2px solid #fff;border-right-color:#555;border-bottom-color:#555;cursor:pointer;}.save-modal-body{background:var(--bg);padding:0.8rem;overflow-y:auto;flex:1;}.save-slot{display:flex;align-items:center;justify-content:space-between;padding:0.6rem 0.7rem;margin-bottom:0.4rem;background:rgba(0,0,0,0.3);border:2px solid #444;gap:0.5rem;}.save-slot.current{border-color:var(--pink);background:rgba(255,105,180,0.08);}.save-slot .slot-info{flex:1;min-width:0;}.save-slot .slot-name{color:#fff;font-size:0.75rem;}.save-slot.current .slot-name{color:var(--pink);}.save-slot .slot-meta{color:#666;font-size:0.55rem;margin-top:2px;}.save-slot .slot-actions{display:flex;gap:4px;flex-shrink:0;}.save-slot .slot-btn{padding:2px 8px;font-size:0.55rem;font-family:inherit;border:2px solid #555;background:rgba(0,0,0,0.3);color:#aaa;cursor:pointer;white-space:nowrap;}.save-slot .slot-btn:hover{color:#fff;border-color:var(--pink);}.save-slot .slot-btn.danger:hover{border-color:#f44;color:#f44;}.save-new-btn{display:block;width:100%;padding:0.5rem;margin-top:0.4rem;background:rgba(255,105,180,0.1);color:var(--pink);border:2px dashed var(--pink);font-family:inherit;font-size:0.7rem;cursor:pointer;}.save-new-form{display:none;margin-top:0.4rem;}.save-new-form input{width:100%;padding:4px 8px;background:rgba(0,0,0,0.3);color:#fff;border:2px solid #555;font-family:inherit;font-size:0.7rem;outline:none;margin-bottom:4px;}.save-new-form input:focus{border-color:var(--pink);}.save-new-form .form-btns{display:flex;gap:4px;justify-content:flex-end;}.save-new-form .form-btn{padding:3px 10px;font-size:0.6rem;font-family:inherit;border:2px solid #555;background:rgba(0,0,0,0.3);color:#ccc;cursor:pointer;}.save-new-form .form-btn.confirm{color:var(--pink);border-color:var(--pink);}.save-toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--win-title);color:#fff;padding:6px 16px;font-size:0.65rem;font-family:inherit;border:2px solid #fff;z-index:10001;opacity:0;transition:opacity 0.2s;pointer-events:none;}.save-toast.show{opacity:1;}
 </style>
 </head>
 <body class="crt">
@@ -804,6 +807,7 @@ body {
 <div class="header">
     <h1>† Poketter †</h1>
     <div class="subtitle"><span class="status-dot"></span> LIVE v2.2</div>
+<div class="save-indicator" id="save-indicator"><span class="save-label">存档:</span> <span class="save-name" id="save-name" onclick="openSaveManager()">默认存档</span> <span class="save-slot-count" id="save-slot-info"></span> <button class="save-manage-btn" onclick="openSaveManager()">+</button></div>
 </div>
 
 <!-- STATUS BAR -->
@@ -821,6 +825,9 @@ body {
     <span style="font-size:0.6rem;color:#555;">KAngel Ch.</span>
 </div>
 <div style="height:300px"></div>
+
+        <div class="webcam-container" id="webcam-container"><div class="webcam-frame"><div class="webcam-titlebar" id="webcam-titlebar"><span><span class="dot">●</span> <span id="webcam-state-label">Webcam</span></span><span style="font-size:0.5rem;">▼</span></div><div class="webcam-state-menu" id="webcam-state-menu"></div><img class="window-chrome" src="img/windowbase_active_300x200.png" alt=""><div class="webcam-inner" id="webcam-inner"><canvas id="webcam-canvas"></canvas></div></div></div>
+        <div style="height:300px"></div>
 <div class="danmaku-bar" id="danmaku-bar"></div>
 
 <!-- DESKTOP ICONS -->
@@ -848,6 +855,21 @@ body {
 
 <!-- TRASH CAN -->
 <div class="trash-widget"><div class="trash-can" id="trash-can"><span class="pixel-trash" style="transform:scale(2);"></span></div><div class="trash-count" id="trash-count">0</div><div class="trash-label">TRASH</div></div>
+
+
+    <!-- SAVE MANAGER MODAL -->
+    <div class="save-modal-overlay" id="save-modal-overlay">
+        <div class="save-modal">
+            <div class="save-modal-titlebar"><span>💾 存档管理</span><span class="close-btn">✕</span></div>
+            <div class="save-modal-body" id="save-modal-body"></div>
+            <button class="save-new-btn" id="save-new-btn">＋ 新建存档</button>
+            <div class="save-new-form" id="save-new-form">
+                <input type="text" id="save-new-name" placeholder="存档名称..." maxlength="20">
+                <div class="form-btns"><button class="form-btn cancel-btn">取消</button><button class="form-btn confirm">创建</button></div>
+            </div>
+        </div>
+    </div>
+    <div class="save-toast" id="save-toast"></div>
 
 <div class="footer"><div class="divider"></div>超天酱日常推文小站 · v2.2<br>游戏素材 © WSS playground / xemono</div>
 
@@ -1110,6 +1132,228 @@ var DANMAKU_COUNT = 5;
             el.style.cursor = 'grab';
         })();
 
+
+// ============================================================
+// SAVE MANAGER — 多存档系统 (LocalStorage)
+// ============================================================
+var SaveManager = {
+    STORAGE_KEY: "amechan_saves",
+    data: null,
+
+    init: function() {
+        var raw = localStorage.getItem(this.STORAGE_KEY);
+        if (raw) {
+            try { this.data = JSON.parse(raw); } catch(e) { this.data = null; }
+        }
+        if (!this.data || !this.data.slots || Object.keys(this.data.slots).length === 0) {
+            var slotId = "slot_" + Date.now();
+            this.data = { version: 1, currentSlot: slotId, slots: {} };
+            this.data.slots[slotId] = this._createSlotData("默认存档");
+            this._persist();
+        }
+        return this;
+    },
+
+    _createSlotData: function(name) {
+        return {
+            name: name, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+            jineChat: [], releasedEntries: [], feedCursor: 0,
+            stats: { followers: 980, stress: 42, affection: 78, darkness: 55 }, trashCount: 0
+        };
+    },
+
+    _persist: function() { localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.data)); },
+
+    getCurrentSlot: function() {
+        var id = this.data.currentSlot;
+        return { id: id, data: this.data.slots[id] };
+    },
+
+    listSlots: function() {
+        var self = this;
+        return Object.keys(this.data.slots).map(function(id) {
+            var s = self.data.slots[id];
+            return { id: id, name: s.name, createdAt: s.createdAt, updatedAt: s.updatedAt,
+                     entryCount: s.releasedEntries.length, chatCount: s.jineChat.length, feedCursor: s.feedCursor || 0 };
+        });
+    },
+
+    createSlot: function(name) {
+        var id = "slot_" + Date.now();
+        this.data.slots[id] = this._createSlotData(name || "新存档");
+        this._persist(); return id;
+    },
+
+    switchSlot: function(id) {
+        if (!this.data.slots[id]) return false;
+        this.data.currentSlot = id; this._persist(); return true;
+    },
+
+    deleteSlot: function(id) {
+        var keys = Object.keys(this.data.slots);
+        if (keys.length <= 1) return false;
+        if (this.data.currentSlot === id) {
+            var others = keys.filter(function(k) { return k !== id; });
+            this.data.currentSlot = others[0];
+        }
+        delete this.data.slots[id]; this._persist(); return true;
+    },
+
+    getJineChat: function() { var s = this.getCurrentSlot(); return s.data ? s.data.jineChat.slice() : []; },
+    addJineMessage: function(msg) {
+        var slot = this.data.slots[this.data.currentSlot]; if (!slot) return;
+        slot.jineChat.push(msg); if (slot.jineChat.length > 60) slot.jineChat = slot.jineChat.slice(-60);
+        slot.updatedAt = new Date().toISOString(); this._persist();
+    },
+    addReleasedEntry: function(entry) {
+        var slot = this.data.slots[this.data.currentSlot]; if (!slot) return;
+        slot.releasedEntries.push(entry); slot.updatedAt = new Date().toISOString(); this._persist();
+    },
+    getReleasedEntries: function() { var s = this.getCurrentSlot(); return s.data ? s.data.releasedEntries.slice() : []; },
+    getStats: function() { var s = this.getCurrentSlot(); return s.data ? Object.assign({}, s.data.stats) : { followers: 980, stress: 42, affection: 78, darkness: 55 }; },
+    updateStats: function(updates) {
+        var slot = this.data.slots[this.data.currentSlot]; if (!slot) return;
+        Object.assign(slot.stats, updates); slot.updatedAt = new Date().toISOString(); this._persist();
+    },
+    getTrashCount: function() { var s = this.getCurrentSlot(); return s.data ? s.data.trashCount : 0; },
+    setTrashCount: function(count) {
+        var slot = this.data.slots[this.data.currentSlot]; if (!slot) return;
+        slot.trashCount = count; this._persist();
+    },
+    getFeedCursor: function() { var s = this.getCurrentSlot(); return s.data ? (s.data.feedCursor || 0) : 0; },
+    setFeedCursor: function(cursor) {
+        var slot = this.data.slots[this.data.currentSlot]; if (!slot) return;
+        slot.feedCursor = cursor; slot.updatedAt = new Date().toISOString(); this._persist();
+    },
+    incrementFeedCursor: function() {
+        var slot = this.data.slots[this.data.currentSlot]; if (!slot) return;
+        slot.feedCursor = (slot.feedCursor || 0) + 1; slot.updatedAt = new Date().toISOString(); this._persist();
+    }
+};
+
+// UI functions
+function updateSaveIndicator() {
+    var slot = SaveManager.getCurrentSlot();
+    var nameEl = document.getElementById("save-name");
+    if (nameEl && slot.data) nameEl.textContent = slot.data.name;
+    var infoEl = document.getElementById("save-slot-info");
+    if (infoEl) infoEl.textContent = "(" + Object.keys(SaveManager.data.slots).length + "个存档)";
+}
+
+function reloadFromSlot() {
+    jineChatMsgs = SaveManager.getJineChat();
+    loadStatsFromSlot(); updateSaveIndicator();
+    renderFromCache();
+    if (ACTIVE_TAB === "jine") renderJineChatMsgs();
+    jineSending = false;
+}
+
+function loadStatsFromSlot() {
+    var stats = SaveManager.getStats();
+    var el = document.getElementById("stat-f"); if (el) el.textContent = stats.followers + "K";
+    el = document.getElementById("stat-stress"); if (el) el.textContent = stats.stress;
+    el = document.getElementById("stat-love"); if (el) el.textContent = stats.affection;
+    el = document.getElementById("stat-yami"); if (el) el.textContent = stats.darkness;
+    el = document.getElementById("bar-stress"); if (el) el.style.width = stats.stress + "%";
+    el = document.getElementById("bar-love"); if (el) el.style.width = stats.affection + "%";
+    el = document.getElementById("bar-yami"); if (el) el.style.width = stats.darkness + "%";
+    trashCount = SaveManager.getTrashCount();
+    el = document.getElementById("trash-count"); if (el) el.textContent = trashCount;
+    affectionLevel = stats.affection;
+}
+
+function showToast(msg) {
+    var toast = document.getElementById("save-toast");
+    if (!toast) return;
+    toast.textContent = msg; toast.classList.add("show");
+    setTimeout(function() { toast.classList.remove("show"); }, 2000);
+}
+
+var saveModalOpen = false;
+function openSaveManager() {
+    saveModalOpen = true;
+    document.getElementById("save-modal-overlay").classList.add("open");
+    renderSaveSlots();
+}
+function closeSaveManager() {
+    saveModalOpen = false;
+    document.getElementById("save-modal-overlay").classList.remove("open");
+    hideNewSaveForm();
+}
+function renderSaveSlots() {
+    var body = document.getElementById("save-modal-body");
+    var slots = SaveManager.listSlots();
+    var currentId = SaveManager.getCurrentSlot().id;
+    var html = "";
+    slots.forEach(function(s) {
+        var isCurrent = s.id === currentId;
+        var dateStr = new Date(s.updatedAt).toLocaleDateString("zh-CN");
+        html += '<div class="save-slot' + (isCurrent ? ' current' : '') + '">';
+        html += '<div class="slot-info"><div class="slot-name">' + esc(s.name) + (isCurrent ? ' ★' : '') + '</div>';
+        html += '<div class="slot-meta">第' + (s.feedCursor||0) + '天 ' + dateStr + '</div></div>';
+        html += '<div class="slot-actions">';
+        if (!isCurrent) html += '<button class="slot-btn active-btn" data-action="switch" data-slot="' + s.id + '">切换</button>';
+        html += '<button class="slot-btn danger" data-action="delete" data-slot="' + s.id + '">删除</button>';
+        html += '</div></div>';
+    });
+    body.innerHTML = html;
+}
+function showNewSaveForm() {
+    document.getElementById("save-new-form").style.display = "block";
+    document.getElementById("save-new-btn").style.display = "none";
+    document.getElementById("save-new-name").focus();
+}
+function hideNewSaveForm() {
+    document.getElementById("save-new-form").style.display = "none";
+    document.getElementById("save-new-btn").style.display = "block";
+    document.getElementById("save-new-name").value = "";
+}
+function createNewSave() {
+    var input = document.getElementById("save-new-name");
+    var name = input.value.trim() || "新存档";
+    SaveManager.createSlot(name);
+    hideNewSaveForm(); renderSaveSlots(); updateSaveIndicator();
+    showToast("存档「" + name + "」已创建");
+}
+function switchToSlot(id) {
+    var slot = SaveManager.data.slots[id];
+    if (!slot) return;
+    if (!confirm("切换到存档「" + slot.name + "」？")) return;
+    SaveManager.switchSlot(id);
+    closeSaveManager(); reloadFromSlot();
+    showToast("已切换到「" + slot.name + "」");
+}
+function deleteSlot(id) {
+    var slot = SaveManager.data.slots[id];
+    if (!slot) return;
+    if (!confirm("确定删除存档「" + slot.name + "」？")) return;
+    if (!SaveManager.deleteSlot(id)) { showToast("无法删除最后一个存档"); return; }
+    renderSaveSlots(); updateSaveIndicator();
+    showToast("存档已删除");
+}
+window.openSaveManager = openSaveManager;
+window.closeSaveManager = closeSaveManager;
+
+document.addEventListener("click", function(e) { if (e.target.id === "save-modal-overlay") closeSaveManager(); });
+document.addEventListener("keydown", function(e) {
+    if (e.key === "Enter" && saveModalOpen && document.getElementById("save-new-form").style.display === "block") createNewSave();
+});
+setTimeout(function() {
+    var b = document.getElementById("save-modal-body");
+    if (b) b.addEventListener("click", function(e) {
+        var btn = e.target.closest("button"); if (!btn) return;
+        var a = btn.dataset.action, s = btn.dataset.slot;
+        if (a === "switch" && s) switchToSlot(s);
+        if (a === "delete" && s) deleteSlot(s);
+    });
+    var cb = document.querySelector(".save-modal-titlebar .close-btn"); if (cb) cb.addEventListener("click", closeSaveManager);
+    var nb = document.getElementById("save-new-btn"); if (nb) nb.addEventListener("click", showNewSaveForm);
+    var cf = document.querySelector("#save-new-form .form-btn.confirm"); if (cf) cf.addEventListener("click", createNewSave);
+    var cc = document.querySelector("#save-new-form .cancel-btn"); if (cc) cc.addEventListener("click", hideNewSaveForm);
+}, 100);
+
+
+
 function initDanmaku() {
     var bar = document.getElementById('danmaku-bar');
 
@@ -1282,10 +1526,10 @@ function renderFeed(items) {
         html += '<div class="jine-titlebar"><div class="jine-logo"><span class="square"></span> JINE</div><div class="window-btns"><span>─</span><span>□</span><span>✕</span></div></div>';
 
         // Date divider
-        html += '<div class="jine-date-divider"><span>日常</span></div>';
+        html += ''; // date dividers now handled by renderJineChatUnified
 
         // Timeline-generated JINE messages
-        html += '<div class="jine-chat">';
+        html += '<div class="jine-chat-msgs" id="jine-chat-msgs">';
         if (items.length === 0) {
             html += '<div class="empty-state"><p style="font-size:0.7rem;color:rgba(0,0,0,0.4);">糖糖还没发消息...</p></div>';
         } else {
@@ -1318,7 +1562,7 @@ function renderFeed(items) {
 
         // Render sticker bar once DOM is in place
         renderStickerBar();
-        renderJineChatMsgs();
+        renderJineChatUnified(items);
         fetchJineChat();
         return;
     }
@@ -1684,6 +1928,9 @@ function sendSticker(stickerId) {
 }
 
 // Init
+SaveManager.init();
+loadStatsFromSlot();
+updateSaveIndicator();
 initDanmaku();
 jiggleLive();
 jiggleStats();
