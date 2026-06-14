@@ -369,9 +369,7 @@ body {
 .sticker-img-wrap {
     position: relative;
     display: inline-block;
-    width: 32px;
-    height: 32px;
-}
+    width: 96px; height: 96px; }
 .sticker-png {
     position: absolute;
     top: 50%; left: 50%;
@@ -379,8 +377,7 @@ body {
     z-index: 1;
     image-rendering: pixelated;
     pointer-events: none;
-    max-width: 36px;
-    max-height: 36px;
+    width: 96px; height: 96px; object-fit: contain;
 }
 
 /* ============================================================
@@ -915,10 +912,7 @@ var jineSending = false;
 
 // Danmaku pool
 var danmakuPool = {
-    fan:  ['✟升天✟','✟升天✟','小天使请安','小天使请安','超天酱贴贴！','kirakira💖','888888','守护','好可爱','互联网天使','主播别走','www'],
-    hate: ['盐我','鸽了','又在卖惨？','草','？？？','好无聊','假的吧','阿P出来挨打']
-};
-function pickDanmaku(pool) { return pool[Math.floor(Math.random() * pool.length)]; }
+    fan:  ['✟升天✟','小天使请安','超天酱贴贴！','kirakira💖','888888','守护','好可爱','互联网天使','主播别走','www','可爱捏','天使降临'], hate: ['草','www','kusa','？？？','草生える','大草原不可避','血压上来了','真实','草www','不愧是你','过于真实','你币没了','禁止好活','走远了','典中典'] }
 var danmakuWraps = [];
 var trashCount = 0;
 var DANMAKU_COUNT = 5;
@@ -1129,7 +1123,12 @@ function initDanmaku() {
         }
     });
 
-    var positions = [1, 7, 13, 19, 25]; // 5 danmaku spread across 34px bar
+    var positions = [];
+	    var barH = bar.clientHeight || 56;
+	    var safeMax = Math.max(2, barH - 17);
+	    for (var i = 0; i < DANMAKU_COUNT; i++) {
+	        positions.push(2 + Math.floor((safeMax - 2) * i / (DANMAKU_COUNT - 1)));
+	    }
     for (var i = 0; i < DANMAKU_COUNT; i++) {
         var wrap = document.createElement('span');
         wrap.className = 'danmaku-wrap';
