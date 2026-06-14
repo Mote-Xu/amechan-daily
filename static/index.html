@@ -1863,10 +1863,9 @@ function stickerHTML(stickerId) {
     if (!s) return '';
     var cssClass = s.cssClass || ('pixel-cat ' + (s.catVar || ''));
     var isAme = s.cssClass && s.cssClass.indexOf('ame-pixel') === 0;
-    return
-        '<span class="sticker-img-wrap' + (isAme ? ' ame-sticker-wrap' : '') + '">' +
+    return '<span class="sticker-img-wrap' + (isAme ? ' ame-sticker-wrap' : '') + '">' +
+        '<img class="sticker-png" src="img/stamps/' + s.pngFile + '" alt="" onerror="this.classList.add(\'error\')">' +
         '<span class="' + cssClass + (isAme ? ' ame-pixel' : '') + '"></span>' +
-        '<img class="sticker-png" src="img/stamps/' + s.pngFile + '" alt="">' +
         '</span>';
 }
 
