@@ -111,52 +111,41 @@ def pop_from_pool() -> list[dict]:
     entries = []
     batch_id = f"released_{int(time.time() * 1000)}"
 
-    def _pop_one(layer: str) -> dict | None:
-        for i, it in enumerate(pool):
+    def _find_one(layer: str) -> dict | None:
+        """查找但不移除。返回 pool 中的原始条目。"""
+        for it in pool:
             if it.get("layer") == layer:
-                item = pool.pop(i)
-                entry = {
-                    "batch_id": batch_id,
-                    "event": "随手一发",
-                    "layer": item.get("layer", layer),
-                    "time": time.strftime("%H:%M"),
-                    "text": item.get("text", ""),
-                    "selfie_mood": item.get("selfie_mood", "angel"),
-                    "timestamp": time.time(),
-                    "date": time.strftime("%Y-%m-%d %H:%M:%S"),
-                }
-                data["timeline"].append(entry)
-                return entry
+                return it
         return None
 
-    # 先找 Poketter（公开身份）
-    poke = _pop_one("poketter")
-    if poke:
-        entries.append(poke)
-    # 再找 Diary（私密身份）
-    diary = _pop_one("diary")
-    if diary:
-        entries.append(diary)
-
-    # 兜底：如果上面一个都没找到，随便取一条
-    if not entries and pool:
-        item = pool.pop(0)
+    def _pop_it(item: dict) -> dict:
+        """移除并写入 timeline。"""
+        pool.remove(item)
         entry = {
-            "batch_id": batch_id,
-            "event": "随手一发",
+            "batch_id": batch_id, "event": "随手一发",
             "layer": item.get("layer", "poketter"),
-            "time": time.strftime("%H:%M"),
-            "text": item.get("text", ""),
+            "time": time.strftime("%H:%M"), "text": item.get("text", ""),
             "selfie_mood": item.get("selfie_mood", "angel"),
-            "timestamp": time.time(),
-            "date": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "timestamp": time.time(), "date": time.strftime("%Y-%m-%d %H:%M:%S"),
         }
         data["timeline"].append(entry)
-        entries.append(entry)
+        return entry
 
+    # 必须成对释放：两边都存在才弹出
+    poke_item = _find_one("poketter")
+    diary_item = _find_one("diary")
+
+    if poke_item and diary_item:
+        entries.append(_pop_it(poke_item))
+        entries.append(_pop_it(diary_item))
+        data["hidden_pool"] = pool
+        _save_raw(data)
+        return entries
+
+    # 不完整 → 返回空，触发服务端重新生成
     data["hidden_pool"] = pool
     _save_raw(data)
-    return entries
+    return []
 
 
 def pool_count() -> int:
