@@ -1413,19 +1413,17 @@ document.addEventListener("click", function(e) { if (e.target.id === "save-modal
 document.addEventListener("keydown", function(e) {
     if (e.key === "Enter" && saveModalOpen && document.getElementById("save-new-form").style.display === "block") createNewSave();
 });
-setTimeout(function() {
-    var b = document.getElementById("save-modal-body");
-    if (b) b.addEventListener("click", function(e) {
-        var btn = e.target.closest("button"); if (!btn) return;
-        var a = btn.dataset.action, s = btn.dataset.slot;
-        if (a === "switch" && s) switchToSlot(s);
-        if (a === "delete" && s) deleteSlot(s);
-    });
-    var cb = document.querySelector(".save-modal-titlebar .close-btn"); if (cb) cb.addEventListener("click", closeSaveManager);
-    var nb = document.getElementById("save-new-btn"); if (nb) nb.addEventListener("click", showNewSaveForm);
-    var cf = document.querySelector("#save-new-form .form-btn.confirm"); if (cf) cf.addEventListener("click", createNewSave);
-    var cc = document.querySelector("#save-new-form .cancel-btn"); if (cc) cc.addEventListener("click", hideNewSaveForm);
-}, 100);
+var b = document.getElementById("save-modal-body");
+if (b) b.addEventListener("click", function(e) {
+    var btn = e.target.closest("button"); if (!btn) return;
+    var a = btn.dataset.action, s = btn.dataset.slot;
+    if (a === "switch" && s) switchToSlot(s);
+    if (a === "delete" && s) deleteSlot(s);
+});
+var cb = document.querySelector(".save-modal-titlebar .close-btn"); if (cb) cb.addEventListener("click", closeSaveManager);
+var nb = document.getElementById("save-new-btn"); if (nb) nb.addEventListener("click", showNewSaveForm);
+var cf = document.querySelector("#save-new-form .form-btn.confirm"); if (cf) cf.addEventListener("click", createNewSave);
+var cc = document.querySelector("#save-new-form .cancel-btn"); if (cc) cc.addEventListener("click", hideNewSaveForm);
 
 
 
