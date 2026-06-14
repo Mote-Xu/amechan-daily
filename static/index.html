@@ -85,6 +85,12 @@ body {
 .card-kangel .card-header { display:flex; align-items:flex-start; margin-bottom:0.6rem; }
 .card-kangel .avatar { width:40px; height:40px; margin-right:0.6rem; flex-shrink:0; border:2px solid var(--pink); background:var(--pink); }
 .card-kangel .avatar img { width:100%; height:100%; image-rendering:pixelated; }
+.at-user {
+    font-size: 0.65rem;
+    color: #888;
+    font-weight: normal;
+}
+.card-ame .at-user { color: #666; }
 .card-kangel .username { font-weight:bold; color:var(--pink); font-size:1rem; display:flex; align-items:center; gap:0.3rem; }
 .card-kangel .badge { font-size:0.5rem; background:var(--pink); color:#fff; padding:1px 4px; }
 .card-kangel .timestamp { font-size:0.6rem; color:#999; }
@@ -105,16 +111,618 @@ body {
 .card-ame .card-selfie img { max-width:100%; max-height:200px; border:2px solid #333; display:block; filter:grayscale(0.2) brightness(0.9); }
 .card-ame .card-actions { display:flex; gap:0.8rem; color:#555; font-size:0.75rem; border-top:2px dashed #333; padding-top:0.4rem; }
 
-/* JINE BUBBLES */
-.jine-chat { padding:0.5rem; }
-.jine-msg { display:flex; margin-bottom:0.4rem; align-items:flex-end; gap:0.4rem; }
-.jine-msg .bubble { max-width:80%; padding:0.5rem 0.7rem; border-radius:12px; font-size:0.85rem; line-height:1.4; }
-.jine-msg.sent { justify-content:flex-end; }
-.jine-msg.sent .bubble { background:var(--purple); color:#fff; border-bottom-right-radius:3px; }
-.jine-msg.sent .time { font-size:0.5rem; color:#666; }
-.jine-msg.received { justify-content:flex-start; }
-.jine-msg.received .bubble { background:#333; color:#ccc; border-bottom-left-radius:3px; }
-.jine-msg.received .time { font-size:0.5rem; color:#555; }
+/* ============================================================
+   JINE — 游戏原版还原
+   糖糖消息: 左对齐, #A0D8F0 气泡 + 三角尾巴
+   阿P贴图:   右对齐, 无气泡, 纯贴图
+   回复栏:     2×4 猫咪 sticker, #C898D8 底
+   参考:       Steam 游戏截图
+   ============================================================ */
+
+/* 聊天区容器 */
+.jine-chat {
+    padding: 12px 16px;
+    background: linear-gradient(180deg, #F8A8E8 0%, #E898D8 100%);
+    min-height: 120px;
+}
+
+/* 糖糖头像 */
+.jine-avatar {
+    width: 34px; height: 34px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    image-rendering: pixelated;
+    border: 1px solid rgba(0,0,0,0.1);
+}
+.jine-avatar img { width: 100%; height: 100%; image-rendering: pixelated; }
+
+/* 基础消息行 */
+.jine-msg { display: flex; margin-bottom: 10px; align-items: flex-end; gap: 6px; }
+
+/* 糖糖消息（左对齐, 带头像 + 气泡尾） */
+.jine-msg.ame { justify-content: flex-start; }
+.jine-msg.ame .bubble {
+    background: #A0D8F0;
+    color: #000;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+    max-width: 75%;
+    position: relative;
+    margin-left: 2px;
+}
+/* 气泡左三角尾 */
+.jine-msg.p-text {
+    justify-content: flex-end;
+    padding: 2px 0;
+}
+.player-text-bubble {
+    background: #B8E8B8;
+    color: #000;
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    max-width: 70%;
+    line-height: 1.4;
+}
+.jine-msg.ame .bubble::before {
+    content: '';
+    position: absolute;
+    left: -6px; bottom: 6px;
+    width: 0; height: 0;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-right: 7px solid #A0D8F0;
+}
+.jine-msg.ame .time {
+    font-size: 10px; color: rgba(0,0,0,0.4);
+    align-self: flex-end; margin-bottom: 2px;
+}
+
+/* 阿P消息（右对齐, 无气泡, 纯贴图/文字） */
+.jine-msg.p { justify-content: flex-end; }
+.jine-msg.p .sticker-content {
+    text-align: right;
+}
+.ame-sticker-content {
+    text-align: center;
+}
+.ame-sticker-wrap {
+    width: 44px;
+    height: 44px;
+}
+.jine-msg.ame-sticker {
+    justify-content: flex-start;
+    padding: 4px 0;
+}
+.ame-sticker-bubble {
+    display: inline-block;
+    padding: 6px 10px;
+    background: rgba(160,216,240,0.25);
+    border-radius: 8px;
+}
+.jine-msg.p .sticker-img {
+    display: block;
+    image-rendering: pixelated;
+}
+.jine-msg.p .time {
+    font-size: 10px; color: rgba(0,0,0,0.4);
+}
+
+/* 已读标记 */
+.jine-read-receipt {
+    text-align: right;
+    font-size: 10px;
+    color: #FFFFFF;
+    padding: 0 4px 6px 0;
+    text-shadow: 0 1px 0 rgba(0,0,0,0.15);
+    opacity: 0.85;
+}
+
+/* 日期分隔条 */
+.jine-date-divider {
+    text-align: center;
+    margin: 8px 0;
+}
+.jine-date-divider span {
+    background: #C8E8F8;
+    color: #000;
+    font-size: 11px;
+    padding: 2px 14px;
+    border-radius: 3px;
+}
+
+/* 系统消息（撤回等） */
+.jine-system-msg {
+    text-align: center;
+    font-size: 10px;
+    color: rgba(0,0,0,0.35);
+    padding: 2px 0;
+    animation: fadeIn 0.3s;
+}
+.jine-system-msg.recall::before { content: '↩ '; }
+
+/* 糖糖正在输入 */
+.jine-typing {
+    text-align: left;
+    padding: 4px 8px;
+    font-size: 11px;
+    color: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.jine-typing .dots { display: inline-flex; gap: 2px; }
+.jine-typing .dots span {
+    width: 4px; height: 4px;
+    background: rgba(0,0,0,0.4);
+    border-radius: 50%;
+    animation: typeBounce 0.6s infinite alternate;
+}
+.jine-typing .dots span:nth-child(2) { animation-delay: 0.2s; }
+.jine-typing .dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typeBounce { from { opacity: 0.3; transform: translateY(0); } to { opacity: 1; transform: translateY(-4px); } }
+
+/* 互动聊天分隔 */
+.jine-interactive {
+    border-top: 2px solid #C888C0;
+    margin-top: 6px;
+    padding-top: 6px;
+}
+.jine-interactive-label {
+    text-align: center;
+    font-size: 10px;
+    color: rgba(0,0,0,0.4);
+    margin-bottom: 4px;
+}
+.jine-chat-msgs {
+    max-height: 230px;
+    overflow-y: auto;
+    padding: 4px 0;
+}
+.jine-chat-msgs .jine-msg { animation: fadeInUp 0.25s ease-out; }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* ============================================================
+   回复栏 — 2×4 猫咪 sticker
+   ============================================================ */
+/* JINE 文字输入区 */
+.jine-text-area {
+    display: flex;
+    gap: 4px;
+    padding: 4px 8px;
+    background: #C898D8;
+    border-top: 1px solid #B880C8;
+}
+.jine-text-input {
+    flex: 1;
+    padding: 4px 8px;
+    border: 1px solid #B880C8;
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: 'DotGothic16', 'Microsoft YaHei', sans-serif;
+    background: rgba(255,255,255,0.7);
+    outline: none;
+}
+.jine-text-input:focus {
+    border-color: #E898D8;
+    background: #fff;
+}
+.jine-text-send {
+    padding: 4px 12px;
+    background: #E898D8;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+    font-family: 'DotGothic16', 'Microsoft YaHei', sans-serif;
+    white-space: nowrap;
+}
+.jine-text-send:hover { background: #D878C8; }
+.jine-text-send:active { transform: scale(0.95); }
+
+.sticker-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 4px;
+    padding: 6px 8px;
+    background: #C898D8;
+    border-top: 2px solid #B880C8;
+    margin-top: 4px;
+}
+
+.sticker-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 1px;
+    padding: 3px 2px 4px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.12s;
+    min-height: 44px;
+}
+.sticker-btn:hover {
+    background: rgba(255,255,255,0.2);
+    border-radius: 3px;
+}
+.sticker-btn:active {
+    transform: scale(0.93);
+    background: rgba(255,255,255,0.3);
+}
+
+/* sticker 文字标签 */
+.sticker-label {
+    font-size: 10px;
+    font-family: 'DotGothic16', 'Microsoft YaHei', sans-serif;
+    line-height: 1;
+    image-rendering: pixelated;
+}
+
+/* sticker PNG overlay (原版 stamp, 不存在时自动 fallback 到下方 CSS pixel cat) */
+.sticker-img-wrap {
+    position: relative;
+    display: inline-block;
+    width: 32px;
+    height: 32px;
+}
+.sticker-png {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    image-rendering: pixelated;
+    pointer-events: none;
+    max-width: 36px;
+    max-height: 36px;
+}
+
+/* ============================================================
+   CSS 像素猫 (8 变体)
+   基准: 3px 单元格, box-shadow 绘制, #FFA8C8 粉
+   ============================================================ */
+.pixel-cat {
+    position: relative;
+    width: 3px; height: 3px;
+    background: #FFA8C8;
+    /* 默认坐姿猫 — "好" */
+    box-shadow:
+        /* 耳朵 */
+        6px 0 0 #FFA8C8, 9px 0 0 #FFA8C8, 18px 0 0 #FFA8C8, 21px 0 0 #FFA8C8,
+        /* 头顶 + 耳根 */
+        3px 3px 0 #FFA8C8, 6px 3px 0 #FFA8C8, 9px 3px 0 #FFA8C8, 12px 3px 0 #FFA8C8,
+        15px 3px 0 #FFA8C8, 18px 3px 0 #FFA8C8, 21px 3px 0 #FFA8C8, 24px 3px 0 #FFA8C8,
+        /* 脸 */
+        3px 6px 0 #FFA8C8, 6px 6px 0 #FFA8C8, 9px 6px 0 #FFA8C8, 12px 6px 0 #FFA8C8,
+        15px 6px 0 #FFA8C8, 18px 6px 0 #FFA8C8, 21px 6px 0 #FFA8C8, 24px 6px 0 #FFA8C8,
+        /* 眼行（留空给眼睛） */
+        3px 9px 0 #FFA8C8, 6px 9px 0 #FFA8C8, 12px 9px 0 #FFA8C8,
+        15px 9px 0 #FFA8C8, 21px 9px 0 #FFA8C8, 24px 9px 0 #FFA8C8,
+        /* 眼下 */
+        3px 12px 0 #FFA8C8, 6px 12px 0 #FFA8C8, 9px 12px 0 #FFA8C8, 12px 12px 0 #FFA8C8,
+        15px 12px 0 #FFA8C8, 18px 12px 0 #FFA8C8, 21px 12px 0 #FFA8C8, 24px 12px 0 #FFA8C8,
+        /* 脸颊 */
+        6px 15px 0 #FFA8C8, 9px 15px 0 #FFA8C8, 18px 15px 0 #FFA8C8, 21px 15px 0 #FFA8C8,
+        /* 下巴 */
+        6px 18px 0 #FFA8C8, 9px 18px 0 #FFA8C8, 12px 18px 0 #FFA8C8,
+        15px 18px 0 #FFA8C8, 18px 18px 0 #FFA8C8,
+        /* 身体 */
+        9px 21px 0 #FFA8C8, 12px 21px 0 #FFA8C8, 15px 21px 0 #FFA8C8,
+        /* 爪子 */
+        6px 24px 0 #FFA8C8, 21px 24px 0 #FFA8C8;
+}
+/* 黑色眼睛（覆盖在眼行） */
+.pixel-cat::after {
+    content: '';
+    position: absolute;
+    width: 3px; height: 3px;
+    background: #333;
+    /* (9,9) 和 (18,9) */
+    box-shadow: 9px 0 0 #333;
+    top: 9px; left: 9px;
+}
+
+/* --- 猫变体 2: 举手 "太强了" --- */
+.pixel-cat.v2 {
+    box-shadow:
+        6px 0 0 #FFA8C8, 9px 0 0 #FFA8C8, 18px 0 0 #FFA8C8, 21px 0 0 #FFA8C8,
+        3px 3px 0 #FFA8C8, 6px 3px 0 #FFA8C8, 9px 3px 0 #FFA8C8, 12px 3px 0 #FFA8C8,
+        15px 3px 0 #FFA8C8, 18px 3px 0 #FFA8C8, 21px 3px 0 #FFA8C8, 24px 3px 0 #FFA8C8,
+        3px 6px 0 #FFA8C8, 6px 6px 0 #FFA8C8, 9px 6px 0 #FFA8C8, 12px 6px 0 #FFA8C8,
+        15px 6px 0 #FFA8C8, 18px 6px 0 #FFA8C8, 21px 6px 0 #FFA8C8, 24px 6px 0 #FFA8C8,
+        3px 9px 0 #FFA8C8, 6px 9px 0 #FFA8C8, 12px 9px 0 #FFA8C8,
+        15px 9px 0 #FFA8C8, 21px 9px 0 #FFA8C8, 24px 9px 0 #FFA8C8,
+        /* 举手: 胳膊向上 */
+        0px 9px 0 #FFA8C8, 27px 9px 0 #FFA8C8,
+        0px 6px 0 #FFA8C8, 27px 6px 0 #FFA8C8,
+        3px 12px 0 #FFA8C8, 6px 12px 0 #FFA8C8, 9px 12px 0 #FFA8C8, 12px 12px 0 #FFA8C8,
+        15px 12px 0 #FFA8C8, 18px 12px 0 #FFA8C8, 21px 12px 0 #FFA8C8, 24px 12px 0 #FFA8C8,
+        6px 15px 0 #FFA8C8, 9px 15px 0 #FFA8C8, 18px 15px 0 #FFA8C8, 21px 15px 0 #FFA8C8,
+        6px 18px 0 #FFA8C8, 9px 18px 0 #FFA8C8, 12px 18px 0 #FFA8C8,
+        15px 18px 0 #FFA8C8, 18px 18px 0 #FFA8C8,
+        9px 21px 0 #FFA8C8, 12px 21px 0 #FFA8C8, 15px 21px 0 #FFA8C8,
+        6px 24px 0 #FFA8C8, 21px 24px 0 #FFA8C8;
+}
+.pixel-cat.v2::after { top: 9px; left: 9px; }
+
+/* --- 猫变体 3: 委屈 "嘤嘤" (耷拉耳朵 + 泪滴) --- */
+.pixel-cat.v3 {
+    box-shadow:
+        /* 垂耳 */
+        3px 0 0 #FFA8C8, 6px 0 0 #FFA8C8, 21px 0 0 #FFA8C8, 24px 0 0 #FFA8C8,
+        3px 3px 0 #FFA8C8, 6px 3px 0 #FFA8C8, 9px 3px 0 #FFA8C8, 12px 3px 0 #FFA8C8,
+        15px 3px 0 #FFA8C8, 18px 3px 0 #FFA8C8, 21px 3px 0 #FFA8C8, 24px 3px 0 #FFA8C8,
+        3px 6px 0 #FFA8C8, 6px 6px 0 #FFA8C8, 9px 6px 0 #FFA8C8, 12px 6px 0 #FFA8C8,
+        15px 6px 0 #FFA8C8, 18px 6px 0 #FFA8C8, 21px 6px 0 #FFA8C8, 24px 6px 0 #FFA8C8,
+        3px 9px 0 #FFA8C8, 6px 9px 0 #FFA8C8, 12px 9px 0 #FFA8C8,
+        15px 9px 0 #FFA8C8, 21px 9px 0 #FFA8C8, 24px 9px 0 #FFA8C8,
+        3px 12px 0 #FFA8C8, 6px 12px 0 #FFA8C8, 9px 12px 0 #FFA8C8, 12px 12px 0 #FFA8C8,
+        15px 12px 0 #FFA8C8, 18px 12px 0 #FFA8C8, 21px 12px 0 #FFA8C8, 24px 12px 0 #FFA8C8,
+        6px 15px 0 #FFA8C8, 9px 15px 0 #FFA8C8, 18px 15px 0 #FFA8C8, 21px 15px 0 #FFA8C8,
+        6px 18px 0 #FFA8C8, 9px 18px 0 #FFA8C8, 12px 18px 0 #FFA8C8,
+        15px 18px 0 #FFA8C8, 18px 18px 0 #FFA8C8,
+        9px 21px 0 #FFA8C8, 12px 21px 0 #FFA8C8, 15px 21px 0 #FFA8C8,
+        6px 24px 0 #FFA8C8, 21px 24px 0 #FFA8C8;
+}
+.pixel-cat.v3::after {
+    /* 泪滴 + 垂眼 */
+    top: 9px; left: 9px;
+    width: 3px; height: 6px;
+    background: #60A0FF;
+    box-shadow: 9px -3px 0 #60A0FF, 6px 0 0 #333, 15px 0 0 #333;
+    border-radius: 0;
+}
+
+/* --- 猫变体 4: 抓狂 "关我屁事" (歪头 + 皱眉) --- */
+.pixel-cat.v4 {
+    box-shadow:
+        9px 0 0 #FFA8C8, 12px 0 0 #FFA8C8, 18px 0 0 #FFA8C8, 21px 0 0 #FFA8C8,
+        6px 3px 0 #FFA8C8, 9px 3px 0 #FFA8C8, 12px 3px 0 #FFA8C8,
+        15px 3px 0 #FFA8C8, 18px 3px 0 #FFA8C8, 21px 3px 0 #FFA8C8, 24px 3px 0 #FFA8C8,
+        3px 6px 0 #FFA8C8, 6px 6px 0 #FFA8C8, 9px 6px 0 #FFA8C8, 12px 6px 0 #FFA8C8,
+        15px 6px 0 #FFA8C8, 18px 6px 0 #FFA8C8, 21px 6px 0 #FFA8C8, 24px 6px 0 #FFA8C8,
+        3px 9px 0 #FFA8C8, 6px 9px 0 #FFA8C8, 12px 9px 0 #FFA8C8,
+        15px 9px 0 #FFA8C8, 21px 9px 0 #FFA8C8, 24px 9px 0 #FFA8C8,
+        3px 12px 0 #FFA8C8, 6px 12px 0 #FFA8C8, 9px 12px 0 #FFA8C8, 12px 12px 0 #FFA8C8,
+        15px 12px 0 #FFA8C8, 18px 12px 0 #FFA8C8, 21px 12px 0 #FFA8C8, 24px 12px 0 #FFA8C8,
+        6px 15px 0 #FFA8C8, 9px 15px 0 #FFA8C8, 18px 15px 0 #FFA8C8, 21px 15px 0 #FFA8C8,
+        6px 18px 0 #FFA8C8, 9px 18px 0 #FFA8C8, 12px 18px 0 #FFA8C8,
+        15px 18px 0 #FFA8C8, 18px 18px 0 #FFA8C8,
+        9px 21px 0 #FFA8C8, 12px 21px 0 #FFA8C8, 15px 21px 0 #FFA8C8,
+        6px 24px 0 #FFA8C8, 21px 24px 0 #FFA8C8;
+}
+.pixel-cat.v4::after {
+    /* 倒V怒眉 */
+    top: 7px; left: 8px;
+    width: 3px; height: 3px;
+    background: #333;
+    box-shadow: 12px -2px 0 #333, 6px 4px 0 #333, 15px 4px 0 #333;
+    border-radius: 0;
+}
+
+/* --- 猫变体 5: 低头 "抱歉抱歉" (头降低) --- */
+.pixel-cat.v5 {
+    box-shadow:
+        6px 3px 0 #FFA8C8, 9px 3px 0 #FFA8C8, 18px 3px 0 #FFA8C8, 21px 3px 0 #FFA8C8,
+        3px 6px 0 #FFA8C8, 6px 6px 0 #FFA8C8, 9px 6px 0 #FFA8C8, 12px 6px 0 #FFA8C8,
+        15px 6px 0 #FFA8C8, 18px 6px 0 #FFA8C8, 21px 6px 0 #FFA8C8, 24px 6px 0 #FFA8C8,
+        3px 9px 0 #FFA8C8, 6px 9px 0 #FFA8C8, 9px 9px 0 #FFA8C8, 12px 9px 0 #FFA8C8,
+        15px 9px 0 #FFA8C8, 18px 9px 0 #FFA8C8, 21px 9px 0 #FFA8C8, 24px 9px 0 #FFA8C8,
+        3px 12px 0 #FFA8C8, 6px 12px 0 #FFA8C8, 12px 12px 0 #FFA8C8,
+        15px 12px 0 #FFA8C8, 21px 12px 0 #FFA8C8, 24px 12px 0 #FFA8C8,
+        3px 15px 0 #FFA8C8, 6px 15px 0 #FFA8C8, 9px 15px 0 #FFA8C8, 12px 15px 0 #FFA8C8,
+        15px 15px 0 #FFA8C8, 18px 15px 0 #FFA8C8, 21px 15px 0 #FFA8C8, 24px 15px 0 #FFA8C8,
+        6px 18px 0 #FFA8C8, 9px 18px 0 #FFA8C8, 18px 18px 0 #FFA8C8, 21px 18px 0 #FFA8C8,
+        6px 21px 0 #FFA8C8, 9px 21px 0 #FFA8C8, 12px 21px 0 #FFA8C8,
+        15px 21px 0 #FFA8C8, 18px 21px 0 #FFA8C8,
+        9px 24px 0 #FFA8C8, 12px 24px 0 #FFA8C8, 15px 24px 0 #FFA8C8,
+        6px 27px 0 #FFA8C8, 21px 27px 0 #FFA8C8;
+}
+.pixel-cat.v5::after {
+    top: 12px; left: 9px;
+    width: 3px; height: 3px;
+    background: #333;
+    box-shadow: 9px 0 0 #333;
+}
+
+/* --- 猫变体 6: 躺平 "原地去世" (横躺) --- */
+.pixel-cat.v6 {
+    box-shadow:
+        3px 3px 0 #FFA8C8, 6px 3px 0 #FFA8C8, 9px 3px 0 #FFA8C8, 12px 3px 0 #FFA8C8,
+        15px 3px 0 #FFA8C8, 18px 3px 0 #FFA8C8, 21px 3px 0 #FFA8C8, 24px 3px 0 #FFA8C8,
+        3px 6px 0 #FFA8C8, 6px 6px 0 #FFA8C8, 9px 6px 0 #FFA8C8, 12px 6px 0 #FFA8C8,
+        15px 6px 0 #FFA8C8, 18px 6px 0 #FFA8C8, 21px 6px 0 #FFA8C8, 24px 6px 0 #FFA8C8,
+        6px 9px 0 #FFA8C8, 9px 9px 0 #FFA8C8, 18px 9px 0 #FFA8C8, 21px 9px 0 #FFA8C8,
+        6px 12px 0 #FFA8C8, 12px 12px 0 #FFA8C8, 15px 12px 0 #FFA8C8, 21px 12px 0 #FFA8C8,
+        6px 15px 0 #FFA8C8, 9px 15px 0 #FFA8C8,
+        18px 15px 0 #FFA8C8, 21px 15px 0 #FFA8C8,
+        9px 18px 0 #FFA8C8, 12px 18px 0 #FFA8C8, 15px 18px 0 #FFA8C8,
+        9px 21px 0 #FFA8C8, 12px 21px 0 #FFA8C8, 15px 21px 0 #FFA8C8;
+}
+.pixel-cat.v6::after {
+    /* X 眼表示去世 */
+    top: 11px; left: 8px;
+    width: 3px; height: 3px;
+    background: #333;
+    box-shadow: 3px -3px 0 #333, -3px 3px 0 #333, 12px -3px 0 #333, 6px 3px 0 #333;
+    border-radius: 0;
+}
+
+/* --- 猫变体 7: 爱心 "永远爱你" --- */
+.pixel-cat.v7 {
+    box-shadow:
+        6px 0 0 #FFA8C8, 9px 0 0 #FFA8C8, 18px 0 0 #FFA8C8, 21px 0 0 #FFA8C8,
+        3px 3px 0 #FFA8C8, 6px 3px 0 #FFA8C8, 9px 3px 0 #FFA8C8, 12px 3px 0 #FFA8C8,
+        15px 3px 0 #FFA8C8, 18px 3px 0 #FFA8C8, 21px 3px 0 #FFA8C8, 24px 3px 0 #FFA8C8,
+        3px 6px 0 #FFA8C8, 6px 6px 0 #FFA8C8, 9px 6px 0 #FFA8C8, 12px 6px 0 #FFA8C8,
+        15px 6px 0 #FFA8C8, 18px 6px 0 #FFA8C8, 21px 6px 0 #FFA8C8, 24px 6px 0 #FFA8C8,
+        3px 9px 0 #FFA8C8, 6px 9px 0 #FFA8C8, 12px 9px 0 #FFA8C8,
+        15px 9px 0 #FFA8C8, 21px 9px 0 #FFA8C8, 24px 9px 0 #FFA8C8,
+        3px 12px 0 #FFA8C8, 6px 12px 0 #FFA8C8, 9px 12px 0 #FFA8C8, 12px 12px 0 #FFA8C8,
+        15px 12px 0 #FFA8C8, 18px 12px 0 #FFA8C8, 21px 12px 0 #FFA8C8, 24px 12px 0 #FFA8C8,
+        6px 15px 0 #FFA8C8, 9px 15px 0 #FFA8C8, 18px 15px 0 #FFA8C8, 21px 15px 0 #FFA8C8,
+        6px 18px 0 #FFA8C8, 9px 18px 0 #FFA8C8, 12px 18px 0 #FFA8C8,
+        15px 18px 0 #FFA8C8, 18px 18px 0 #FFA8C8,
+        9px 21px 0 #FFA8C8, 12px 21px 0 #FFA8C8, 15px 21px 0 #FFA8C8,
+        6px 24px 0 #FFA8C8, 21px 24px 0 #FFA8C8;
+}
+.pixel-cat.v7::after {
+    /* 爱心眼 */
+    top: 8px; left: 8px;
+    width: 5px; height: 5px;
+    background: #FF6080;
+    box-shadow: 10px 0 0 #FF6080;
+    clip-path: polygon(50% 0%, 100% 30%, 80% 70%, 50% 100%, 20% 70%, 0% 30%);
+}
+
+/* --- 猫变体 8: 奔跑 "啊对对" (倾斜 + 速度线) --- */
+.pixel-cat.v8 {
+    transform: rotate(-8deg);
+    box-shadow:
+        9px 0 0 #FFA8C8, 12px 0 0 #FFA8C8, 18px 0 0 #FFA8C8, 21px 0 0 #FFA8C8,
+        6px 3px 0 #FFA8C8, 9px 3px 0 #FFA8C8, 12px 3px 0 #FFA8C8,
+        15px 3px 0 #FFA8C8, 18px 3px 0 #FFA8C8, 21px 3px 0 #FFA8C8, 24px 3px 0 #FFA8C8,
+        3px 6px 0 #FFA8C8, 6px 6px 0 #FFA8C8, 9px 6px 0 #FFA8C8, 12px 6px 0 #FFA8C8,
+        15px 6px 0 #FFA8C8, 18px 6px 0 #FFA8C8, 21px 6px 0 #FFA8C8, 24px 6px 0 #FFA8C8,
+        3px 9px 0 #FFA8C8, 6px 9px 0 #FFA8C8, 12px 9px 0 #FFA8C8,
+        15px 9px 0 #FFA8C8, 21px 9px 0 #FFA8C8, 24px 9px 0 #FFA8C8,
+        3px 12px 0 #FFA8C8, 6px 12px 0 #FFA8C8, 9px 12px 0 #FFA8C8, 12px 12px 0 #FFA8C8,
+        15px 12px 0 #FFA8C8, 18px 12px 0 #FFA8C8, 21px 12px 0 #FFA8C8, 24px 12px 0 #FFA8C8,
+        6px 15px 0 #FFA8C8, 9px 15px 0 #FFA8C8, 18px 15px 0 #FFA8C8, 21px 15px 0 #FFA8C8,
+        6px 18px 0 #FFA8C8, 9px 18px 0 #FFA8C8,
+        /* 跑动: 腿分开 */
+        12px 18px 0 #FFA8C8, 15px 18px 0 #FFA8C8, 18px 18px 0 #FFA8C8,
+        9px 21px 0 #FFA8C8, 12px 21px 0 #FFA8C8, 15px 21px 0 #FFA8C8,
+        3px 24px 0 #FFA8C8, 24px 24px 0 #FFA8C8;
+}
+.pixel-cat.v8::after {
+    top: 9px; left: 9px;
+    width: 3px; height: 3px;
+    background: #333;
+    box-shadow: 9px 0 0 #333;
+}
+
+/* ============================================================
+   CSS 像素糖糖表情 (6 变体) — 糖糖专属
+   12×12 像素圆脸，4px 单元格
+   ============================================================ */
+.ame-pixel {
+    position: relative;
+    width: 4px; height: 4px;
+    background: #FFB8C8;
+    box-shadow:
+        8px 0 0 #FFB8C8, 12px 0 0 #FFB8C8, 16px 0 0 #FFB8C8, 20px 0 0 #FFB8C8, 24px 0 0 #FFB8C8, 28px 0 0 #FFB8C8, 32px 0 0 #FFB8C8,
+        4px 4px 0 #FFB8C8, 8px 4px 0 #FFB8C8, 12px 4px 0 #FFB8C8, 16px 4px 0 #FFB8C8, 20px 4px 0 #FFB8C8, 24px 4px 0 #FFB8C8, 28px 4px 0 #FFB8C8, 32px 4px 0 #FFB8C8, 36px 4px 0 #FFB8C8,
+        4px 8px 0 #FFB8C8, 8px 8px 0 #FFB8C8, 12px 8px 0 #FFB8C8, 16px 8px 0 #FFB8C8, 20px 8px 0 #FFB8C8, 24px 8px 0 #FFB8C8, 28px 8px 0 #FFB8C8, 32px 8px 0 #FFB8C8, 36px 8px 0 #FFB8C8,
+        4px 12px 0 #FFB8C8, 12px 12px 0 #FFB8C8, 16px 12px 0 #FFB8C8, 20px 12px 0 #FFB8C8, 24px 12px 0 #FFB8C8, 28px 12px 0 #FFB8C8, 36px 12px 0 #FFB8C8,
+        4px 16px 0 #FFB8C8, 8px 16px 0 #FFB8C8, 12px 16px 0 #FFB8C8, 16px 16px 0 #FFB8C8, 20px 16px 0 #FFB8C8, 24px 16px 0 #FFB8C8, 28px 16px 0 #FFB8C8, 32px 16px 0 #FFB8C8, 36px 16px 0 #FFB8C8,
+        4px 20px 0 #FFB8C8, 8px 20px 0 #FFB8C8, 12px 20px 0 #FFB8C8, 16px 20px 0 #FFB8C8, 20px 20px 0 #FFB8C8, 24px 20px 0 #FFB8C8, 28px 20px 0 #FFB8C8, 32px 20px 0 #FFB8C8, 36px 20px 0 #FFB8C8,
+        4px 24px 0 #FFB8C8, 8px 24px 0 #FFB8C8, 12px 24px 0 #FFB8C8, 16px 24px 0 #FFB8C8, 20px 24px 0 #FFB8C8, 24px 24px 0 #FFB8C8, 28px 24px 0 #FFB8C8, 32px 24px 0 #FFB8C8, 36px 24px 0 #FFB8C8,
+        4px 28px 0 #FFB8C8, 8px 28px 0 #FFB8C8, 12px 28px 0 #FFB8C8, 16px 28px 0 #FFB8C8, 20px 28px 0 #FFB8C8, 24px 28px 0 #FFB8C8, 28px 28px 0 #FFB8C8, 32px 28px 0 #FFB8C8, 36px 28px 0 #FFB8C8,
+        8px 32px 0 #FFB8C8, 12px 32px 0 #FFB8C8, 16px 32px 0 #FFB8C8, 20px 32px 0 #FFB8C8, 24px 32px 0 #FFB8C8, 28px 32px 0 #FFB8C8, 32px 32px 0 #FFB8C8;
+}
+.ame-pixel::after {
+    content: '';
+    position: absolute;
+    width: 4px; height: 4px;
+    top: 12px; left: 12px;
+    background: #333;
+    box-shadow: 12px 0 0 #333, -4px 8px 0 #333, 4px 8px 0 #333, 8px 8px 0 #333, 12px 8px 0 #333, 16px 8px 0 #333;
+}
+
+.ame-pixel.ame-pixel-tsun::after {
+    background: #333;
+    box-shadow: 8px 1px 0 #333, 12px 1px 0 #333, -2px 8px 0 #333, 4px 10px 0 #333, 16px 9px 0 #333;
+}
+
+.ame-pixel.ame-pixel-pien::after {
+    background: #333;
+    width: 7px; height: 7px;
+    box-shadow: 12px 0 0 #333, 0px 12px 0 #60A0FF, 2px 12px 0 #60A0FF;
+}
+
+.ame-pixel.ame-pixel-blush::after {
+    background: transparent;
+    box-shadow: 4px 2px 0 #FF6080, 16px 2px 0 #FF6080, 8px 4px 0 #333, 16px 4px 0 #333, 8px 14px 0 #FF6080, 12px 14px 0 #FF6080;
+}
+
+.ame-pixel.ame-pixel-dead {
+    background: #D0D0D0;
+    box-shadow:
+        8px 0 0 #D0D0D0, 12px 0 0 #D0D0D0, 16px 0 0 #D0D0D0, 20px 0 0 #D0D0D0, 24px 0 0 #D0D0D0, 28px 0 0 #D0D0D0, 32px 0 0 #D0D0D0,
+        4px 4px 0 #D0D0D0, 8px 4px 0 #D0D0D0, 12px 4px 0 #D0D0D0, 16px 4px 0 #D0D0D0, 20px 4px 0 #D0D0D0, 24px 4px 0 #D0D0D0, 28px 4px 0 #D0D0D0, 32px 4px 0 #D0D0D0, 36px 4px 0 #D0D0D0,
+        4px 8px 0 #D0D0D0, 8px 8px 0 #D0D0D0, 12px 8px 0 #D0D0D0, 16px 8px 0 #D0D0D0, 20px 8px 0 #D0D0D0, 24px 8px 0 #D0D0D0, 28px 8px 0 #D0D0D0, 32px 8px 0 #D0D0D0, 36px 8px 0 #D0D0D0,
+        4px 12px 0 #D0D0D0, 12px 12px 0 #D0D0D0, 16px 12px 0 #D0D0D0, 20px 12px 0 #D0D0D0, 24px 12px 0 #D0D0D0, 28px 12px 0 #D0D0D0, 36px 12px 0 #D0D0D0,
+        4px 16px 0 #D0D0D0, 8px 16px 0 #D0D0D0, 12px 16px 0 #D0D0D0, 16px 16px 0 #D0D0D0, 20px 16px 0 #D0D0D0, 24px 16px 0 #D0D0D0, 28px 16px 0 #D0D0D0, 32px 16px 0 #D0D0D0, 36px 16px 0 #D0D0D0,
+        4px 20px 0 #D0D0D0, 8px 20px 0 #D0D0D0, 12px 20px 0 #D0D0D0, 16px 20px 0 #D0D0D0, 20px 20px 0 #D0D0D0, 24px 20px 0 #D0D0D0, 28px 20px 0 #D0D0D0, 32px 20px 0 #D0D0D0, 36px 20px 0 #D0D0D0,
+        4px 24px 0 #D0D0D0, 8px 24px 0 #D0D0D0, 12px 24px 0 #D0D0D0, 16px 24px 0 #D0D0D0, 20px 24px 0 #D0D0D0, 24px 24px 0 #D0D0D0, 28px 24px 0 #D0D0D0, 32px 24px 0 #D0D0D0, 36px 24px 0 #D0D0D0,
+        4px 28px 0 #D0D0D0, 8px 28px 0 #D0D0D0, 12px 28px 0 #D0D0D0, 16px 28px 0 #D0D0D0, 20px 28px 0 #D0D0D0, 24px 28px 0 #D0D0D0, 28px 28px 0 #D0D0D0, 32px 28px 0 #D0D0D0, 36px 28px 0 #D0D0D0,
+        8px 32px 0 #D0D0D0, 12px 32px 0 #D0D0D0, 16px 32px 0 #D0D0D0, 20px 32px 0 #D0D0D0, 24px 32px 0 #D0D0D0, 28px 32px 0 #D0D0D0, 32px 32px 0 #D0D0D0;
+}
+.ame-pixel.ame-pixel-dead::after {
+    background: #666;
+    width: 4px; height: 4px;
+    box-shadow: 4px -4px 0 #666, -4px 4px 0 #666, 12px -4px 0 #666, 4px 4px 0 #666;
+}
+
+.ame-pixel.ame-pixel-shock::after {
+    background: #333;
+    width: 6px; height: 6px;
+    top: 10px; left: 10px;
+    box-shadow: 14px 0 0 #333, 6px 12px 0 #333, 10px 12px 0 #333;
+}
+
+/* ============================================================
+   JINE 标题栏 (游戏还原)
+   ============================================================ */
+.jine-titlebar {
+    background: #D8A8E8;
+    padding: 4px 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #C898D8;
+    font-family: 'DotGothic16', 'Microsoft YaHei', sans-serif;
+}
+.jine-titlebar .jine-logo {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: bold;
+}
+.jine-titlebar .jine-logo .square {
+    width: 14px; height: 14px;
+    background: #6088D8;
+    border: 1px solid rgba(0,0,0,0.15);
+}
+.jine-titlebar .window-btns {
+    display: flex;
+    gap: 2px;
+}
+.jine-titlebar .window-btns span {
+    width: 16px; height: 14px;
+    background: rgba(255,255,255,0.4);
+    border: 1px solid rgba(0,0,0,0.1);
+    text-align: center;
+    font-size: 8px;
+    line-height: 14px;
+    color: rgba(0,0,0,0.5);
+}
+
+/* JINE 整体屏幕（含标题栏 + 聊天区 + 回复栏） */
+.jine-screen {
+    background: linear-gradient(180deg, #F8A8E8 0%, #E898D8 100%);
+    border: 2px solid #C898D8;
+    border-top: none;
+}
 
 /* LIVE WIDGET */
 .live-widget { margin-bottom:1rem; background:rgba(0,0,0,0.5); border:2px solid #333; padding:0.5rem 0.8rem; display:flex; align-items:center; justify-content:space-between; }
@@ -123,15 +731,16 @@ body {
 @keyframes livePulse { 0%,100%{opacity:1;box-shadow:0 0 4px red} 50%{opacity:0.3;box-shadow:0 0 12px red} }
 .live-text { color:red; font-size:0.75rem; font-weight:bold; }
 .live-viewers { color:#ccc; font-size:0.7rem; }
-.danmaku-bar { height:26px; overflow:hidden; position:relative; margin-bottom:1rem; border-bottom:1px solid #333; }
-.danmaku-wrap { position:absolute; white-space:nowrap; display:flex; align-items:center; gap:4px; animation:scrollR 10s linear infinite; }
-.danmaku-text { font-size:0.65rem; color:#aaa; pointer-events:none; }
+.danmaku-bar { height:34px; overflow:hidden; position:relative; margin-bottom:1rem; border-bottom:1px solid #333; cursor:default; }
+.danmaku-wrap { position:absolute; white-space:nowrap; display:flex; align-items:center; gap:5px; will-change:transform; animation:scrollR linear forwards; padding:2px 4px; border-radius:3px; transition:background 0.15s; }
+.danmaku-wrap:hover { animation-play-state:paused !important; background:rgba(255,0,0,0.08); z-index:10; }
+.danmaku-text { font-size:0.65rem; color:#aaa; pointer-events:none; line-height:1.4; }
 .danmaku-text.fan { color:var(--pink); text-shadow:0 0 4px rgba(255,105,180,0.3); }
 .danmaku-text.hate { color:#ccc; }
-.danmaku-trash { display:none; width:14px; height:16px; cursor:pointer; opacity:0.7; flex-shrink:0; }
-.danmaku-trash:hover { opacity:1; transform:scale(1.15); }
-.danmaku-wrap:hover .danmaku-text.hate ~ .danmaku-trash { display:inline-block; }
-@keyframes scrollR { from { transform:translateX(720px); } to { transform:translateX(-250px); } }
+.danmaku-text.hate:hover { color:#ff4444; text-shadow:0 0 6px rgba(255,0,0,0.6); }
+.danmaku-trash { display:inline-block; width:16px; height:18px; cursor:crosshair; opacity:0.65; flex-shrink:0; transition:opacity 0.15s,transform 0.15s; }
+.danmaku-trash:hover { opacity:1; transform:scale(1.2); }
+@keyframes scrollR { from { transform:translateX(105vw); } to { transform:translateX(-150vw); } }
 /* pixel trash can drawn with CSS */
 .pixel-trash { display:inline-block; width:16px; height:18px; image-rendering:pixelated; position:relative; }
 .pixel-trash::before { content:''; position:absolute; top:0;left:2px;width:12px;height:3px;background:#999;
@@ -139,8 +748,6 @@ body {
 .pixel-trash::after { content:''; position:absolute; top:4px;left:3px;width:10px;height:12px;background:#888;
     box-shadow: 0 1px 0 #777, 0 2px 0 #999, 1px 0 0 #666, -1px 0 0 #666; }
 .pixel-trash-body { position:absolute; top:8px;left:3px;width:10px;height:2px;background:#aaa; }
-.danmaku-wrap:hover .pixel-trash { opacity:1; }
-@keyframes scroll { from { transform:translateX(700px); } to { transform:translateX(-200px); } }
 @keyframes flyToTrash { 0% { opacity:1; transform:scale(1); } 50% { opacity:0.5; transform:scale(0.3) translateY(-20px); } 100% { opacity:0; transform:scale(0) translateY(-40px); } }
 .danmaku-wrap.trashed { animation:flyToTrash 0.4s ease-out forwards; pointer-events:none; }
 
@@ -163,10 +770,27 @@ body {
 .f7-btn .count { font-size:0.6rem; color:var(--purple); display:block; margin-top:2px; }
 @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-3px)} 75%{transform:translateX(3px)} }
 .f7-btn.shaking { animation:shake 0.3s ease; }
+.static-badge {
+    display: none;
+    text-align: center;
+    padding: 3px 8px;
+    font-size: 0.55rem;
+    color: rgba(255,255,255,0.4);
+    font-family: 'DotGothic16', sans-serif;
+}
 
 /* EMPTY */
 .empty-state { text-align:center; padding:3rem 1rem; color:var(--purple); }
 .empty-state .icon { font-size:3rem; margin-bottom:1rem; animation:float 3s ease-in-out infinite; }
+
+/* 静态模式提示 */
+.static-notice {
+    text-align: center;
+    padding: 10px;
+    font-size: 0.6rem;
+    color: rgba(0,0,0,0.3);
+    font-family: 'DotGothic16', sans-serif;
+}
 @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
 .empty-state p { font-size:0.85rem; opacity:0.7; }
 
@@ -181,16 +805,16 @@ body {
 
 <div class="header">
     <h1>† Poketter †</h1>
-    <div class="subtitle"><span class="status-dot"></span> LIVE v2.0</div>
+    <div class="subtitle"><span class="status-dot"></span> LIVE v2.2</div>
 </div>
 
 <!-- STATUS BAR -->
 <div class="status-bar">
-    <div class="status-item"><img src="img/icon_status_follower_res.png"><span>Followers</span><span class="val" id="stat-f">999K</span></div>
-    <div class="status-item"><img src="img/icon_status_love_res.png"><span>Affection</span><div class="bar-wrap"><div class="bar-fill love" id="bar-love" style="width:65%"></div></div><span class="val" style="font-size:0.6rem;color:var(--pink);">78</span></div>
-    <div class="status-item"><img src="img/icon_status_stress_res.png"><span>Stress</span><div class="bar-wrap"><div class="bar-fill stress" id="bar-stress" style="width:42%"></div></div></div>
-    <div class="status-item"><img src="img/icon_status_yami_res.png"><span>Darkness</span><div class="bar-wrap"><div class="bar-fill yami" id="bar-yami" style="width:55%"></div></div></div>
-</div>
+	    <div class="status-item"><img src="img/icon_status_follower_res.png"><span>Followers</span><span class="val" id="stat-f">999K</span></div>
+	    <div class="status-item"><img src="img/icon_status_stress_res.png"><span>Stress</span><div class="bar-wrap"><div class="bar-fill stress" id="bar-stress" style="width:42%"></div></div><span class="val" id="stat-stress">42</span></div>
+	    <div class="status-item"><img src="img/icon_status_love_res.png"><span>Affection</span><div class="bar-wrap"><div class="bar-fill love" id="bar-love" style="width:65%"></div></div><span class="val" id="stat-love">78</span></div>
+	    <div class="status-item"><img src="img/icon_status_yami_res.png"><span>Darkness</span><div class="bar-wrap"><div class="bar-fill yami" id="bar-yami" style="width:55%"></div></div><span class="val" id="stat-yami">55</span></div>
+	</div>
 
 <!-- LIVE WIDGET -->
 <div class="live-widget">
@@ -208,7 +832,7 @@ body {
 </div>
 
 <!-- F7 BUTTON -->
-<div class="f7-area"><button class="f7-btn" id="f7-btn" onclick="doRelease()">[ F7 ] 戳一戳 ✨<span class="count" id="f7-count">--</span></button></div>
+<div class="f7-area" id="f7-area"><button class="f7-btn" id="f7-btn" onclick="doRelease()">[ F7 ] 戳一戳 ✨<span class="count" id="f7-count">--</span></button></div><div class="static-badge" id="static-badge">📡 只读模式 · GitHub Pages</div>
 
 <!-- TABS -->
 <div class="tabs">
@@ -226,7 +850,7 @@ body {
 <!-- TRASH CAN -->
 <div class="trash-widget"><div class="trash-can" id="trash-can"><span class="pixel-trash" style="transform:scale(2);"></span></div><div class="trash-count" id="trash-count">0</div><div class="trash-label">TRASH</div></div>
 
-<div class="footer"><div class="divider"></div>超天酱日常推文小站 · v2.0<br>游戏素材 © WSS playground / xemono</div>
+<div class="footer"><div class="divider"></div>超天酱日常推文小站 · v2.2<br>游戏素材 © WSS playground / xemono</div>
 
 </div>
 </div>
@@ -238,12 +862,54 @@ var CONTAINER = document.getElementById('feed-container');
 var ACTIVE_TAB = 'all';
 var knownBatches = {};
 var firstLoad = true;
+var isStaticMode = false;
 var poolRemaining = 0;
+var affectionLevel = 78; // Dynamic affection based on chat
 
 var choSelfies = ['cho_angel','cho_happy','cho_start','cho_sleepy','cho_cosplay','cho_pray','cho_yami','cho_akkanbe','cho_sorrow'];
 var ameSelfies = ['ame_home','ame_happy','ame_talk','ame_game','ame_cool','ame_home2','ame_sorrow','ame_cry'];
 
 function pickSelfie(list, idx) { return list[idx % list.length]; }
+
+// F8 JINE Interactive Chat — 游戏原版 2×4 猫咪 sticker
+var STICKERS = [
+    {id:'sticker_1', label:'好',      color:'#FF6060', catVar:'v1', pngFile:'stamp_good.png'},
+    {id:'sticker_2', label:'太强了',  color:'#FFA060', catVar:'v2', pngFile:'stamp_strong.png'},
+    {id:'sticker_3', label:'嘤嘤',    color:'#60A0FF', catVar:'v3', pngFile:'stamp_cry.png'},
+    {id:'sticker_4', label:'关我屁事',color:'#FFFFFF', catVar:'v4', pngFile:'stamp_ignore.png'},
+    {id:'sticker_5', label:'抱歉抱歉',color:'#888888', catVar:'v5', pngFile:'stamp_sorry.png'},
+    {id:'sticker_6', label:'原地去世',color:'#888888', catVar:'v6', pngFile:'stamp_dead.png'},
+    {id:'sticker_7', label:'永远爱你',color:'#FF88C8', catVar:'v7', pngFile:'stamp_love.png'},
+    {id:'sticker_8', label:'啊对对',  color:'#FFFFFF', catVar:'v8', pngFile:'stamp_yeah.png'}
+];
+
+// 糖糖专属贴图池（只由糖糖在回复中发送，不出现在底部 sticker 栏）
+var AME_STICKERS = [
+    // 糖糖像素表情
+    {id:'ame_smile', label:'', color:'#FFA8C8', cssClass:'ame-pixel-smile', pngFile:'stamp_ame_smile.png'},
+    {id:'ame_tsun',  label:'', color:'#FF88B8', cssClass:'ame-pixel-tsun',  pngFile:'stamp_ame_tsun.png'},
+    {id:'ame_pien',  label:'', color:'#88B8FF', cssClass:'ame-pixel-pien',  pngFile:'stamp_ame_pien.png'},
+    {id:'ame_blush', label:'', color:'#FF8090', cssClass:'ame-pixel-blush', pngFile:'stamp_ame_blush.png'},
+    {id:'ame_dead',  label:'', color:'#AAA',    cssClass:'ame-pixel-dead',  pngFile:'stamp_ame_dead.png'},
+    {id:'ame_shock', label:'', color:'#FFD060', cssClass:'ame-pixel-shock', pngFile:'stamp_ame_shock.png'},
+    // 猫咪贴图（糖糖也能发）
+    {id:'cat_good',   label:'好',     color:'#FF6060', catVar:'v1', pngFile:'stamp_cat_good.png'},
+    {id:'cat_strong', label:'太强了', color:'#FFA060', catVar:'v2', pngFile:'stamp_cat_strong.png'},
+    {id:'cat_cry',    label:'嘤嘤',   color:'#60A0FF', catVar:'v3', pngFile:'stamp_cat_cry.png'},
+    {id:'cat_ignore', label:'关我屁事',color:'#FFFFFF',catVar:'v4', pngFile:'stamp_cat_ignore.png'},
+    {id:'cat_sorry',  label:'抱歉抱歉',color:'#888888',catVar:'v5', pngFile:'stamp_cat_sorry.png'},
+    {id:'cat_love',   label:'永远爱你',color:'#FF88C8',catVar:'v7', pngFile:'stamp_cat_love.png'},
+    {id:'cat_yeah',   label:'啊对对', color:'#FFFFFF',catVar:'v8', pngFile:'stamp_cat_yeah.png'},
+];
+
+// 统一贴图查询
+function findSticker(id) {
+    var s = STICKERS.find(function(st) { return st.id === id; });
+    if (s) return s;
+    return (AME_STICKERS.find(function(st) { return st.id === id; }) || null);
+}
+var jineChatMsgs = [];
+var jineSending = false;
 
 // Danmaku pool
 var danmakuPool = {
@@ -258,21 +924,23 @@ var DANMAKU_COUNT = 5;
 function initDanmaku() {
     var bar = document.getElementById('danmaku-bar');
 
-    // Event delegation: one click handler for all trash icons
+    // Event delegation: click on any part of a hate danmaku = trash it (hover pauses it for easy targeting)
     bar.addEventListener('click', function(e) {
-        var trash = e.target.closest('.danmaku-trash');
-        if (!trash) return;
-        e.stopPropagation();
-        var wrap = trash.closest('.danmaku-wrap');
-        if (wrap) trashDanmaku(wrap);
+        var wrap = e.target.closest('.danmaku-wrap');
+        if (!wrap) return;
+        if (wrap.querySelector('.danmaku-trash')) {
+            e.stopPropagation();
+            trashDanmaku(wrap);
+        }
     });
 
-    var positions = [2, 7, 12, 17, 22]; // 5 danmaku evenly spaced in 26px bar
+    var positions = [1, 7, 13, 19, 25]; // 5 danmaku spread across 34px bar
     for (var i = 0; i < DANMAKU_COUNT; i++) {
         var wrap = document.createElement('span');
         wrap.className = 'danmaku-wrap';
         wrap.style.top = positions[i] + 'px';
-        wrap.style.animationDuration = (8 + Math.random() * 8) + 's';
+        wrap.style.left = '110vw'; // start off-screen right
+        wrap.style.animation = 'scrollR linear infinite ' + (18 + Math.random() * 10) + 's';
         wrap.style.animationDelay = (Math.random() * 10) + 's';
 
         spawnDanmakuContent(wrap);
@@ -286,7 +954,7 @@ function initDanmaku() {
 function spawnDanmakuContent(wrap) {
     // Clear existing
     wrap.innerHTML = '';
-    var isHate = Math.random() < 0.3;
+    var isHate = Math.random() < 0.15;
     var pool = isHate ? danmakuPool.hate : danmakuPool.fan;
 
     var textEl = document.createElement('span');
@@ -308,6 +976,9 @@ function refreshDanmaku() {
         if (Math.random() < 0.25) {
             spawnDanmakuContent(wrap);
         }
+        wrap.style.animation = 'none';
+        wrap.offsetHeight;
+        wrap.style.animation = 'scrollR linear infinite ' + (18 + Math.random() * 10) + 's';
     });
 }
 
@@ -353,9 +1024,23 @@ setInterval(jiggleLive, 3000);
 // Stats jiggle
 function jiggleStats() {
     document.getElementById('stat-f').textContent = (980 + Math.floor(Math.random()*50)) + 'K';
-    document.getElementById('bar-love').style.width = (54 + Math.floor(Math.random()*20)) + '%';
-    document.getElementById('bar-stress').style.width = (30 + Math.floor(Math.random()*40)) + '%';
-    document.getElementById('bar-yami').style.width = (35 + Math.floor(Math.random()*45)) + '%';
+    var sv = 30 + Math.floor(Math.random()*40);
+    document.getElementById('bar-stress').style.width = sv + '%';
+    var ss = document.getElementById('stat-stress'); if (ss) ss.textContent = sv;
+    var lv = 54 + Math.floor(Math.random()*20);
+    document.getElementById('bar-love').style.width = lv + '%';
+    var sl = document.getElementById('stat-love'); if (sl) sl.textContent = lv;
+    var yv = 35 + Math.floor(Math.random()*45);
+    document.getElementById('bar-yami').style.width = yv + '%';
+    var sy = document.getElementById('stat-yami'); if (sy) sy.textContent = yv;
+}
+
+function updateAffection(delta) {
+    affectionLevel = Math.max(0, Math.min(100, affectionLevel + delta));
+    var sl = document.getElementById('stat-love');
+    if (sl) sl.textContent = affectionLevel;
+    var bl = document.getElementById('bar-love');
+    if (bl) bl.style.width = affectionLevel + '%';
 }
 
 // Tab switching
@@ -363,6 +1048,11 @@ function switchTab(tab) {
     ACTIVE_TAB = tab;
     document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.toggle('active', b.dataset.tab === tab); });
     document.querySelectorAll('.desktop-icon').forEach(function(i) { i.classList.toggle('active', i.dataset.tab === tab); });
+    // Update window title based on active tab
+    var titleSpan = document.querySelector('.win95-titlebar span');
+    if (titleSpan) {
+        titleSpan.textContent = tab === 'jine' ? 'JINE' : '推博 / Poketter';
+    }
     renderFromCache();
 }
 
@@ -388,6 +1078,58 @@ function renderFromCache() {
 
 // Render
 function renderFeed(items) {
+    // JINE tab always renders the chat screen (even without timeline items)
+    if (ACTIVE_TAB === 'jine') {
+        items = items || [];
+        var html = '<div class="jine-screen">';
+        html = '<div class="jine-screen">'; // wrapper with game-accurate pink gradient bg
+
+        // JINE title bar
+        html += '<div class="jine-titlebar"><div class="jine-logo"><span class="square"></span> JINE</div><div class="window-btns"><span>─</span><span>□</span><span>✕</span></div></div>';
+
+        // Date divider
+        html += '<div class="jine-date-divider"><span>日常</span></div>';
+
+        // Timeline-generated JINE messages
+        html += '<div class="jine-chat">';
+        if (items.length === 0) {
+            html += '<div class="empty-state"><p style="font-size:0.7rem;color:rgba(0,0,0,0.4);">糖糖还没发消息...</p></div>';
+        } else {
+            items.forEach(function(e) {
+                if (e.type === 'system') {
+                    html += '<div class="jine-system-msg recall">' + esc(e.text) + '</div>';
+                } else {
+                    html += '<div class="jine-msg ame"><div class="jine-avatar"><img src="img/icon_ame.png"></div><div><span class="time">' + esc(e.time||'') + '</span><div class="bubble">' + esc(e.text) + '</div></div></div>';
+                }
+            });
+        }
+        html += '</div>';
+
+        // Interactive chat section (hidden in static/GitHub Pages mode)
+        if (!isStaticMode) {
+            html += '<div class="jine-interactive">';
+            html += '<div class="jine-interactive-label">— 阿P 的聊天 —</div>';
+            html += '<div class="jine-chat-msgs" id="jine-chat-msgs"></div>';
+            html += '<div class="jine-typing" id="jine-typing" style="display:none">糖糖正在输入<span class="dots"><span></span><span></span><span></span></span></div>';
+            html += '<div class="sticker-bar" id="sticker-bar"></div>';
+            html += '<div class="jine-text-area"><input type="text" class="jine-text-input" id="jine-text-input" placeholder="给糖糖发消息..." maxlength="80"><button class="jine-text-send" id="jine-text-send" onclick="sendText()">发送</button></div>';
+            html += '</div>';
+        } else {
+            html += '<div class="static-notice">— JINE 互动在只读模式下不可用 —</div>';
+        }
+
+        html += '</div>'; // .jine-screen
+
+        CONTAINER.innerHTML = html;
+
+        // Render sticker bar once DOM is in place
+        renderStickerBar();
+        renderJineChatMsgs();
+        fetchJineChat();
+        return;
+    }
+
+    // Non-JINE rendering (ALL / Diary)
     if (!items || items.length === 0) {
         CONTAINER.innerHTML = '<div class="empty-state"><div class="icon">👼</div><p>等待超天酱上线...</p></div>';
         return;
@@ -396,17 +1138,6 @@ function renderFeed(items) {
     var html = '';
     var lastBatch = '';
 
-    // For JINE tab, render as chat bubbles
-    if (ACTIVE_TAB === 'jine') {
-        html = '<div class="jine-chat">';
-        items.forEach(function(e) {
-            html += '<div class="jine-msg sent"><span class="time">' + esc(e.time||'') + '</span><div class="bubble">' + esc(e.text) + '</div></div>';
-        });
-        html += '</div>';
-        CONTAINER.innerHTML = html;
-        return;
-    }
-
     items.forEach(function(e, i) {
         // Batch divider
         if (e.batch_id && e.batch_id !== lastBatch && e.layer !== 'jine') {
@@ -414,15 +1145,17 @@ function renderFeed(items) {
             lastBatch = e.batch_id;
         }
 
-        var dayN = Math.floor(i / 3) + 1;
+        var absIdx = cachedTimeline.indexOf(e);
+	        if (absIdx < 0) absIdx = i;
+	        var dayN = Math.max(1, Math.ceil((cachedTimeline.length - absIdx) / 3));
         if (e.layer === 'poketter') {
             var selfie = 'img/' + pickSelfie(choSelfies, i) + '.png';
             var likes = Math.floor(dayN * 12 + Math.random() * 30);
             var rts = Math.floor(dayN * 4 + Math.random() * 15);
             html += '<div class="tweet-pair"><div class="card-kangel kangel-card">' +
                 '<div class="card-header"><div class="avatar"><img src="img/icon_cho.png"></div>' +
-                '<div><div class="username">🎀超绝最可爱🎁天使酱 <span class="badge">✨认证</span></div>' +
-                '<div class="timestamp">@x_angelkawaii_x · 第' + dayN + '天 · ' + esc(e.time||'') + '</div></div></div>' +
+                '<div style="flex:1"><div class="username">🎀超绝最可爱🎁天使酱 <span class="badge">✨认证</span><span class="at-user">    @x_angelkawaii_x</span></div>' +
+                '<div class="timestamp">第' + dayN + '天 · ' + esc(e.time||'') + '</div></div></div>' +
                 '<div class="card-body">' + esc(e.text) + '</div>' +
                 '<div class="card-selfie"><img src="' + selfie + '" onerror="this.style.display=\'none\'"></div>' +
                 '<div class="card-actions"><span>⭐ ' + likes + '</span><span>🔁 ' + rts + '</span></div>' +
@@ -430,10 +1163,10 @@ function renderFeed(items) {
         } else if (e.layer === 'diary') {
             html += '<div class="tweet-pair"><div class="card-ame ame-card">' +
                 '<div class="card-header"><div class="avatar"><img src="img/icon_ame.png"></div>' +
-                '<div><div class="username">💙糖糖💙</div>' +
-                '<div class="timestamp">@raincandy_U · 第' + dayN + '天 · ' + esc(e.time||'') + '</div></div></div>' +
+                '<div style="flex:1"><div class="username">💙糖糖💙<span class="at-user">    @raincandy_U</span></div>' +
+                '<div class="timestamp">第' + dayN + '天 · ' + esc(e.time||'') + '</div></div></div>' +
                 '<div class="card-body">' + esc(e.text) + '</div>' +
-                '<div class="card-actions"><span>💬 ' + rnd(0,2) + '</span></div>' +
+                '<div class="card-actions"><span>💬 0</span></div>' +
                 '</div></div>';
         }
     });
@@ -463,12 +1196,32 @@ function fetchTimeline() {
             renderFromCache();
         }
     }).catch(function(err) {
-        console.error('Feed error:', err);
-        if (firstLoad) {
-            CONTAINER.innerHTML = '<div class="empty-state"><div class="icon">💤</div><p>超天酱暂时失联...</p></div>';
-            firstLoad = false;
-        }
+        console.warn('API unavailable, trying static mode:', err.message);
+        // Fallback: try loading feed.json directly (GitHub Pages)
+        fetch('data/feed.json').then(function(r) { return r.json(); }).then(function(data) {
+            isStaticMode = true;
+            cachedTimeline = data.timeline || [];
+            poolRemaining = 0;
+            updatePoolCount();
+            if (firstLoad) { renderFromCache(); firstLoad = false; enterStaticMode(); }
+        }).catch(function(err2) {
+            console.error('Static fallback also failed:', err2);
+            if (firstLoad) {
+                CONTAINER.innerHTML = '<div class="empty-state"><div class="icon">💤</div><p>超天酱暂时失联...</p></div>';
+                firstLoad = false;
+            }
+        });
     });
+}
+
+function enterStaticMode() {
+    // Hide interactive features that require the Python server
+    var f7 = document.getElementById('f7-area');
+    if (f7) f7.style.display = 'none';
+    // Show readonly badge
+    var badge = document.getElementById('static-badge');
+    if (badge) badge.style.display = 'block';
+    // Note: JINE interactive section is skipped by renderFromCache() when isStaticMode is true
 }
 
 function updatePoolCount() {
@@ -478,7 +1231,9 @@ function updatePoolCount() {
 
 // F7 Release
 window.doRelease = function() {
+    if (isStaticMode) return;  // No server in static/GitHub Pages mode
     var btn = document.getElementById('f7-btn');
+    if (!btn) return;
     btn.classList.add('shaking');
     btn.textContent = '...';
     btn.disabled = true;
@@ -486,10 +1241,23 @@ window.doRelease = function() {
         if (data.ok) {
             fetchTimeline();
             btn.textContent = '已发送! ✨';
+            // 糖糖看到新动态后主动给阿P发 JINE 消息
+            var jineMsgs = data.jine_msgs || [];
+            setTimeout(function() {
+                jineMsgs.forEach(function(msg, i) {
+                    setTimeout(function() {
+                        jineChatMsgs.push({
+                            time: msg.time || '', reply: msg.reply || '',
+                            ame_sticker: msg.ame_sticker || null,
+                            player_text: '', sticker: ''
+                        });
+                        if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
+                    }, i * 2000 + 600);
+                });
+            }, 800);
             setTimeout(function() { btn.textContent = '[ F7 ] 戳一戳 ✨'; btn.disabled = false; btn.classList.remove('shaking'); }, 2000);
         } else {
             btn.textContent = '生成中...';
-            // Trigger generation then retry
             fetch(API + '/api/generate', { method: 'POST', body: '{}' }).then(function() {
                 fetchTimeline();
                 btn.textContent = '[ F7 ] 戳一戳 ✨';
@@ -505,8 +1273,254 @@ window.doRelease = function() {
 
 // F7 keyboard shortcut
 document.addEventListener('keydown', function(e) {
-    if (e.key === 'F7') { e.preventDefault(); doRelease(); }
+    if (e.key === 'F7' && !isStaticMode) { e.preventDefault(); doRelease(); }
 });
+
+// Global error handler: hide sticker-png images that fail to load
+// (no inline onerror needed — avoids quoting hell)
+document.addEventListener('error', function(e) {
+    if (e.target.classList && e.target.classList.contains('sticker-png')) {
+        e.target.style.display = 'none';
+    }
+}, true);
+
+// ============================================================
+// F8: JINE Interactive Chat
+// ============================================================
+
+function renderStickerBar() {
+    var bar = document.getElementById('sticker-bar');
+    if (!bar) return;
+    bar.innerHTML = '';
+    STICKERS.forEach(function(s) {
+        var btn = document.createElement('button');
+        btn.className = 'sticker-btn';
+        btn.title = s.label;
+        // Colored text label
+        var labelEl = document.createElement('span');
+        labelEl.className = 'sticker-label';
+        labelEl.style.color = s.color;
+        labelEl.textContent = s.label;
+        btn.appendChild(labelEl);
+        // Image wrapper: CSS pixel cat base + PNG overlay
+        var wrap = document.createElement('span');
+        wrap.className = 'sticker-img-wrap';
+        // CSS pixel cat (always rendered as base fallback)
+        var catEl = document.createElement('span');
+        catEl.className = 'pixel-cat ' + s.catVar;
+        wrap.appendChild(catEl);
+        // PNG stamp overlay (hides CSS cat when loaded)
+        var imgEl = document.createElement('img');
+        imgEl.className = 'sticker-png';
+        imgEl.src = 'img/stamps/' + s.pngFile;
+        imgEl.onerror = function() { this.style.display = 'none'; };
+        imgEl.alt = s.label;
+        wrap.appendChild(imgEl);
+        btn.appendChild(wrap);
+        btn.addEventListener('click', function() {
+            if (!jineSending) sendSticker(s.id);
+        });
+        bar.appendChild(btn);
+    });
+}
+
+function stickerHTML(stickerId) {
+    var s = findSticker(stickerId);
+    if (!s) return '';
+    var cssClass = s.cssClass || ('pixel-cat ' + (s.catVar || ''));
+    var isAme = s.cssClass && s.cssClass.indexOf('ame-pixel') === 0;
+    var label = s.label ? '<span class="sticker-label" style="color:' + s.color + '">' + esc(s.label) + '</span><br>' : '';
+    return label +
+        '<span class="sticker-img-wrap' + (isAme ? ' ame-sticker-wrap' : '') + '">' +
+        '<span class="' + cssClass + (isAme ? ' ame-pixel' : '') + '"></span>' +
+        '<img class="sticker-png" src="img/stamps/' + s.pngFile + '" alt="">' +
+        '</span>';
+}
+
+function renderJineChatMsgs() {
+    var container = document.getElementById('jine-chat-msgs');
+    if (!container) return;
+    var html = '';
+    jineChatMsgs.forEach(function(msg) {
+        // 阿P贴图 或 阿P文字
+        if (msg.sticker) {
+            html += '<div class="jine-msg p">';
+            html += '<div class="sticker-content">';
+            html += stickerHTML(msg.sticker);
+            html += '</div></div>';
+            html += '<div class="jine-read-receipt">已读</div>';
+        } else if (msg.player_text) {
+            html += '<div class="jine-msg p-text">';
+            html += '<div class="bubble player-text-bubble">' + esc(msg.player_text) + '</div>';
+            html += '</div>';
+            html += '<div class="jine-read-receipt">已读</div>';
+        }
+        if (msg.recall) {
+            html += '<div class="jine-system-msg recall">糖糖撤回了一条消息</div>';
+        }
+        // 糖糖回复贴图（如有）-- 左对齐带头像
+        if (msg.ame_sticker) {
+            html += '<div class="jine-msg ame-sticker">';
+            html += '<div class="jine-avatar"><img src="img/icon_ame.png"></div>';
+            html += '<div><div class="ame-sticker-bubble">';
+            html += stickerHTML(msg.ame_sticker);
+            html += '</div></div>';
+            html += '</div>';
+        }
+        // 糖糖回复文字
+        if (msg.reply) {
+            html += '<div class="jine-msg ame">';
+            html += '<div class="jine-avatar"><img src="img/icon_ame.png"></div>';
+            html += '<div><span class="time">' + esc(msg.time||'') + '</span><div class="bubble">' + esc(msg.reply) + '</div></div>';
+            html += '</div>';
+        }
+    });
+    container.innerHTML = html;
+    container.scrollTop = container.scrollHeight;
+}
+
+// F8b: 发送文字消息
+window.sendText = function() {
+    var input = document.getElementById('jine-text-input');
+    if (!input) return;
+    var text = input.value.trim();
+    if (!text || jineSending) return;
+    input.value = '';
+    input.disabled = true;
+
+    jineSending = true;
+    var now = new Date();
+    var timeStr = ('0' + now.getHours()).slice(-2) + ':' + ('0' + now.getMinutes()).slice(-2);
+
+    // Optimistic UI
+    jineChatMsgs.push({ time: timeStr, player_text: text, reply: '', recall: false });
+    if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
+
+    // Typing indicator
+    var typingEl = document.getElementById('jine-typing');
+    setTimeout(function() {
+        if (typingEl) typingEl.style.display = 'flex';
+    }, 800 + Math.random() * 800);
+
+    // API call
+    fetch(API + '/api/jine/text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: text })
+    }).then(function(r) { return r.json(); }).then(function(data) {
+        var last = jineChatMsgs[jineChatMsgs.length - 1];
+        if (last && !last.reply) {
+            last.reply = data.reply || '';
+            last.ame_sticker = data.ame_sticker || null;
+            last.time = data.time;
+            last.recall = data.recall || false;
+        }
+        var delay = 1200 + Math.random() * 1500;
+        setTimeout(function() {
+            if (typingEl) typingEl.style.display = 'none';
+            if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
+            jineSending = false;
+            input.disabled = false;
+            input.focus();
+        }, delay);
+    }).catch(function() {
+        if (typingEl) typingEl.style.display = 'none';
+        var last = jineChatMsgs[jineChatMsgs.length - 1];
+        if (last && !last.reply) {
+            last.reply = ['...', '嗯', '哼', '说完了？', '哦'][Math.floor(Math.random() * 5)];
+        }
+        if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
+        jineSending = false;
+        input.disabled = false;
+    });
+}
+
+// Load persisted JINE chat history from server
+function fetchJineChat() {
+    fetch(API + '/api/jine/chat').then(function(r) { return r.json(); }).then(function(data) {
+        jineChatMsgs = (data.chat || []).map(function(msg) {
+            return {
+                time: msg.time,
+                sticker: msg.sticker || '',
+                player_text: msg.player_text || '',
+                reply: msg.reply || '',
+                ame_sticker: msg.ame_sticker || null,
+                recall: msg.recall || false
+            };
+        });
+        if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
+    }).catch(function() {});
+}
+
+// Enter key also sends
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && document.activeElement === document.getElementById('jine-text-input') && !jineSending) {
+        sendText();
+    }
+});
+
+function sendSticker(stickerId) {
+    jineSending = true;
+    var sticker = STICKERS.find(function(s) { return s.id === stickerId; });
+    if (!sticker) { jineSending = false; return; }
+
+    var now = new Date();
+    var timeStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+
+    // Show sticker immediately (with "已读" rendered below by renderJineChatMsgs)
+    jineChatMsgs.push({
+        time: timeStr,
+        sticker: stickerId,
+        reply: '',
+        recall: false
+    });
+    if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
+
+    // Show "糖糖正在输入..." after ~2s
+    var typingEl = document.getElementById('jine-typing');
+    var container = document.getElementById('jine-chat-msgs');
+    setTimeout(function() {
+        if (ACTIVE_TAB === 'jine' && typingEl) {
+            typingEl.style.display = 'flex';
+            if (container) container.scrollTop = container.scrollHeight;
+        }
+    }, 1500 + Math.random() * 1000);
+
+    // Send to API
+    fetch(API + '/api/jine/send', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({sticker: stickerId})
+    }).then(function(r) { return r.json(); }).then(function(data) {
+        if (!data.ok) throw new Error(data.error);
+
+        // Update last message with reply
+        var last = jineChatMsgs[jineChatMsgs.length - 1];
+        if (last && !last.reply) {
+            last.reply = data.reply || '';
+            last.ame_sticker = data.ame_sticker || null;
+            last.time = data.time || last.time;
+            last.recall = data.recall || false;
+        }
+
+        // Delay showing reply for typing realism
+        setTimeout(function() {
+            if (typingEl) typingEl.style.display = 'none';
+            if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
+            jineSending = false;
+        }, 1200 + Math.random() * 1500);
+    }).catch(function(err) {
+        console.error('JINE send error:', err);
+        if (typingEl) typingEl.style.display = 'none';
+        var fallbacks = ['...','嗯','好...吧','知道了','算了'];
+        var last = jineChatMsgs[jineChatMsgs.length - 1];
+        if (last && !last.reply) {
+            last.reply = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+        }
+        if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
+        jineSending = false;
+    });
+}
 
 // Init
 initDanmaku();
@@ -514,8 +1528,11 @@ jiggleLive();
 jiggleStats();
 setInterval(jiggleStats, 15000);
 fetchTimeline();
-setInterval(fetchTimeline, 30000);
-console.log('+ Poketter v2.0 ready +');
+// Static mode: no polling (content generated by GitHub Actions)
+if (!isStaticMode) {
+    setInterval(fetchTimeline, 30000);
+}
+console.log('+ Poketter v2.3 ready +');
 })();
 </script>
 </body>

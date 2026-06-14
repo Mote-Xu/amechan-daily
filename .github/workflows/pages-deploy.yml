@@ -1,0 +1,56 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'static/**'
+      - 'data/**'
+      - '.github/workflows/pages-deploy.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Prepare artifact
+        run: |
+          mkdir -p _site/img _site/data
+          # 核心前端
+          cp static/index.html _site/
+          # 头像 + 自拍 + 图标
+          cp static/img/icon_cho.png _site/img/
+          cp static/img/icon_ame.png _site/img/
+          cp static/img/cho_*.png _site/img/
+          cp static/img/ame_*.png _site/img/
+          cp static/img/icon_status_*.png _site/img/
+          cp static/img/JINE_amechan.png _site/img/
+          cp static/img/cursor_*.png _site/img/ 2>/dev/null || true
+          cp static/img/icon_kusoripu_*.png _site/img/ 2>/dev/null || true
+          # stamp PNG（如果有原版 stamp 则复制，否则跳过）
+          cp static/img/stamps/*.png _site/img/ 2>/dev/null || true
+          # 数据文件
+          cp data/feed.json _site/data/
+          # 生成简单的 404 页面（SPA fallback 不需要，纯展示站）
+          echo '<meta http-equiv="refresh" content="0; url=/">' > _site/404.html
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

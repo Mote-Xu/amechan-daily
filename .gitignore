@@ -1,10 +1,19 @@
 # API Key
 .env
 
-# Generated data
-data/
+# Generated data (but track feed.json for GitHub Actions)
+data/*
+!data/feed.json
 
 # Python
 __pycache__/
 *.pyc
 *.pyo
+
+# Extracted game sprites (607 unnamed files, too large)
+static/img/extracted/
+static/img/stamp_candidates/
+
+# OS
+.DS_Store
+Thumbs.db

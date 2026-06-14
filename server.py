@@ -14,9 +14,9 @@ from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 from urllib.parse import urlparse
 
-from config import HOST, PORT, STATIC_DIR
-from feed import get_timeline, pool_count, pop_from_pool, feed_count, clear_feed
-from generator import generate_and_save, generate_single
+from config import HOST, PORT, STATIC_DIR, DATA_DIR
+from feed import get_timeline, pool_count, pop_from_pool, feed_count, clear_feed, save_jine_message, get_jine_chat
+from generator import generate_and_save, generate_single, generate_jine_reply, generate_jine_text_reply
 
 
 class AmechanHandler(SimpleHTTPRequestHandler):
@@ -74,8 +74,21 @@ class AmechanHandler(SimpleHTTPRequestHandler):
             timeline = get_timeline()
             pool = pool_count()
             self._send_json({"count": len(timeline), "pool": pool, "feed": timeline})
+        elif path == "/api/jine/chat":
+            chat = get_jine_chat()
+            self._send_json({"chat": chat})
         elif path == "/api/stats":
             self._send_json({"count": feed_count(), "pool": pool_count(), "status": "ok"})
+        elif path == "/data/feed.json":
+            # Static mode fallback: serve feed.json directly
+            feed_path = DATA_DIR / "feed.json"
+            if feed_path.exists():
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(feed_path.read_bytes())
+            else:
+                self._send_json({"timeline": [], "hidden_pool": [], "jine_chat": []})
         else:
             super().do_GET()
 
@@ -114,15 +127,36 @@ class AmechanHandler(SimpleHTTPRequestHandler):
             entry = pop_from_pool()
             if entry:
                 print(f"  [OK] 释放: [{entry['layer']}] {entry['text'][:40]}... (剩余 {pool_count()})")
-                self._send_json({"ok": True, "entry": entry, "pool_remaining": pool_count()})
+                # 糖糖看到新动态后主动给阿P发 JINE 消息（2-3条）
+                jine_msgs = []
+                event_text = entry.get('text', '刚才的动态')[:30]
+                prompt_texts = [
+                    f"（糖糖刚发了一条动态：「{event_text}」，她看完之后想跟阿P说点什么）",
+                    "（糖糖又想起一件事，继续给阿P发消息）",
+                ]
+                for pt in prompt_texts:
+                    try:
+                        reply, stamp = generate_jine_text_reply(pt)
+                        msg = save_jine_message(reply=reply, ame_sticker=stamp, player_text="")
+                        jine_msgs.append({"reply": reply, "ame_sticker": stamp, "time": msg.get("time", time.strftime("%H:%M"))})
+                    except Exception:
+                        pass
+                self._send_json({"ok": True, "entry": entry, "pool_remaining": pool_count(), "jine_msgs": jine_msgs})
             else:
                 print("  [!] hidden_pool 已空，尝试生成...")
                 try:
                     data = generate_and_save()
-                    # 从新的 hidden_pool 再试一次
                     entry2 = pop_from_pool()
                     if entry2:
-                        self._send_json({"ok": True, "entry": entry2, "pool_remaining": pool_count(), "regenerated": True})
+                        jine_msgs = []
+                        event_text = entry2.get('text', '刚才的动态')[:30]
+                        try:
+                            reply, stamp = generate_jine_text_reply(f"（糖糖刚发了一条动态：「{event_text}」，她主动给阿P发消息）")
+                            msg = save_jine_message(reply=reply, ame_sticker=stamp, player_text="")
+                            jine_msgs.append({"reply": reply, "ame_sticker": stamp, "time": msg.get("time", time.strftime("%H:%M"))})
+                        except Exception:
+                            pass
+                        self._send_json({"ok": True, "entry": entry2, "pool_remaining": pool_count(), "regenerated": True, "jine_msgs": jine_msgs})
                     else:
                         self._send_json({"ok": False, "error": "pool exhausted after regenerate"}, status=500)
                 except Exception as e:
@@ -133,21 +167,73 @@ class AmechanHandler(SimpleHTTPRequestHandler):
             print("\n[*] 数据已清空")
             self._send_json({"ok": True})
 
+        elif path == "/api/jine/send":
+            try:
+                content_length = int(self.headers.get("Content-Length", 0))
+                body_raw = self.rfile.read(content_length) if content_length else b"{}"
+                body = json.loads(body_raw.decode("utf-8")) if body_raw else {}
+            except json.JSONDecodeError:
+                body = {}
+
+            sticker = body.get("sticker", "")
+            if not sticker:
+                self._send_json({"ok": False, "error": "missing sticker"}, status=400)
+                return
+
+            print(f"\n[*] POST /api/jine/send | sticker: {sticker}")
+
+            try:
+                reply, ame_sticker = generate_jine_reply(sticker)
+                msg = save_jine_message(sticker, reply, ame_sticker)
+                resp = {"ok": True, "sticker": sticker, "reply": reply, "time": msg.get("time"), "recall": msg.get("recall", False)}
+                if ame_sticker:
+                    resp["ame_sticker"] = ame_sticker
+                self._send_json(resp)
+            except Exception as e:
+                print(f"  [X] JINE 回复失败: {e}")
+                self._send_json({"ok": False, "error": str(e)}, status=500)
+
+        elif path == "/api/jine/text":
+            try:
+                content_length = int(self.headers.get("Content-Length", 0))
+                body_raw = self.rfile.read(content_length) if content_length else b"{}"
+                body = json.loads(body_raw.decode("utf-8")) if body_raw else {}
+            except json.JSONDecodeError:
+                body = {}
+
+            player_text = body.get("text", "").strip()
+            if not player_text:
+                self._send_json({"ok": False, "error": "missing text"}, status=400)
+                return
+
+            print(f"\n[*] POST /api/jine/text | text: {player_text[:30]}...")
+
+            try:
+                reply, ame_sticker = generate_jine_text_reply(player_text)
+                msg = save_jine_message(reply=reply, ame_sticker=ame_sticker, player_text=player_text)
+                resp = {"ok": True, "player_text": player_text, "reply": reply, "time": msg.get("time"), "recall": msg.get("recall", False)}
+                if ame_sticker:
+                    resp["ame_sticker"] = ame_sticker
+                self._send_json(resp)
+            except Exception as e:
+                print(f"  [X] JINE 文字回复失败: {e}")
+                self._send_json({"ok": False, "error": str(e)}, status=500)
+
         else:
             self.send_error(404, "Not Found")
 
 
 def main():
-    from config import DATA_DIR
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
     print("=" * 50)
-    print("  + Poketter v2.0 -- 三层时间线 +")
+    print("  + Poketter v2.2 -- 三层时间线 + JINE互动 +")
     print("=" * 50)
     print(f"  地址: http://{HOST}:{PORT}")
     print(f"  API:  GET  /api/timeline  -> 获取时间线")
     print(f"       POST /api/generate   -> 生成新批次")
     print(f"       POST /api/release    -> F7 释放 hidden_pool")
+    print(f"       POST /api/jine/send  -> F8 JINE 互动聊天")
     print("=" * 50)
 
     if feed_count() == 0:
