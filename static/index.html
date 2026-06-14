@@ -1741,7 +1741,7 @@ function updatePoolCount() {
 
 // F7 Release
 window.doRelease = function() {
-    if (isStaticMode) return;  // No server in static/GitHub Pages mode
+    if (isStaticMode) return;
     var btn = document.getElementById('f7-btn');
     if (!btn) return;
     btn.classList.add('shaking');
@@ -1749,18 +1749,27 @@ window.doRelease = function() {
     btn.disabled = true;
     fetch(API + '/api/release', { method: 'POST' }).then(function(r) { return r.json(); }).then(function(data) {
         if (data.ok) {
+            var entries = data.entries || [];
+            // Save to current save slot
+            for (var n = 0; n < entries.length; n++) {
+                SaveManager.incrementFeedCursor();
+                SaveManager.addReleasedEntry(entries[n]);
+            }
+            updateSaveIndicator();
             fetchTimeline();
             btn.textContent = '已发送! ✨';
-            // 糖糖看到新动态后主动给阿P发 JINE 消息
+            // JINE follow-up messages
             var jineMsgs = data.jine_msgs || [];
             setTimeout(function() {
                 jineMsgs.forEach(function(msg, i) {
                     setTimeout(function() {
-                        jineChatMsgs.push({
+                        var chatMsg = {
                             time: msg.time || '', reply: msg.reply || '',
                             ame_sticker: msg.ame_sticker || null,
                             player_text: '', sticker: ''
-                        });
+                        };
+                        jineChatMsgs.push(chatMsg);
+                        SaveManager.addJineMessage(chatMsg);
                         if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
                     }, i * 2000 + 600);
                 });
@@ -1770,6 +1779,29 @@ window.doRelease = function() {
             btn.textContent = '生成中...';
             fetch(API + '/api/generate', { method: 'POST', body: '{}' }).then(function() {
                 fetchTimeline();
+                // After regeneration, try release again
+                fetch(API + '/api/release', { method: 'POST' }).then(function(r) { return r.json(); }).then(function(d2) {
+                    if (d2.ok) {
+                        var e2 = d2.entries || [];
+                        for (var n = 0; n < e2.length; n++) {
+                            SaveManager.incrementFeedCursor();
+                            SaveManager.addReleasedEntry(e2[n]);
+                        }
+                        updateSaveIndicator();
+                        fetchTimeline();
+                        var j2 = d2.jine_msgs || [];
+                        setTimeout(function() {
+                            j2.forEach(function(msg, i) {
+                                setTimeout(function() {
+                                    var cm = { time: msg.time||'', reply: msg.reply||'', ame_sticker: msg.ame_sticker||null, player_text:'', sticker:'' };
+                                    jineChatMsgs.push(cm);
+                                    SaveManager.addJineMessage(cm);
+                                    if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
+                                }, i * 2000 + 600);
+                            });
+                        }, 800);
+                    }
+                });
                 btn.textContent = '[ F7 ] 戳一戳 ✨';
                 btn.disabled = false;
                 btn.classList.remove('shaking');
