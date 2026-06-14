@@ -1644,7 +1644,11 @@ function renderFeed(items) {
 
     // Non-JINE rendering (ALL / Diary)
     if (!items || items.length === 0) {
-        CONTAINER.innerHTML = '<div class="empty-state"><div class="icon"><img src="img/icon_cho.png"></div><p>等待超天酱上线...</p></div>';
+        if (ACTIVE_TAB === 'diary') {
+            CONTAINER.innerHTML = '<div class="empty-state"><div class="icon"><img src="img/icon_ame.png"></div><p>糖糖还没写日记...</p></div>';
+        } else {
+            CONTAINER.innerHTML = '<div class="empty-state"><div class="icon"><img src="img/icon_cho.png"></div><p>等待超天酱上线...</p></div>';
+        }
         return;
     }
 
