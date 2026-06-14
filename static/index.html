@@ -1763,8 +1763,9 @@ window.doRelease = function() {
             setTimeout(function() {
                 jineMsgs.forEach(function(msg, i) {
                     setTimeout(function() {
+                        var replyText = (msg.reply && msg.reply !== 'undefined') ? msg.reply : '';
                         var chatMsg = {
-                            time: msg.time || '', reply: msg.reply || '',
+                            time: msg.time || '', reply: replyText,
                             ame_sticker: msg.ame_sticker || null,
                             player_text: '', sticker: ''
                         };
@@ -1793,7 +1794,8 @@ window.doRelease = function() {
                         setTimeout(function() {
                             j2.forEach(function(msg, i) {
                                 setTimeout(function() {
-                                    var cm = { time: msg.time||'', reply: msg.reply||'', ame_sticker: msg.ame_sticker||null, player_text:'', sticker:'' };
+                                    var rt = (msg.reply && msg.reply !== 'undefined') ? msg.reply : '';
+                                    var cm = { time: msg.time||'', reply: rt, ame_sticker: msg.ame_sticker||null, player_text:'', sticker:'' };
                                     jineChatMsgs.push(cm);
                                     SaveManager.addJineMessage(cm);
                                     if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
