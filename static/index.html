@@ -61,11 +61,11 @@ body {
 .desktop-icon.active .icon-box { border-color:var(--pink); }
 
 /* WIN95 WINDOW */
-.win95-outer { background:var(--win-bg); margin-bottom:0.5rem; }
-.win95-titlebar { background:var(--win-title); color:#fff; padding:0.2rem 0.5rem; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; }
+.win95-outer { background:var(--win-bg); margin:0 auto 0.5rem; aspect-ratio:266/388; max-width:500px; max-height:85vh; display:flex; flex-direction:column; overflow:hidden; }
+.win95-titlebar { background:var(--win-title); color:#fff; padding:0.2rem 0.5rem; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; flex-shrink:0; }
 .win95-titlebar .btns { display:flex; gap:2px; }
 .win95-titlebar .btn { background:var(--win-bg); color:#000; padding:0 5px; font-size:0.6rem; border:2px solid #fff; border-right-color:#555; border-bottom-color:#555; }
-.win95-body { background:var(--bg); padding:0.8rem; max-height:55vh; overflow-y:auto; border:2px solid #888; border-top-color:#000; border-left-color:#000; }
+.win95-body { background:var(--bg); padding:0.8rem; flex:1; overflow-y:auto; border:2px solid #888; border-top-color:#000; border-left-color:#000; }
 
 /* TABS */
 .tabs { display:flex; gap:0; margin-bottom:1rem; }
@@ -140,7 +140,7 @@ body {
 .jine-msg { display: flex; margin-bottom: 10px; align-items: flex-end; gap: 6px; }
 
 /* 糖糖消息（左对齐, 带头像 + 气泡尾） */
-.jine-msg.ame { justify-content: flex-start; }
+.jine-msg.ame { justify-content: flex-start; align-items: flex-start; }
 .jine-msg.ame .bubble {
     background: #A0D8F0;
     color: #000;
@@ -169,7 +169,7 @@ body {
 .jine-msg.ame .bubble::before {
     content: '';
     position: absolute;
-    left: -6px; bottom: 6px;
+    left: -6px; top: 10px;
     width: 0; height: 0;
     border-top: 5px solid transparent;
     border-bottom: 5px solid transparent;
@@ -583,7 +583,7 @@ body {
 
 /* --- 猫变体 8: 奔跑 "啊对对" (倾斜 + 速度线) --- */
 .pixel-cat.v8 {
-    transform: rotate(-8deg);
+    transform: translate(-50%,-50%) scale(2.6) rotate(-8deg);
     box-shadow:
         9px 0 0 #FFA8C8, 12px 0 0 #FFA8C8, 18px 0 0 #FFA8C8, 21px 0 0 #FFA8C8,
         6px 3px 0 #FFA8C8, 9px 3px 0 #FFA8C8, 12px 3px 0 #FFA8C8,
@@ -781,7 +781,8 @@ body {
 
 /* EMPTY */
 .empty-state { text-align:center; padding:3rem 1rem; color:var(--purple); }
-.empty-state .icon { font-size:3rem; margin-bottom:1rem; animation:float 3s ease-in-out infinite; }
+.empty-state .icon { margin-bottom:1rem; animation:float 3s ease-in-out infinite; }
+.empty-state .icon img { width:80px; height:80px; image-rendering:pixelated; display:block; margin:0 auto; background:rgba(255,255,255,0.08); border-radius:8px; padding:8px; }
 
 /* 静态模式提示 */
 .static-notice {
@@ -822,6 +823,7 @@ body {
     <span class="live-viewers">👁 <span id="live-count">12,847</span> watching</span>
     <span style="font-size:0.6rem;color:#555;">KAngel Ch.</span>
 </div>
+<div style="height:300px"></div>
 <div class="danmaku-bar" id="danmaku-bar"></div>
 
 <!-- DESKTOP ICONS -->
@@ -920,6 +922,199 @@ function pickDanmaku(pool) { return pool[Math.floor(Math.random() * pool.length)
 var danmakuWraps = [];
 var trashCount = 0;
 var DANMAKU_COUNT = 5;
+
+        // ============================================================
+        // WEBCAM ENGINE v3
+        // ============================================================
+        var WebcamEngine = {
+            canvas: null, ctx: null, currentState: 'smile', frames: [], frameIdx: 0,
+            animId: null, lastTick: 0, interval: 200, menuOpen: false, loopCount: 0, smileTimer: null,
+
+            states: {
+                comic:{count:2,interval:500,label:'Comic'}, egosearching:{count:5,interval:250,label:'Ego Searching'},
+                egosearching_ura:{count:5,interval:250,label:'Dark Ego Search'},
+                hair_drill:{count:2,interval:600,label:'Hair Drill'}, hair_long:{count:2,interval:600,label:'Long Hair'},
+                hair_poney:{count:2,interval:600,label:'Ponytail'}, hair_side:{count:2,interval:600,label:'Side Hair'},
+                handspinner:{count:12,interval:100,label:'Hand Spinner'}, headphone:{count:3,interval:400,label:'Headphones'},
+                henoji:{count:2,interval:500,label:'Henji'}, henoji_dark:{count:2,interval:500,label:'Dark Henji'},
+                movie:{count:5,interval:250,label:'Movie'}, nail:{count:5,interval:300,label:'Nail Biting'},
+                selfie:{count:6,interval:300,label:'Selfie'}, sleep:{count:9,interval:400,label:'Sleeping'},
+                smile:{count:3,interval:350,label:'Smile'}, tv:{count:7,interval:250,label:'TV'},
+                voice_training:{count:8,interval:200,label:'Voice Training'}
+            },
+
+            init: function() {
+                this.canvas = document.getElementById('webcam-canvas');
+                if (!this.canvas) return;
+                this.ctx = this.canvas.getContext('2d');
+                this._sizeCanvas();
+                var saved = null;
+                try { saved = localStorage.getItem('amechan_webcam_state'); } catch(e) {}
+                if (saved && this.states[saved]) this.currentState = saved;
+                this.switchState(this.currentState);
+                this._bindMenu();
+                var self = this;
+                if (this.canvas) {
+                    this.canvas.style.cursor = 'pointer';
+                    this.canvas.addEventListener('click', function(e) { self._onCanvasClick(e); });
+                }
+                new ResizeObserver(function() { self._sizeCanvas(); }).observe(this.canvas.parentNode);
+            },
+
+            _sizeCanvas: function() {
+                var inner = document.getElementById('webcam-inner');
+                if (!inner || !this.canvas) return;
+                var w = inner.clientWidth, h = inner.clientHeight;
+                if (w > 0 && h > 0 && (this.canvas.width !== w || this.canvas.height !== h)) {
+                    this.canvas.width = w; this.canvas.height = h;
+                }
+            },
+
+            switchState: function(stateName) {
+                var state = this.states[stateName];
+                if (!state) return;
+                this.currentState = stateName;
+                this.interval = state.interval;
+                this.frameIdx = 0; this.frames = [];
+                var self = this;
+                for (var i = 0; i < state.count; i++) {
+                    var img = new Image();
+                    var num = String(i).padStart(3, '0');
+                    var size = (stateName === 'movie') ? '696x454' : '348x227';
+                    img.src = 'img/webcam/' + stateName + '/stream_ame_' + stateName + '_' + num + '_' + size + '.png';
+                    self.frames.push(img);
+                }
+                if (this.animId) cancelAnimationFrame(this.animId);
+                if (this.smileTimer) { clearTimeout(this.smileTimer); this.smileTimer = null; }
+                this.loopCount = 0; this.lastTick = 0;
+                this._tick();
+                this._updateMenuHighlight();
+                try { localStorage.setItem('amechan_webcam_state', stateName); } catch(e) {}
+            },
+
+            _tick: function() {
+                var self = this;
+                this.animId = requestAnimationFrame(function(ts) { self._draw(ts); });
+            },
+
+            _draw: function(timestamp) {
+                if (!this.ctx || !this.canvas) return;
+                if (timestamp - this.lastTick < this.interval) { this._tick(); return; }
+                this.lastTick = timestamp;
+                if (this.frames.length === 0) { this._tick(); return; }
+                var img = null, startIdx = this.frameIdx;
+                do {
+                    img = this.frames[this.frameIdx];
+                    this.frameIdx = (this.frameIdx + 1) % this.frames.length;
+                    if (this.frameIdx === 0) {
+                        this.loopCount++;
+                        if (this.loopCount >= 2 && !this.smileTimer) this._autoCycleState();
+                    }
+                    if (img && img.complete && (img.naturalWidth || img.width) > 0) break;
+                    img = null;
+                } while (this.frameIdx !== startIdx);
+                if (!img) { this._tick(); return; }
+                var ctx = this.ctx, cw = this.canvas.width, ch = this.canvas.height;
+                ctx.clearRect(0, 0, cw, ch);
+                var iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+                var scale = Math.min(cw / iw, ch / ih);
+                ctx.drawImage(img, (cw - iw * scale) / 2, (ch - ih * scale) / 2, iw * scale, ih * scale);
+                this._tick();
+            },
+
+            _autoCycleState: function() {
+                var self = this; this.loopCount = 0;
+                var pool = ['smile','selfie','tv','voice_training','egosearching','comic','hair_drill','hair_long','hair_poney','hair_side'];
+                var next = pool[Math.floor(Math.random() * pool.length)];
+                if (next === this.currentState) next = 'smile';
+                setTimeout(function() { self.switchState(next); }, 500 + Math.random() * 1500);
+            },
+
+            _onCanvasClick: function(e) {
+                if (e.target.closest('#webcam-state-menu')) return;
+                var self = this;
+                if (this.smileTimer) clearTimeout(this.smileTimer);
+                if (this.currentState !== 'smile') this.switchState('smile');
+                this.smileTimer = setTimeout(function() {
+                    self.smileTimer = null;
+                    self._autoCycleState();
+                }, 2500 + Math.random() * 1500);
+            },
+
+            _bindMenu: function() {
+                var self = this;
+                var titlebar = document.getElementById('webcam-titlebar');
+                var menu = document.getElementById('webcam-state-menu');
+                if (!titlebar || !menu) return;
+                var html = '';
+                var stateKeys = Object.keys(this.states);
+                for (var i = 0; i < stateKeys.length; i++) {
+                    var key = stateKeys[i], st = this.states[key];
+                    html += '<div class="state-opt" data-state="' + key + '">' + st.label + ' <span style="color:#666;font-size:0.45rem;">(' + st.count + 'f)</span></div>';
+                }
+                menu.innerHTML = html;
+                titlebar.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    self.menuOpen = !self.menuOpen;
+                    menu.classList.toggle('open', self.menuOpen);
+                });
+                menu.addEventListener('click', function(e) {
+                    var opt = e.target.closest('.state-opt');
+                    if (!opt) return;
+                    var state = opt.dataset.state;
+                    if (state) { self.switchState(state); self.menuOpen = false; menu.classList.remove('open'); }
+                });
+                document.addEventListener('click', function() {
+                    if (self.menuOpen) { self.menuOpen = false; menu.classList.remove('open'); }
+                });
+                this._updateMenuHighlight();
+            },
+
+            _updateMenuHighlight: function() {
+                var menu = document.getElementById('webcam-state-menu');
+                if (!menu) return;
+                var opts = menu.querySelectorAll('.state-opt');
+                for (var i = 0; i < opts.length; i++) opts[i].classList.toggle('current', opts[i].dataset.state === this.currentState);
+            },
+
+            autoState: function(stress, affection, darkness) {
+                var ns = this.currentState;
+                if (darkness > 80) ns = ['sleep','egosearching_ura','handspinner','henoji_dark'][Math.floor(Math.random()*4)];
+                else if (stress > 80) ns = ['headphone','nail','henoji_dark','egosearching_ura'][Math.floor(Math.random()*4)];
+                else if (affection > 70 && darkness < 50) ns = ['smile','selfie','comic'][Math.floor(Math.random()*3)];
+                else if (Math.random() < 0.1) ns = ['smile','selfie','tv','voice_training','egosearching','hair_drill'][Math.floor(Math.random()*6)];
+                if (ns !== this.currentState) this.switchState(ns);
+            }
+        };
+
+        // Init webcam
+        WebcamEngine.init();
+
+        // Drag webcam window (fixed positioning)
+        (function() {
+            var el = document.getElementById('webcam-container');
+            if (!el) return;
+            var dragging = false, sx = 0, sy = 0, ox = 0, oy = 0;
+            el.addEventListener('mousedown', function(e) {
+                if (e.target.closest('#webcam-titlebar') || e.target.closest('#webcam-state-menu')) return;
+                dragging = true;
+                sx = e.clientX; sy = e.clientY;
+                ox = parseInt(el.style.left) || 20;
+                oy = parseInt(el.style.top) || 80;
+                el.style.cursor = 'grabbing';
+                e.preventDefault();
+            });
+            document.addEventListener('mousemove', function(e) {
+                if (!dragging) return;
+                el.style.left = (ox + e.clientX - sx) + 'px';
+                el.style.top = (oy + e.clientY - sy) + 'px';
+            });
+            document.addEventListener('mouseup', function() {
+                dragging = false;
+                el.style.cursor = 'grab';
+            });
+            el.style.cursor = 'grab';
+        })();
 
 function initDanmaku() {
     var bar = document.getElementById('danmaku-bar');
@@ -1112,7 +1307,7 @@ function renderFeed(items) {
             html += '<div class="jine-chat-msgs" id="jine-chat-msgs"></div>';
             html += '<div class="jine-typing" id="jine-typing" style="display:none">糖糖正在输入<span class="dots"><span></span><span></span><span></span></span></div>';
             html += '<div class="sticker-bar" id="sticker-bar"></div>';
-            html += '<div class="jine-text-area"><input type="text" class="jine-text-input" id="jine-text-input" placeholder="给糖糖发消息..." maxlength="80"><button class="jine-text-send" id="jine-text-send" onclick="sendText()">发送</button></div>';
+            html += '<div class="jine-text-area"><textarea class="jine-text-input" id="jine-text-input" placeholder="给糖糖发消息..." maxlength="200" rows="2"></textarea><button class="jine-text-send" id="jine-text-send" onclick="sendText()">发送</button></div>';
             html += '</div>';
         } else {
             html += '<div class="static-notice">— JINE 互动在只读模式下不可用 —</div>';
@@ -1131,7 +1326,7 @@ function renderFeed(items) {
 
     // Non-JINE rendering (ALL / Diary)
     if (!items || items.length === 0) {
-        CONTAINER.innerHTML = '<div class="empty-state"><div class="icon">👼</div><p>等待超天酱上线...</p></div>';
+        CONTAINER.innerHTML = '<div class="empty-state"><div class="icon"><img src="img/icon_cho.png"></div><p>等待超天酱上线...</p></div>';
         return;
     }
 
@@ -1173,7 +1368,7 @@ function renderFeed(items) {
 
     // No items in current tab
     if (!html && ACTIVE_TAB !== 'all') {
-        html = '<div class="empty-state"><div class="icon">🔒</div><p>这里还没有内容</p></div>';
+        html = '<div class="empty-state"><div class="icon"><img src="img/icon_ame.png"></div><p>这里还没有内容</p></div>';
     }
 
     CONTAINER.innerHTML = html;
@@ -1207,7 +1402,7 @@ function fetchTimeline() {
         }).catch(function(err2) {
             console.error('Static fallback also failed:', err2);
             if (firstLoad) {
-                CONTAINER.innerHTML = '<div class="empty-state"><div class="icon">💤</div><p>超天酱暂时失联...</p></div>';
+                CONTAINER.innerHTML = '<div class="empty-state"><div class="icon"><img src="img/icon_cho_res.png"></div><p>超天酱暂时失联...</p></div>';
                 firstLoad = false;
             }
         });
@@ -1532,7 +1727,7 @@ fetchTimeline();
 if (!isStaticMode) {
     setInterval(fetchTimeline, 30000);
 }
-console.log('+ Poketter v2.3 ready +');
+console.log('+ Poketter v2.7.1 ready +');
 })();
 </script>
 </body>
