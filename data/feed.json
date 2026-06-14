@@ -129,42 +129,20 @@
       "selfie_mood": "angel",
       "timestamp": 1781439410.982186,
       "date": "2026-06-14 20:16:50"
-    }
-  ],
-  "hidden_pool": [
+    },
     {
+      "batch_id": "released_1781477441610",
+      "event": "随手一发",
       "layer": "diary",
+      "time": "06:50",
       "text": "今天被便利店店员夸了钥匙扣可爱。那种毫无防备的善意，让我多站了三秒钟。原来被当成普通人对待也会这么开心。",
-      "selfie_mood": "angel"
+      "selfie_mood": "angel",
+      "timestamp": 1781477441.610453,
+      "date": "2026-06-15 06:50:41"
     }
   ],
+  "hidden_pool": [],
   "jine_chat": [
-    {
-      "time": "18:18",
-      "reply": "你又在傻笑什么啦\n笨蛋",
-      "timestamp": 1781432318.19632,
-      "player_text": "hhhh"
-    },
-    {
-      "time": "19:31",
-      "reply": "你是在数数还是发摩斯密码啊\n笨蛋",
-      "timestamp": 1781436689.081355,
-      "player_text": "1111",
-      "recall": true
-    },
-    {
-      "time": "19:56",
-      "reply": "又在发神经了是吧\n笨蛋",
-      "timestamp": 1781438163.5178955,
-      "player_text": "1111"
-    },
-    {
-      "time": "20:05",
-      "reply": "你又发什么鬼动态\n是不是又在吐槽我",
-      "timestamp": 1781438740.1993206,
-      "player_text": "（糖糖看到了阿P刚发的动态：刚才的动态）",
-      "recall": true
-    },
     {
       "time": "20:05",
       "reply": "干嘛\n有话快说啦",
@@ -317,6 +295,29 @@
       "time": "20:17",
       "reply": "干嘛 突然不说话又想让我猜啊",
       "timestamp": 1781439421.0966494
+    },
+    {
+      "time": "06:50",
+      "reply": "哼 连店员都比你懂我\n你怎么不学着点",
+      "timestamp": 1781477445.9505572
+    },
+    {
+      "time": "06:50",
+      "reply": "那你倒是说句话啊\n不然我就要揍你了",
+      "timestamp": 1781477447.993441
+    },
+    {
+      "time": "06:56",
+      "reply": "",
+      "timestamp": 1781477798.7880824,
+      "sticker": "sticker_7",
+      "ame_sticker": "ame_blush"
+    },
+    {
+      "time": "06:56",
+      "reply": "敷衍。",
+      "timestamp": 1781477805.559632,
+      "sticker": "sticker_8"
     }
   ]
 }
