@@ -362,7 +362,7 @@ def generate_jine_release_msgs(poke_text: str, diary_text: str = "", count: int 
 
     msgs = []
     try:
-        raw = _call_api(JINE_RELEASE_SYSTEM, prompt, temperature=0.7,
+        raw = _call_api(JINE_RELEASE_SYSTEM, prompt, temperature=0.5,
                       frequency_penalty=0.95, presence_penalty=0.8)
         # Parse JSON array
         data = _parse_json(raw)
@@ -389,7 +389,7 @@ def generate_jine_release_msgs(poke_text: str, diary_text: str = "", count: int 
     except Exception as e:
         print(f"  [X] 联动消息生成失败: {e}")
         # Fallback: use game-original lines
-        fallbacks = ["喂喂", "又不理我", "算了", "笨蛋阿P", "我在跟你说话呢"]
+        fallbacks = ["喂喂", "又不理我", "算了", "好累", "那条超可爱的吧"]
         for i in range(min(count, len(fallbacks))):
             msgs.append({"reply": fallbacks[i], "ame_sticker": None})
 
