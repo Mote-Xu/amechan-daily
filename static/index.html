@@ -358,12 +358,7 @@ body {
 }
 
 /* sticker 文字标签 */
-.sticker-label {
-    font-size: 10px;
-    font-family: 'DotGothic16', 'Microsoft YaHei', sans-serif;
-    line-height: 1;
-    image-rendering: pixelated;
-}
+.sticker-label { display:none; }
 
 /* sticker PNG overlay (原版 stamp, 不存在时自动 fallback 到下方 CSS pixel cat) */
 .sticker-img-wrap {
@@ -1811,24 +1806,14 @@ function renderStickerBar() {
         var btn = document.createElement('button');
         btn.className = 'sticker-btn';
         btn.title = s.label;
-        // Colored text label
-        var labelEl = document.createElement('span');
-        labelEl.className = 'sticker-label';
-        labelEl.style.color = s.color;
-        labelEl.textContent = s.label;
-        btn.appendChild(labelEl);
-        // Image wrapper: CSS pixel cat base + PNG overlay
+        // Image wrapper: PNG first, CSS fallback second
         var wrap = document.createElement('span');
         wrap.className = 'sticker-img-wrap';
-        // CSS pixel cat (always rendered as base fallback)
-        var catEl = document.createElement('span');
-        catEl.className = 'pixel-cat ' + s.catVar;
-        wrap.appendChild(catEl);
-        // PNG stamp overlay (hides CSS cat when loaded)
+        // PNG stamp (rendered first)
         var imgEl = document.createElement('img');
         imgEl.className = 'sticker-png';
         imgEl.src = 'img/stamps/' + s.pngFile;
-        imgEl.onerror = function() { this.style.display = 'none'; };
+        imgEl.onerror = function() { this.classList.add('error'); };
         imgEl.alt = s.label;
         wrap.appendChild(imgEl);
         btn.appendChild(wrap);
@@ -1844,8 +1829,7 @@ function stickerHTML(stickerId) {
     if (!s) return '';
     var cssClass = s.cssClass || ('pixel-cat ' + (s.catVar || ''));
     var isAme = s.cssClass && s.cssClass.indexOf('ame-pixel') === 0;
-    var label = s.label ? '<span class="sticker-label" style="color:' + s.color + '">' + esc(s.label) + '</span><br>' : '';
-    return label +
+    return
         '<span class="sticker-img-wrap' + (isAme ? ' ame-sticker-wrap' : '') + '">' +
         '<span class="' + cssClass + (isAme ? ' ame-pixel' : '') + '"></span>' +
         '<img class="sticker-png" src="img/stamps/' + s.pngFile + '" alt="">' +
