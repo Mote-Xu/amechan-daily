@@ -1532,105 +1532,72 @@ function stickerHTML(stickerId) {
         '</span>';
 }
 
-function renderJineChatMsgs() {
+
+function renderJineChatMsgs() { renderJineChatUnified([]); }
+
+function renderJineChatUnified(timelineItems) {
     var container = document.getElementById('jine-chat-msgs');
     if (!container) return;
+
+    var all = [];
+    (timelineItems || []).forEach(function(e) {
+        all.push({ type: e.type === 'system' ? 'recall-tl' : 'ame-text', time: e.time || '', text: e.text || '' });
+    });
+    var chatMsgs = jineChatMsgs;
+    chatMsgs.forEach(function(msg) {
+        var t = msg.time || '';
+        if (msg.sticker)     all.push({ type: 'p-sticker', time: t, sticker: msg.sticker });
+        if (msg.player_text) all.push({ type: 'p-text',    time: t, text: msg.player_text });
+        if (msg.recall)      all.push({ type: 'recall',    time: t });
+        if (msg.ame_sticker) all.push({ type: 'ame-sticker', time: t, sticker: msg.ame_sticker });
+        if (msg.reply)       all.push({ type: 'ame-text',  time: t, text: msg.reply });
+    });
+    all.sort(function(a, b) { return (a.time||'00:00').localeCompare(b.time||'00:00'); });
+
+    function toMins(t) { var p = (t||'00:00').split(':'); return parseInt(p[0])*60 + parseInt(p[1]); }
+
     var html = '';
-    jineChatMsgs.forEach(function(msg) {
-        // 阿P贴图 或 阿P文字
-        if (msg.sticker) {
-            html += '<div class="jine-msg p">';
-            html += '<div class="sticker-content">';
-            html += stickerHTML(msg.sticker);
-            html += '</div></div>';
-            html += '<div class="jine-read-receipt">已读</div>';
-        } else if (msg.player_text) {
-            html += '<div class="jine-msg p-text">';
-            html += '<div class="bubble player-text-bubble">' + esc(msg.player_text) + '</div>';
-            html += '</div>';
-            html += '<div class="jine-read-receipt">已读</div>';
+    var lastMins = -99;
+    for (var i = 0; i < all.length; i++) {
+        var m = all[i];
+        var mins = toMins(m.time);
+        if (mins - lastMins > 5 || i === 0) {
+            html += '<div class="jine-date-divider"><span>' + esc(m.time) + '</span></div>';
         }
-        if (msg.recall) {
+        lastMins = mins;
+        switch (m.type) {
+        case 'ame-text':
+            html += '<div class="jine-msg ame"><div class="jine-avatar"><img src="img/icon_ame.png"></div><div class="bubble">' + esc(m.text) + '</div></div>';
+            break;
+        case 'recall': case 'recall-tl':
             html += '<div class="jine-system-msg recall">糖糖撤回了一条消息</div>';
+            break;
+        case 'p-sticker':
+            html += '<div class="jine-msg p"><div class="sticker-content">' + stickerHTML(m.sticker) + '</div></div>';
+            html += '<div class="jine-read-receipt">已读</div>';
+            break;
+        case 'p-text':
+            html += '<div class="jine-msg p-text"><div class="bubble player-text-bubble">' + esc(m.text) + '</div></div>';
+            html += '<div class="jine-read-receipt">已读</div>';
+            break;
+        case 'ame-sticker':
+            html += '<div class="jine-msg ame-sticker"><div class="jine-avatar"><img src="img/icon_ame.png"></div><div><div class="jine-bubble stamp-msg">' + stickerHTML(m.sticker) + '</div></div></div>';
+            break;
         }
-        // 糖糖回复贴图（如有）-- 左对齐带头像
-        if (msg.ame_sticker) {
-            html += '<div class="jine-msg ame-sticker">';
-            html += '<div class="jine-avatar"><img src="img/icon_ame.png"></div>';
-            html += '<div><div class="ame-sticker-bubble">';
-            html += stickerHTML(msg.ame_sticker);
-            html += '</div></div>';
-            html += '</div>';
-        }
-        // 糖糖回复文字
-        if (msg.reply) {
-            html += '<div class="jine-msg ame">';
-            html += '<div class="jine-avatar"><img src="img/icon_ame.png"></div>';
-            html += '<div><span class="time">' + esc(msg.time||'') + '</span><div class="bubble">' + esc(msg.reply) + '</div></div>';
-            html += '</div>';
-        }
-    });
-    container.innerHTML = html;
+    }
+
+    container.innerHTML = html || '<div class="empty-state"><div class="icon"><img src="img/icon_ame.png"></div><p style="font-size:0.7rem;color:rgba(0,0,0,0.4);">糖糖还没发消息...</p></div>';
     container.scrollTop = container.scrollHeight;
+    var receipts = container.querySelectorAll('.jine-read-receipt');
+    for (var ri = 0; ri < receipts.length; ri++) { receipts[ri].classList.remove('show'); }
+    clearTimeout(window._jineReadTimer);
+    if (receipts.length > 0) {
+        window._jineReadTimer = setTimeout(function() {
+            var r2 = container.querySelectorAll('.jine-read-receipt');
+            for (var rj = 0; rj < r2.length; rj++) { r2[rj].classList.add('show'); }
+        }, 2200);
+    }
 }
-
-// F8b: 发送文字消息
-window.sendText = function() {
-    var input = document.getElementById('jine-text-input');
-    if (!input) return;
-    var text = input.value.trim();
-    if (!text || jineSending) return;
-    input.value = '';
-    input.disabled = true;
-
-    jineSending = true;
-    var now = new Date();
-    var timeStr = ('0' + now.getHours()).slice(-2) + ':' + ('0' + now.getMinutes()).slice(-2);
-
-    // Optimistic UI
-    jineChatMsgs.push({ time: timeStr, player_text: text, reply: '', recall: false });
-    if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
-
-    // Typing indicator
-    var typingEl = document.getElementById('jine-typing');
-    setTimeout(function() {
-        if (typingEl) typingEl.style.display = 'flex';
-    }, 800 + Math.random() * 800);
-
-    // API call
-    fetch(API + '/api/jine/text', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: text })
-    }).then(function(r) { return r.json(); }).then(function(data) {
-        var last = jineChatMsgs[jineChatMsgs.length - 1];
-        if (last && !last.reply) {
-            last.reply = data.reply || '';
-            last.ame_sticker = data.ame_sticker || null;
-            last.time = data.time;
-            last.recall = data.recall || false;
-        }
-        var delay = 1200 + Math.random() * 1500;
-        setTimeout(function() {
-            if (typingEl) typingEl.style.display = 'none';
-            if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
-            jineSending = false;
-            input.disabled = false;
-            input.focus();
-        }, delay);
-    }).catch(function() {
-        if (typingEl) typingEl.style.display = 'none';
-        var last = jineChatMsgs[jineChatMsgs.length - 1];
-        if (last && !last.reply) {
-            last.reply = ['...', '嗯', '哼', '说完了？', '哦'][Math.floor(Math.random() * 5)];
-        }
-        if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
-        jineSending = false;
-        input.disabled = false;
-    });
-}
-
-// Load persisted JINE chat history from server
 function fetchJineChat() {
     fetch(API + '/api/jine/chat').then(function(r) { return r.json(); }).then(function(data) {
         jineChatMsgs = (data.chat || []).map(function(msg) {
