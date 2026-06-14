@@ -1919,19 +1919,8 @@ function renderJineChatUnified(timelineItems) {
     }
 }
 function fetchJineChat() {
-    fetch(API + '/api/jine/chat').then(function(r) { return r.json(); }).then(function(data) {
-        jineChatMsgs = (data.chat || []).map(function(msg) {
-            return {
-                time: msg.time,
-                sticker: msg.sticker || '',
-                player_text: msg.player_text || '',
-                reply: msg.reply || '',
-                ame_sticker: msg.ame_sticker || null,
-                recall: msg.recall || false
-            };
-        });
-        if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
-    }).catch(function() {});
+    jineChatMsgs = SaveManager.getJineChat();
+    if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
 }
 
 // Enter key also sends
@@ -1983,6 +1972,8 @@ function sendSticker(stickerId) {
             last.recall = data.recall || false;
         }
 
+        // Persist to current save slot
+        if (last) SaveManager.addJineMessage(last);
         // Delay showing reply for typing realism
         setTimeout(function() {
             if (typingEl) typingEl.style.display = 'none';
@@ -1997,6 +1988,7 @@ function sendSticker(stickerId) {
         if (last && !last.reply) {
             last.reply = fallbacks[Math.floor(Math.random() * fallbacks.length)];
         }
+        if (last) SaveManager.addJineMessage(last);
         if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
         jineSending = false;
     });
