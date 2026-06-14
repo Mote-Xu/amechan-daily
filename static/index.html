@@ -1089,7 +1089,7 @@ var DANMAKU_COUNT = 5;
                     html += '<div class="state-opt" data-state="' + key + '">' + st.label + ' <span style="color:#666;font-size:0.45rem;">(' + st.count + 'f)</span></div>';
                 }
                 menu.innerHTML = html;
-                titlebar.addEventListener('click', function(e) {
+                titlebar.addEventListener('mousedown', function(e) {
                     e.stopPropagation();
                     self.menuOpen = !self.menuOpen;
                     menu.classList.toggle('open', self.menuOpen);
@@ -1433,7 +1433,7 @@ function initDanmaku() {
     var bar = document.getElementById('danmaku-bar');
 
     // Event delegation: click on any part of a hate danmaku = trash it (hover pauses it for easy targeting)
-    bar.addEventListener('click', function(e) {
+    bar.addEventListener('mousedown', function(e) {
         var wrap = e.target.closest('.danmaku-wrap');
         if (!wrap) return;
         if (wrap.querySelector('.danmaku-trash')) {
@@ -1934,9 +1934,7 @@ function fetchJineChat() {
 
 // Enter key also sends
 document.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' && document.activeElement === document.getElementById('jine-text-input') && !jineSending) {
-        sendText();
-    }
+    if (e.key === 'Enter' && document.activeElement === document.getElementById('jine-text-input')) { if (e.shiftKey) return; e.preventDefault(); sendText(); }
 });
 
 function sendSticker(stickerId) {
