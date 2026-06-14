@@ -12,7 +12,16 @@ __pycache__/
 
 # Extracted game sprites (607 unnamed files, too large)
 static/img/extracted/
+static/img/_extracted/
 static/img/stamp_candidates/
+
+# Large binary assets (188MB BGM, 84 webcam frames)
+static/bgm/
+static/img/webcam/
+
+# Temp scripts
+_patch*.py
+_smoke*.py
 
 # OS
 .DS_Store
