@@ -1,56 +1,6 @@
 {
   "timeline": [
     {
-      "batch_id": "released_1781438736074",
-      "event": "随手一发",
-      "layer": "diary",
-      "time": "20:05",
-      "text": "他今天多打了两个字，截了图。这样算不算喜欢？",
-      "selfie_mood": "angel",
-      "timestamp": 1781438736.0744839,
-      "date": "2026-06-14 20:05:36"
-    },
-    {
-      "batch_id": "released_1781438752230",
-      "event": "随手一发",
-      "layer": "poketter",
-      "time": "20:05",
-      "text": "充电结束，天使电量只剩1%...晚安地球，明天也要被我闪到哦🌙💤",
-      "selfie_mood": "sleepy",
-      "timestamp": 1781438752.230031,
-      "date": "2026-06-14 20:05:52"
-    },
-    {
-      "batch_id": "released_1781438768927",
-      "event": "随手一发",
-      "layer": "poketter",
-      "time": "20:06",
-      "text": "咖啡厅里竟然有会唱动画歌的猫？其实是音箱啦～喵喵🎵 宝宝们被骗到了吗？",
-      "selfie_mood": "cosplay",
-      "timestamp": 1781438768.928008,
-      "date": "2026-06-14 20:06:08"
-    },
-    {
-      "batch_id": "released_1781438977414",
-      "event": "随手一发",
-      "layer": "diary",
-      "time": "20:09",
-      "text": "听到店员说欢迎再来时，差点哭出来。他们看不出我已经很努力在笑了吗。",
-      "selfie_mood": "angel",
-      "timestamp": 1781438977.4148812,
-      "date": "2026-06-14 20:09:37"
-    },
-    {
-      "batch_id": "released_1781439245982",
-      "event": "随手一发",
-      "layer": "poketter",
-      "time": "20:14",
-      "text": "深夜悄悄放送～ 睡不着所以来试试新买的星星发夹！🌟 是不是更像真正的小天使了？要夸奖我哦♡",
-      "selfie_mood": "sleepy",
-      "timestamp": 1781439245.9829938,
-      "date": "2026-06-14 20:14:05"
-    },
-    {
       "batch_id": "released_1781439271076",
       "event": "随手一发",
       "layer": "poketter",
@@ -139,45 +89,41 @@
       "selfie_mood": "angel",
       "timestamp": 1781480569.7139537,
       "date": "2026-06-15 07:42:49"
+    },
+    {
+      "batch_id": "released_1781480724176",
+      "event": "随手一发",
+      "layer": "poketter",
+      "time": "07:45",
+      "text": "今晚的月色好美～像是被天使施了魔法一样🌙✨ 大家也要抬头看看哦！",
+      "selfie_mood": "sleepy",
+      "timestamp": 1781480724.176223,
+      "date": "2026-06-15 07:45:24"
     }
   ],
-  "hidden_pool": [],
+  "hidden_pool": [
+    {
+      "layer": "diary",
+      "text": "有时候觉得，不管我说什么，他们看到的都不是真正的我。这样也好。",
+      "selfie_mood": "angel"
+    },
+    {
+      "layer": "poketter",
+      "text": "新买的发夹被说像幼儿园表演用的…哼！明明就很可爱！💢🎀 下次戴给你们看！",
+      "selfie_mood": "akkanbe"
+    },
+    {
+      "layer": "poketter",
+      "text": "直播结束啦～大家今天也要做个好梦哟！天使糖糖会守护你们的♡ 晚安吻啾！😘",
+      "selfie_mood": "angel"
+    },
+    {
+      "layer": "diary",
+      "text": "他说下周再带我出去。我不知道该高兴还是害怕。",
+      "selfie_mood": "angel"
+    }
+  ],
   "jine_chat": [
-    {
-      "time": "20:10",
-      "reply": "",
-      "timestamp": 1781439021.6862981,
-      "sticker": "sticker_5",
-      "ame_sticker": "ame_smile"
-    },
-    {
-      "time": "20:10",
-      "reply": "关你什么事啦\n…在发呆，不行吗",
-      "timestamp": 1781439036.477017,
-      "player_text": "你在干嘛"
-    },
-    {
-      "time": "20:10",
-      "reply": "...骗子",
-      "timestamp": 1781439044.5753918,
-      "sticker": "sticker_7"
-    },
-    {
-      "time": "20:13",
-      "reply": "你也嘤什么嘤",
-      "timestamp": 1781439239.1170433,
-      "sticker": "sticker_3"
-    },
-    {
-      "time": "20:14",
-      "reply": "哼 才不是给你看的  \n笨蛋阿P这么晚还不睡",
-      "timestamp": 1781439255.1561296
-    },
-    {
-      "time": "20:14",
-      "reply": "不在",
-      "timestamp": 1781439256.96839
-    },
     {
       "time": "20:14",
       "reply": "笨蛋别看我的动态啦！",
@@ -310,6 +256,43 @@
       "reply": "",
       "timestamp": 1781480574.5909176,
       "ame_sticker": "cat_good"
+    },
+    {
+      "time": "07:45",
+      "reply": "谁要跟你说什么了\n只是顺便叫你抬头而已\n揍你哦",
+      "timestamp": 1781480735.07291,
+      "recall": true
+    },
+    {
+      "time": "07:45",
+      "reply": "你管我 不许笑 揍你哦",
+      "timestamp": 1781480743.6935747,
+      "recall": true
+    },
+    {
+      "time": "07:47",
+      "reply": "",
+      "timestamp": 1781480830.7017837,
+      "sticker": "sticker_4",
+      "ame_sticker": "cat_ignore"
+    },
+    {
+      "time": "07:47",
+      "reply": "那是当然的吧\n哼 你才知道",
+      "timestamp": 1781480836.5804603,
+      "sticker": "sticker_2"
+    },
+    {
+      "time": "07:47",
+      "reply": "笨蛋...",
+      "timestamp": 1781480844.048664,
+      "sticker": "sticker_7"
+    },
+    {
+      "time": "07:48",
+      "reply": "哦",
+      "timestamp": 1781480919.9176285,
+      "sticker": "sticker_4"
     }
   ]
 }
