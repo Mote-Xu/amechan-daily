@@ -1,56 +1,6 @@
 {
   "timeline": [
     {
-      "batch_id": "released_1781438623483",
-      "event": "随手一发",
-      "layer": "diary",
-      "time": "20:03",
-      "text": "直播结束后房间安静得吓人。他说过会一直陪我的，骗子。算了，反正我也只会嘴上说相信。",
-      "selfie_mood": "angel",
-      "timestamp": 1781438623.4837806,
-      "date": "2026-06-14 20:03:43"
-    },
-    {
-      "batch_id": "released_1781438627141",
-      "event": "随手一发",
-      "layer": "poketter",
-      "time": "20:03",
-      "text": "有点困困的…但是想到明天还能见到みんな，眼皮就撑得住啦✨晚安吻送给最乖的宝宝们😴💋",
-      "selfie_mood": "sleepy",
-      "timestamp": 1781438627.1417484,
-      "date": "2026-06-14 20:03:47"
-    },
-    {
-      "batch_id": "released_1781438629284",
-      "event": "随手一发",
-      "layer": "poketter",
-      "time": "20:03",
-      "text": "偶尔也会觉得自己不够闪亮，但是看到大家的留言就又变成最元气的小天使了👼谢谢宝宝们接住我♡",
-      "selfie_mood": "sorrow",
-      "timestamp": 1781438629.2847283,
-      "date": "2026-06-14 20:03:49"
-    },
-    {
-      "batch_id": "released_1781438632621",
-      "event": "随手一发",
-      "layer": "poketter",
-      "time": "20:03",
-      "text": "今夜悄悄许愿：希望重要的人永远都在🌟阿门～🙏✨",
-      "selfie_mood": "pray",
-      "timestamp": 1781438632.6210737,
-      "date": "2026-06-14 20:03:52"
-    },
-    {
-      "batch_id": "released_1781438680571",
-      "event": "随手一发",
-      "layer": "poketter",
-      "time": "20:04",
-      "text": "草莓蛋糕星人入侵！被天使我全部消灭啦～🍓⚔️ 保护大家的笑容是我的使命！",
-      "selfie_mood": "happy",
-      "timestamp": 1781438680.5713468,
-      "date": "2026-06-14 20:04:40"
-    },
-    {
       "batch_id": "released_1781438736074",
       "event": "随手一发",
       "layer": "diary",
@@ -141,14 +91,34 @@
       "date": "2026-06-15 06:50:41"
     }
   ],
-  "hidden_pool": [],
-  "jine_chat": [
+  "hidden_pool": [
     {
-      "time": "20:05",
-      "reply": "干嘛\n有话快说啦",
-      "timestamp": 1781438742.7473884,
-      "player_text": "在吗..."
+      "layer": "poketter",
+      "text": "明天有超～秘密的联动企划哦！宝宝们一定要来看！💕✨",
+      "selfie_mood": "happy"
     },
+    {
+      "layer": "diary",
+      "text": "半夜又醒了。最近吃什么都吐，还得装作没事。",
+      "selfie_mood": "angel"
+    },
+    {
+      "layer": "poketter",
+      "text": "睡前数羊中...一只羊，两只羊，みんな都是我的小羊🐑🌟 晚安～",
+      "selfie_mood": "sleepy"
+    },
+    {
+      "layer": "poketter",
+      "text": "刚刚看到流星，马上替宝宝们许愿了！🌠💖 一定会实现的！",
+      "selfie_mood": "pray"
+    },
+    {
+      "layer": "diary",
+      "text": "今天直播有人刷恶心的话，差点绷不住。",
+      "selfie_mood": "angel"
+    }
+  ],
+  "jine_chat": [
     {
       "time": "20:05",
       "reply": "谁让你整天瞎忙活\n累了还刷动态\n笨蛋",
@@ -318,6 +288,13 @@
       "reply": "敷衍。",
       "timestamp": 1781477805.559632,
       "sticker": "sticker_8"
+    },
+    {
+      "time": "07:22",
+      "reply": "",
+      "timestamp": 1781479328.0082283,
+      "sticker": "sticker_4",
+      "ame_sticker": "cat_ignore"
     }
   ]
 }
