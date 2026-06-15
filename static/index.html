@@ -1978,14 +1978,20 @@ function _startReplyCycle() {
     _replyPending = true;
     var cycleStart = Date.now();
 
-    // v2.9: Reply to ONE message at a time — find the OLDEST unreplied player message
-    // This prevents batching multiple player messages into one API call (forced Q&A pattern)
+    // v2.9: Find OLDEST player msg that hasn't been replied to yet.
+    // "Replied" = the very next message in the array is an ame reply.
     var targetIdx = -1, targetText = '', targetSticker = '';
     for (var i = 0; i < jineChatMsgs.length; i++) {
         var m = jineChatMsgs[i];
-        if (m.reply) continue;  // skip already-replied
-        if (m.player_text) { targetIdx = i; targetText = m.player_text; break; }
-        if (m.sticker)     { targetIdx = i; targetSticker = m.sticker; break; }
+        if (m.reply || m.ame_sticker) continue;  // skip ame messages
+        if (m.player_text || m.sticker) {
+            var next = jineChatMsgs[i + 1];
+            if (next && (next.reply || next.ame_sticker)) continue;  // already replied
+            targetIdx = i;
+            targetText = m.player_text || '';
+            targetSticker = m.sticker || '';
+            break;
+        }
     }
     if (targetIdx < 0) { _replyPending = false; return; }
     var replyIdx = targetIdx + 1;  // insert reply right after this message
@@ -2061,12 +2067,17 @@ function _startReplyCycle() {
         }, remainWait);
     });
 }
-// Check if any player messages are still waiting for a reply
+// Check if any player messages are still waiting for a reply.
+// A player message is "replied" if the very next message is an ame reply.
 function _checkUnreplied() {
     for (var i = 0; i < jineChatMsgs.length; i++) {
         var m = jineChatMsgs[i];
-        if (m.reply || m.ame_sticker) continue;
-        if (m.player_text || m.sticker) return true;
+        if (m.reply || m.ame_sticker) continue;  // skip ame messages
+        if (m.player_text || m.sticker) {
+            var next = jineChatMsgs[i + 1];
+            if (next && (next.reply || next.ame_sticker)) continue;  // already replied
+            return true;  // still waiting
+        }
     }
     return false;
 }
