@@ -122,7 +122,7 @@ body {
 /* 聊天区容器 */
 .jine-chat {
     padding: 12px 16px;
-    background: linear-gradient(180deg, #F8A8E8 0%, #E898D8 100%);
+	    background: transparent;
     min-height: 120px;
 }
 
@@ -298,7 +298,7 @@ body {
     display: flex;
     gap: 4px;
     padding: 4px 8px;
-    background: #C898D8;
+    background: rgba(200,152,216,0.65);
     border-top: 1px solid #B880C8;
 }
 .jine-text-input {
@@ -335,7 +335,7 @@ body {
     grid-template-rows: repeat(2, 1fr);
     gap: 4px;
     padding: 6px 8px;
-    background: #C898D8;
+    background: rgba(200,152,216,0.65);
     border-top: 2px solid #B880C8;
     margin-top: 4px;
 }
@@ -716,14 +716,15 @@ body {
 }
 
 /* JINE 整体屏幕（含标题栏 + 聊天区 + 回复栏） */
-.jine-screen {
-    background: linear-gradient(180deg, #F8A8E8 0%, #E898D8 100%);
-    border: 2px solid #C898D8;
-    border-top: none;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-}
+	/* JINE 整体屏幕（含标题栏 + 聊天区 + 回复栏） */
+	.jine-screen {
+	    background: url("img/JINEBG_266x388.png") center/cover no-repeat;
+	    border: 2px solid #C898D8;
+	    border-top: none;
+	    height: 100%;
+	    display: flex;
+	    flex-direction: column;
+	}
 
 /* LIVE WIDGET */
 .live-widget { margin-bottom:1rem; background:rgba(0,0,0,0.5); border:2px solid #333; padding:0.5rem 0.8rem; display:flex; align-items:center; justify-content:space-between; }
