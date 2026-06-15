@@ -1922,18 +1922,24 @@ window.doRelease = function() {
                 var t1 = setTimeout(function() {
                     jineMsgs.forEach(function(msg, i) {
                         var t2 = setTimeout(function() {
-                            // Double guard: same slot + slot still exists (not deleted)
-                            if (SaveManager.getCurrentSlot().id !== _f7SlotId) { console.warn('[F7] t2 skipped — slot mismatch'); return; }
-                            if (!SaveManager.data.slots[_f7SlotId]) { console.warn('[F7] t2 skipped — slot deleted'); return; }
+                            // Write DIRECTLY to original slot — bypass current slot entirely
+                            var slot = SaveManager.data.slots[_f7SlotId];
+                            if (!slot) { console.warn('[F7] t2 skipped — slot gone'); return; }
                             var replyText = (msg.reply && msg.reply !== 'undefined') ? msg.reply : '';
                             var chatMsg = {
                                 time: msg.time || '', reply: replyText,
                                 ame_sticker: msg.ame_sticker || null,
                                 player_text: '', sticker: ''
                             };
-                            jineChatMsgs.push(chatMsg);
-                            SaveManager.addJineMessage(chatMsg);
-                            if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
+                            slot.jineChat.push(chatMsg);
+                            if (slot.jineChat.length > 60) slot.jineChat = slot.jineChat.slice(-60);
+                            slot.updatedAt = new Date().toISOString();
+                            SaveManager._persist();
+                            // Only update in-memory display if still viewing this slot
+                            if (SaveManager.getCurrentSlot().id === _f7SlotId) {
+                                jineChatMsgs.push(chatMsg);
+                                if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
+                            }
                         }, i * 2000 + 600);
                         _f7Timers.push(t2);
                     });
