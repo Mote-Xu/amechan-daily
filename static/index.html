@@ -1647,7 +1647,9 @@ function renderFromCache() {
     if (ACTIVE_TAB === 'diary') {
         filtered = cachedTimeline.filter(function(e) { return e.layer === 'diary'; });
     } else if (ACTIVE_TAB === 'jine') {
-        filtered = cachedTimeline.filter(function(e) { return e.layer === 'jine'; });
+        // JINE tab shows interactive chat only — not timeline-generated monologues
+        renderFeed([]);
+        return;
     }
     renderFeed(filtered);
 }
