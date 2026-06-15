@@ -133,9 +133,8 @@ class AmechanHandler(SimpleHTTPRequestHandler):
                 # v2.7: 使用专用的 release prompt — 明确玩家处于沉默状态
                 jine_msgs = []
                 poke_text = next((e['text'][:40] for e in entries if e['layer'] == 'poketter'), '刚才的动态')
-                diary_text = next((e['text'][:40] for e in entries if e['layer'] == 'diary'), '')
                 msg_count = random.randint(2, 5)
-                msgs = generate_jine_release_msgs(poke_text, diary_text, count=msg_count)
+                msgs = generate_jine_release_msgs(poke_text, '', count=msg_count)
                 for m in msgs:
                     if m.get("reply"):
                         msg = save_jine_message(reply=m["reply"], ame_sticker=m.get("ame_sticker"), player_text="")
@@ -149,9 +148,8 @@ class AmechanHandler(SimpleHTTPRequestHandler):
                     if entries2:
                         jine_msgs = []
                         poke_text = next((e['text'][:40] for e in entries2 if e['layer'] == 'poketter'), '刚才的动态')
-                        diary_text = next((e['text'][:40] for e in entries2 if e['layer'] == 'diary'), '')
                         msg_count = random.randint(2, 5)
-                        msgs = generate_jine_release_msgs(poke_text, diary_text, count=msg_count)
+                        msgs = generate_jine_release_msgs(poke_text, '', count=msg_count)
                         for m in msgs:
                             if m.get("reply"):
                                 msg = save_jine_message(reply=m["reply"], ame_sticker=m.get("ame_sticker"), player_text="")

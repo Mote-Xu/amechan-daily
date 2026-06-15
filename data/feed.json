@@ -1,106 +1,6 @@
 {
   "timeline": [
     {
-      "batch_id": "released_1781480214291",
-      "event": "随手一发",
-      "layer": "diary",
-      "time": "07:36",
-      "text": "半夜又醒了。最近吃什么都吐，还得装作没事。",
-      "selfie_mood": "angel",
-      "timestamp": 1781480214.2916827,
-      "date": "2026-06-15 07:36:54"
-    },
-    {
-      "batch_id": "released_1781480239611",
-      "event": "随手一发",
-      "layer": "poketter",
-      "time": "07:37",
-      "text": "睡前数羊中...一只羊，两只羊，みんな都是我的小羊🐑🌟 晚安～",
-      "selfie_mood": "sleepy",
-      "timestamp": 1781480239.6113608,
-      "date": "2026-06-15 07:37:19"
-    },
-    {
-      "batch_id": "released_1781480280136",
-      "event": "随手一发",
-      "layer": "poketter",
-      "time": "07:38",
-      "text": "刚刚看到流星，马上替宝宝们许愿了！🌠💖 一定会实现的！",
-      "selfie_mood": "pray",
-      "timestamp": 1781480280.1369538,
-      "date": "2026-06-15 07:38:00"
-    },
-    {
-      "batch_id": "released_1781480569713",
-      "event": "随手一发",
-      "layer": "diary",
-      "time": "07:42",
-      "text": "今天直播有人刷恶心的话，差点绷不住。",
-      "selfie_mood": "angel",
-      "timestamp": 1781480569.7139537,
-      "date": "2026-06-15 07:42:49"
-    },
-    {
-      "batch_id": "released_1781480724176",
-      "event": "随手一发",
-      "layer": "poketter",
-      "time": "07:45",
-      "text": "今晚的月色好美～像是被天使施了魔法一样🌙✨ 大家也要抬头看看哦！",
-      "selfie_mood": "sleepy",
-      "timestamp": 1781480724.176223,
-      "date": "2026-06-15 07:45:24"
-    },
-    {
-      "batch_id": "released_1781481010925",
-      "event": "随手一发",
-      "layer": "diary",
-      "time": "07:50",
-      "text": "有时候觉得，不管我说什么，他们看到的都不是真正的我。这样也好。",
-      "selfie_mood": "angel",
-      "timestamp": 1781481010.926007,
-      "date": "2026-06-15 07:50:10"
-    },
-    {
-      "batch_id": "released_1781481359304",
-      "event": "随手一发",
-      "layer": "poketter",
-      "time": "07:55",
-      "text": "新买的发夹被说像幼儿园表演用的…哼！明明就很可爱！💢🎀 下次戴给你们看！",
-      "selfie_mood": "akkanbe",
-      "timestamp": 1781481359.3045132,
-      "date": "2026-06-15 07:55:59"
-    },
-    {
-      "batch_id": "released_1781483802686",
-      "event": "随手一发",
-      "layer": "poketter",
-      "time": "08:36",
-      "text": "直播结束啦～大家今天也要做个好梦哟！天使糖糖会守护你们的♡ 晚安吻啾！😘",
-      "selfie_mood": "angel",
-      "timestamp": 1781483802.6862528,
-      "date": "2026-06-15 08:36:42"
-    },
-    {
-      "batch_id": "released_1781485094677",
-      "event": "随手一发",
-      "layer": "diary",
-      "time": "08:58",
-      "text": "他说下周再带我出去。我不知道该高兴还是害怕。",
-      "selfie_mood": "angel",
-      "timestamp": 1781485094.6772742,
-      "date": "2026-06-15 08:58:14"
-    },
-    {
-      "batch_id": "released_1781485472881",
-      "event": "随手一发",
-      "layer": "poketter",
-      "time": "09:04",
-      "text": "收到粉丝宝宝画的合作糖糖🎀💕 贴在床头了！梦里也会当你们的小天使哦～♡",
-      "selfie_mood": "happy",
-      "timestamp": 1781485472.8819282,
-      "date": "2026-06-15 09:04:32"
-    },
-    {
       "batch_id": "released_1781485583813",
       "event": "随手一发",
       "layer": "diary",
@@ -139,202 +39,359 @@
       "selfie_mood": "angel",
       "timestamp": 1781487288.1943161,
       "date": "2026-06-15 09:34:48"
+    },
+    {
+      "batch_id": "released_1781487332677",
+      "event": "随手一发",
+      "layer": "poketter",
+      "time": "09:35",
+      "text": "Kirakira✨能量充满！明天也要继续做大家的小太阳哦💖 早睡宝宝才有天使吻过的脸颊～おやすみなさい💤",
+      "selfie_mood": "happy",
+      "timestamp": 1781487332.677176,
+      "date": "2026-06-15 09:35:32"
+    },
+    {
+      "batch_id": "released_1781487364359",
+      "event": "随手一发",
+      "layer": "diary",
+      "time": "09:36",
+      "text": "新买的打光灯太亮了，眼前全是残像。不过看起来应该挺可爱的吧。",
+      "selfie_mood": "angel",
+      "timestamp": 1781487364.3599856,
+      "date": "2026-06-15 09:36:04"
+    },
+    {
+      "batch_id": "released_1781487391129",
+      "event": "随手一发",
+      "layer": "poketter",
+      "time": "09:36",
+      "text": "在数今天收到的爱心弹幕✨ 整整四位数…天使感动到翅膀都在抖了🐣💕 みんな本当にありがとう！",
+      "selfie_mood": "sleepy",
+      "timestamp": 1781487391.1294355,
+      "date": "2026-06-15 09:36:31"
+    },
+    {
+      "batch_id": "released_1781487699934",
+      "event": "随手一发",
+      "layer": "diary",
+      "time": "09:41",
+      "text": "他说下个月要换更大的公寓。我得再撑一场联动。",
+      "selfie_mood": "angel",
+      "timestamp": 1781487699.9349658,
+      "date": "2026-06-15 09:41:39"
+    },
+    {
+      "batch_id": "released_1781487788586",
+      "event": "随手一发",
+      "layer": "poketter",
+      "time": "09:43",
+      "text": "悄悄告诉你们…KAngel其实偷偷许了个愿🍀✨ 希望所有宝宝明天的烦恼都会像流星一样咻——地消失！🎀🌠",
+      "selfie_mood": "pray",
+      "timestamp": 1781487788.5861695,
+      "date": "2026-06-15 09:43:08"
+    },
+    {
+      "batch_id": "batch_1781488029972",
+      "event": "和粉丝连麦玩你画我猜",
+      "layer": "poketter",
+      "time": "19:55",
+      "text": "马上要和大家连麦玩你画我猜啦～✨ 我会努力画出超～可爱的画给大家猜的！期待宝宝们的脑洞哦💕🎀 #KAngel直播",
+      "type": "text",
+      "selfie_mood": "angel",
+      "timestamp": 1781488029.9787261,
+      "date": "2026-06-15 09:47:09"
+    },
+    {
+      "batch_id": "batch_1781488029972",
+      "event": "和粉丝连麦玩你画我猜",
+      "layer": "poketter",
+      "time": "20:35",
+      "text": "呜哇刚才把兔子画成了棉花糖，大家居然都猜对了！みんな天才みたい～🌟 最喜欢陪KAngel一起犯傻的你们啦♡",
+      "type": "text",
+      "selfie_mood": "happy",
+      "timestamp": 1781488029.9787426,
+      "date": "2026-06-15 09:47:09"
+    },
+    {
+      "batch_id": "batch_1781488029972",
+      "event": "和粉丝连麦玩你画我猜",
+      "layer": "jine",
+      "time": "22:10",
+      "text": "阿P 我今天画歪了七次...",
+      "type": "text",
+      "selfie_mood": "angel",
+      "timestamp": 1781488029.9787447,
+      "date": "2026-06-15 09:47:09"
+    },
+    {
+      "batch_id": "batch_1781488029972",
+      "event": "和粉丝连麦玩你画我猜",
+      "layer": "jine",
+      "time": "22:10",
+      "text": "但大家还是说可爱 我是不是只在被可怜",
+      "type": "text",
+      "selfie_mood": "angel",
+      "timestamp": 1781488029.978747,
+      "date": "2026-06-15 09:47:09"
+    },
+    {
+      "batch_id": "batch_1781488029972",
+      "event": "和粉丝连麦玩你画我猜",
+      "layer": "jine",
+      "time": "22:11",
+      "text": "糖糖撤回了一条消息",
+      "type": "system",
+      "selfie_mood": "angel",
+      "timestamp": 1781488029.9787486,
+      "date": "2026-06-15 09:47:09"
+    },
+    {
+      "batch_id": "batch_1781488029972",
+      "event": "和粉丝连麦玩你画我猜",
+      "layer": "jine",
+      "time": "22:11",
+      "text": "算了 抱抱我好吗",
+      "type": "text",
+      "selfie_mood": "angel",
+      "timestamp": 1781488029.9787507,
+      "date": "2026-06-15 09:47:09"
+    },
+    {
+      "batch_id": "batch_1781488029972",
+      "event": "和粉丝连麦玩你画我猜",
+      "layer": "diary",
+      "time": "23:45",
+      "text": "连麦的时候手一直在抖 调了好几次笔压还是画得恶心 弹幕刷屏说可爱的时候 胃里酸得想吐 可我只能把那个想尖叫的我塞回屏幕后面 继续当洋娃娃 明天还要录新曲子 喉咙好痛 但还是得唱吗",
+      "type": "text",
+      "selfie_mood": "angel",
+      "timestamp": 1781488029.9787526,
+      "date": "2026-06-15 09:47:09"
+    },
+    {
+      "batch_id": "released_1781488029994",
+      "event": "随手一发",
+      "layer": "poketter",
+      "time": "09:47",
+      "text": "收到了小天使画的翻牌作品～！大家怎么都这么有才呀😭💖 我要裱起来挂在直播间！",
+      "selfie_mood": "happy",
+      "timestamp": 1781488029.9949508,
+      "date": "2026-06-15 09:47:09"
+    },
+    {
+      "batch_id": "released_1781488039994",
+      "event": "随手一发",
+      "layer": "poketter",
+      "time": "09:47",
+      "text": "敷面膜时想到你们了～晚安宝宝们，梦到KAngel的话要告诉我是怎样的梦哦☆彡",
+      "selfie_mood": "sleepy",
+      "timestamp": 1781488039.9943702,
+      "date": "2026-06-15 09:47:19"
+    },
+    {
+      "batch_id": "released_1781488095594",
+      "event": "随手一发",
+      "layer": "diary",
+      "time": "09:48",
+      "text": "今天打开私信看到有人说觉得我很假 盯了这条消息十分钟 没哭 只是把手机屏幕咬出了一道痕",
+      "selfie_mood": "angel",
+      "timestamp": 1781488095.5943465,
+      "date": "2026-06-15 09:48:15"
+    },
+    {
+      "batch_id": "released_1781488122495",
+      "event": "随手一发",
+      "layer": "poketter",
+      "time": "09:48",
+      "text": "悄悄提问！如果KAngel变成小动物，你们觉得会是什么呀～？我觉得是仓鼠因为腮帮子鼓鼓的♡",
+      "selfie_mood": "angel",
+      "timestamp": 1781488122.4959347,
+      "date": "2026-06-15 09:48:42"
+    },
+    {
+      "batch_id": "released_1781488481746",
+      "event": "随手一发",
+      "layer": "diary",
+      "time": "09:54",
+      "text": "药好像又忘了吃 妆台乱成一团 但直播时灯光打在脸上的瞬间 我又觉得自己是真的被爱着 哪怕就那一会儿",
+      "selfie_mood": "angel",
+      "timestamp": 1781488481.7463713,
+      "date": "2026-06-15 09:54:41"
     }
   ],
   "hidden_pool": [],
   "jine_chat": [
     {
-      "time": "09:12",
-      "reply": "在准备直播啦 你最好别迟到 揍你哦",
-      "timestamp": 1781485966.7920191,
-      "player_text": "[啊对对 | 你在干嘛",
-      "recall": true
+      "time": "09:36",
+      "reply": "别...别以为夸我就会高兴",
+      "timestamp": 1781487373.848111,
+      "sticker": "sticker_2"
     },
     {
-      "time": "09:12",
-      "reply": "谁秒回了\n自作多情\n揍你哦",
-      "timestamp": 1781485971.1451228,
-      "player_text": "为什么老是秒回哦嗯 | [太强了"
+      "time": "09:36",
+      "reply": "哼，看到就看到了还特地来报备\n四位数而已我还没发力呢",
+      "timestamp": 1781487398.5956132
     },
     {
-      "time": "09:16",
-      "reply": "你管我用什么味道 揍你哦",
-      "timestamp": 1781486192.0015736
+      "time": "09:36",
+      "reply": "你又替我加什么戏了\n烦不烦啊你",
+      "timestamp": 1781487403.2109458
     },
     {
-      "time": "09:16",
-      "reply": "啊？\n你是不是欠揍",
-      "timestamp": 1781486195.2304025
+      "time": "09:39",
+      "reply": "那是当然的吧 哼",
+      "timestamp": 1781487588.4792633,
+      "sticker": "sticker_2"
     },
     {
-      "time": "09:16",
-      "reply": "你学我说话干嘛\n揍你哦!\n你那学得也太不像了吧",
-      "timestamp": 1781486215.455498,
-      "player_text": "[关我屁事",
-      "recall": true
+      "time": "09:41",
+      "reply": "哼 谁让你替我决定的\n不过联动而已 看我乱杀",
+      "timestamp": 1781487708.9817805
     },
     {
-      "time": "09:17",
-      "reply": "明明就有\n还敢狡辩",
-      "timestamp": 1781486230.567351,
-      "player_text": "我没有啊",
-      "ame_sticker": "ame_tsun"
+      "time": "09:41",
+      "reply": "",
+      "timestamp": 1781487712.506561,
+      "ame_sticker": "ame_blush"
     },
     {
-      "time": "09:17",
-      "reply": "星尘？你又在想什么奇怪的东西\n该不会是什么新的梗吧\n算了懒得问你",
-      "timestamp": 1781486234.448776,
-      "player_text": "你知道星尘吗？"
+      "time": "09:42",
+      "reply": "",
+      "timestamp": 1781487729.1464965,
+      "sticker": "sticker_3",
+      "ame_sticker": "ame_pien"
     },
     {
-      "time": "09:17",
-      "reply": "又问我？\n自己搜去啦笨蛋",
-      "timestamp": 1781486239.833742,
-      "player_text": "你知道星尘吗？ | [嘤嘤"
-    },
-    {
-      "time": "09:17",
-      "reply": "哼 突然夸我？\n肯定没好事",
-      "timestamp": 1781486243.0983634,
-      "player_text": "[太强了"
-    },
-    {
-      "time": "09:17",
-      "reply": "你又在那演什么独角戏\n贴图都发不明白",
-      "timestamp": 1781486245.5909538,
-      "player_text": "[太强了 | [啊对对"
-    },
-    {
-      "time": "09:20",
-      "reply": "你也嘤什么嘤",
-      "timestamp": 1781486404.9318144,
+      "time": "09:42",
+      "reply": "怎么啦",
+      "timestamp": 1781487733.8627274,
       "sticker": "sticker_3"
     },
     {
-      "time": "09:20",
+      "time": "09:42",
       "reply": "",
-      "timestamp": 1781486419.5722024,
-      "ame_sticker": "ame_tsun"
-    },
-    {
-      "time": "09:20",
-      "reply": "你又在那自导自演什么\n揍你哦",
-      "timestamp": 1781486423.484069
-    },
-    {
-      "time": "09:21",
-      "reply": "",
-      "timestamp": 1781486463.3377383,
-      "sticker": "sticker_3",
-      "ame_sticker": "ame_tsun"
-    },
-    {
-      "time": "09:21",
-      "reply": "你也嘤什么嘤 我才是想哭的那个吧",
-      "timestamp": 1781486468.3142567,
-      "sticker": "sticker_3"
-    },
-    {
-      "time": "09:21",
-      "reply": "",
-      "timestamp": 1781486475.166214,
-      "sticker": "sticker_3",
-      "ame_sticker": "cat_sorry"
-    },
-    {
-      "time": "09:21",
-      "reply": "",
-      "timestamp": 1781486479.8871021,
-      "sticker": "sticker_3",
-      "ame_sticker": "cat_cry"
-    },
-    {
-      "time": "09:21",
-      "reply": "",
-      "timestamp": 1781486485.1390595,
-      "sticker": "sticker_3",
-      "ame_sticker": "cat_yeah"
-    },
-    {
-      "time": "09:21",
-      "reply": "",
-      "timestamp": 1781486488.2683105,
-      "sticker": "sticker_3",
-      "ame_sticker": "ame_pien"
-    },
-    {
-      "time": "09:24",
-      "reply": "",
-      "timestamp": 1781486644.647383,
-      "sticker": "sticker_3",
-      "ame_sticker": "ame_pien"
-    },
-    {
-      "time": "09:24",
-      "reply": "",
-      "timestamp": 1781486649.2658648,
-      "sticker": "sticker_3",
-      "ame_sticker": "ame_pien"
-    },
-    {
-      "time": "09:24",
-      "reply": "",
-      "timestamp": 1781486653.4223673,
-      "sticker": "sticker_3",
-      "ame_sticker": "ame_pien"
-    },
-    {
-      "time": "09:24",
-      "reply": "",
-      "timestamp": 1781486657.0962281,
-      "sticker": "sticker_3",
-      "ame_sticker": "ame_pien"
-    },
-    {
-      "time": "09:24",
-      "reply": "",
-      "timestamp": 1781486661.642848,
-      "sticker": "sticker_3",
-      "ame_sticker": "ame_pien"
-    },
-    {
-      "time": "09:24",
-      "reply": "",
-      "timestamp": 1781486666.8448348,
-      "sticker": "sticker_3",
-      "ame_sticker": "ame_smile"
-    },
-    {
-      "time": "09:24",
-      "reply": "",
-      "timestamp": 1781486677.1376514,
-      "sticker": "sticker_3",
-      "ame_sticker": "ame_tsun"
-    },
-    {
-      "time": "09:24",
-      "reply": "",
-      "timestamp": 1781486683.7488847,
-      "sticker": "sticker_3",
-      "ame_sticker": "ame_pien"
-    },
-    {
-      "time": "09:24",
-      "reply": "",
-      "timestamp": 1781486688.3729677,
-      "sticker": "sticker_3",
-      "ame_sticker": "ame_pien"
-    },
-    {
-      "time": "09:34",
-      "reply": "",
-      "timestamp": 1781487292.1030898,
+      "timestamp": 1781487738.203189,
+      "player_text": "你在干嘛呢？",
       "ame_sticker": "cat_ignore"
     },
     {
-      "time": "09:34",
-      "reply": "坏阿P！\n又吊我胃口\n不理你啦",
-      "timestamp": 1781487295.8010406
+      "time": "09:42",
+      "reply": "要你管",
+      "timestamp": 1781487741.210663,
+      "player_text": "你在干嘛呢？"
+    },
+    {
+      "time": "09:43",
+      "reply": "才不是包括你呢  \n笨蛋",
+      "timestamp": 1781487796.5631804
+    },
+    {
+      "time": "09:43",
+      "reply": "等等 我刚才还没说完呢  \n你又无视我是不是",
+      "timestamp": 1781487799.0180686
+    },
+    {
+      "time": "09:43",
+      "reply": "",
+      "timestamp": 1781487819.9637318,
+      "sticker": "sticker_3",
+      "ame_sticker": "ame_pien"
+    },
+    {
+      "time": "09:43",
+      "reply": "你也嘤什么嘤\n我才是该哭的那个吧",
+      "timestamp": 1781487825.6321173,
+      "sticker": "sticker_3"
+    },
+    {
+      "time": "09:44",
+      "reply": "才没哭\n谁要你管\n笨蛋",
+      "timestamp": 1781487876.083415,
+      "player_text": "为什么哭呀"
+    },
+    {
+      "time": "09:44",
+      "reply": "...真的？",
+      "timestamp": 1781487883.4565165,
+      "sticker": "sticker_7"
+    },
+    {
+      "time": "09:44",
+      "reply": "",
+      "timestamp": 1781487894.4438746,
+      "sticker": "sticker_8",
+      "ame_sticker": "ame_tsun"
+    },
+    {
+      "time": "09:44",
+      "reply": "哦",
+      "timestamp": 1781487897.1850007,
+      "sticker": "sticker_8"
+    },
+    {
+      "time": "09:47",
+      "reply": "哼 你居然会看动态\n我还以为你眼里只有工作呢",
+      "timestamp": 1781488039.9200838
+    },
+    {
+      "time": "09:47",
+      "reply": "哼 才不是给你看的\n只是例行营业而已",
+      "timestamp": 1781488044.2929697
+    },
+    {
+      "time": "09:47",
+      "reply": "你干嘛学我说话啦 笨蛋阿P",
+      "timestamp": 1781488049.1558762
+    },
+    {
+      "time": "09:48",
+      "reply": "哼 我才没哭呢\n只是眼睛进砖头了",
+      "timestamp": 1781488102.3581948,
+      "recall": true
+    },
+    {
+      "time": "09:48",
+      "reply": "你又在擅自加戏了\n不准用我的名字发旁白啦笨蛋",
+      "timestamp": 1781488108.0849304
+    },
+    {
+      "time": "09:48",
+      "reply": "阿P你在窥屏的话就吱一声啊\n都不来猜猜看吗",
+      "timestamp": 1781488128.9689493
+    },
+    {
+      "time": "09:48",
+      "reply": "吱——  \n我还以为你要装死到底呢笨蛋  \n不过下次要早点来 不然揍你哦",
+      "timestamp": 1781488133.7421765
+    },
+    {
+      "time": "09:48",
+      "reply": "你也嘤什么嘤",
+      "timestamp": 1781488138.4336455,
+      "sticker": "sticker_3",
+      "recall": true
+    },
+    {
+      "time": "09:49",
+      "reply": "嘤嘤怪 揍你哦",
+      "timestamp": 1781488160.6574292,
+      "sticker": "sticker_3"
+    },
+    {
+      "time": "09:51",
+      "reply": "哦 那我也不管了",
+      "timestamp": 1781488290.249859,
+      "sticker": "sticker_4"
+    },
+    {
+      "time": "09:55",
+      "reply": "喂，你看到了？\n不许点评！\n...虽然也没差啦。",
+      "timestamp": 1781488502.4561374
+    },
+    {
+      "time": "09:55",
+      "reply": "喂，你不会又准备了一大堆牢骚吧  \n先说好我可不会安慰你哦",
+      "timestamp": 1781488506.7843466,
+      "recall": true
     }
   ]
 }

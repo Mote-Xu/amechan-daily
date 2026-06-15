@@ -1857,6 +1857,7 @@ window.doRelease = function() {
     fetch(API + '/api/release', { method: 'POST' }).then(function(r) { return r.json(); }).then(function(data) {
         if (data.ok) {
             var entries = data.entries || [];
+            console.log('[doRelease] entries:', entries.length, entries.map(function(e){return e.layer;}));
             // Save to current save slot
             for (var n = 0; n < entries.length; n++) {
                 SaveManager.incrementFeedCursor();
