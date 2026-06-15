@@ -2227,17 +2227,7 @@ function fetchJineChat() {
     if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
 }
 
-// Trigger words — local instant replies without API (F12)
-function checkTriggerWords(text) {
-    if (!text) return null;
-    var t = text.toLowerCase();
-    if (/(爱你|喜欢|想你|抱|亲|贴贴|老婆|宝贝)/.test(t)) return { reply: '...笨蛋', ame_sticker: 'ame_blush' };
-    if (/(晚安|睡觉|拜拜|再见|bye)/.test(t)) return { reply: '嗯...晚安', ame_sticker: null };
-    if (/(揍你|打你|敲你|笨蛋|傻瓜)/.test(t)) return { reply: '你才笨蛋！', ame_sticker: 'ame_tsun' };
-    return null;
-}
-
-// Send text from textarea — queues message, triggers batched reply cycle
+// Send text from textarea — all messages go through AI (no hardcoded trigger words)
 window.sendText = function() {
     try {
     var input = document.getElementById('jine-text-input');
@@ -2250,20 +2240,9 @@ window.sendText = function() {
     var now = new Date();
     var timeStr = ('0'+now.getHours()).slice(-2) + ':' + ('0'+now.getMinutes()).slice(-2);
 
-    // Trigger words: instant local reply, no API call (protected)
-    var trigger = null;
-    try { trigger = checkTriggerWords(text); } catch(e) { console.warn('[sendText] trigger error:', e); }
-    if (trigger) {
-        jineChatMsgs.push({ time: timeStr, player_text: text, reply: trigger.reply, ame_sticker: trigger.ame_sticker || null, recall: false });
-        var last = jineChatMsgs[jineChatMsgs.length - 1];
-        if (last) SaveManager.addJineMessage(last);
-        setTimeout(function() { endAmeResponse(); if (ACTIVE_TAB === 'jine') renderJineChatMsgs(); }, 600);
-        return;
-    }
-
     var playerMsg = { time: timeStr, player_text: text, reply: '', recall: false };
     jineChatMsgs.push(playerMsg);
-    SaveManager.addJineMessage(playerMsg);  // persist immediately
+    SaveManager.addJineMessage(playerMsg);
     if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
     _scheduleReply(true);
     } catch(e) { console.error('[sendText] crashed:', e); }
