@@ -2129,7 +2129,9 @@ window.sendText = function() {
         return;
     }
 
-    jineChatMsgs.push({ time: timeStr, player_text: text, reply: '', recall: false });
+    var playerMsg = { time: timeStr, player_text: text, reply: '', recall: false };
+    jineChatMsgs.push(playerMsg);
+    SaveManager.addJineMessage(playerMsg);  // persist immediately
     if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
     _startReplyCycle();
 };
@@ -2150,7 +2152,9 @@ function sendSticker(stickerId) {
 
     var now = new Date();
     var timeStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
-    jineChatMsgs.push({ time: timeStr, sticker: stickerId, reply: '', recall: false });
+    var stickerMsg = { time: timeStr, sticker: stickerId, reply: '', recall: false };
+    jineChatMsgs.push(stickerMsg);
+    SaveManager.addJineMessage(stickerMsg);  // persist immediately
     if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
     _startReplyCycle();
 }
