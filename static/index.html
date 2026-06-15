@@ -1476,8 +1476,8 @@ function initDanmaku() {
         wrap.className = 'danmaku-wrap';
         wrap.style.top = positions[i] + 'px';
         // Position handled entirely by CSS animation (translateX) — don't set left
-        wrap.style.animation = 'scrollR linear infinite ' + (12 + Math.random() * 8) + 's';
-        // First 2 danmaku: short delay so they appear within ~1s
+        // Only override duration/delay — don't touch the CSS shorthand (order-sensitive)
+        wrap.style.animationDuration = (12 + Math.random() * 8) + 's';
         wrap.style.animationDelay = (i < 2 ? Math.random() * 1.5 : Math.random() * 4) + 's';
 
         spawnDanmakuContent(wrap);
@@ -1514,8 +1514,8 @@ function refreshDanmaku() {
             spawnDanmakuContent(wrap);
         }
         wrap.style.animation = 'none';
-        wrap.offsetHeight;
-        wrap.style.animation = 'scrollR linear infinite ' + (12 + Math.random() * 8) + 's';
+        wrap.offsetHeight;  // force reflow to restart animation
+        wrap.style.animationDuration = (12 + Math.random() * 8) + 's';
     });
 }
 
@@ -1721,11 +1721,19 @@ function fetchTimeline() {
         CONTAINER.innerHTML = '<div class="empty-state"><div class="icon"><img src="img/icon_cho.png"></div><p>连接超天酱中...<br><span style="font-size:0.55rem;color:#555;">' + new Date().toLocaleTimeString() + '</span></p></div>';
     }
     fetch(API + '/api/timeline').then(function(r) { return r.json(); }).then(function(data) {
-        _fetchRetries = 0;
         console.log('[fetchTimeline] got', data.count, 'items, pool:', data.pool_remaining);
         cachedTimeline = data.timeline || [];
         poolRemaining = data.pool_remaining || 0;
         updatePoolCount();
+
+        // If backend is still generating (empty feed), keep polling — don't consume firstLoad
+        if (cachedTimeline.length === 0) {
+            console.log('[fetchTimeline] feed empty, polling in 3s...');
+            setTimeout(fetchTimeline, 3000);
+            return;
+        }
+
+        _fetchRetries = 0;
         if (firstLoad) {
             console.log('[fetchTimeline] firstLoad render, items:', cachedTimeline.length);
             renderFromCache();
@@ -1748,21 +1756,19 @@ function fetchTimeline() {
             poolRemaining = 0;
             updatePoolCount();
             console.log('[fetchTimeline] static mode, items:', cachedTimeline.length);
+            // Same guard: don't set firstLoad=false on empty
+            if (cachedTimeline.length === 0) {
+                setTimeout(fetchTimeline, 5000);
+                return;
+            }
             if (firstLoad) { renderFromCache(); firstLoad = false; enterStaticMode(); }
         }).catch(function(err2) {
             console.error('[fetchTimeline] static fallback also failed:', err2);
-            if (firstLoad) {
-                CONTAINER.innerHTML = '<div class="empty-state"><div class="icon"><img src="img/icon_cho.png"></div><p>超天酱暂时失联...<br><span style="font-size:0.6rem;color:#666;">确认服务器已启动？python server.py</span></p></div>';
-                firstLoad = false;
-            }
-            // Retry with backoff
+            // Retry with backoff — keep firstLoad alive
             _fetchRetries++;
             var delay = Math.min(3000 * _fetchRetries, 15000);
             console.log('[fetchTimeline] retry in', delay + 'ms');
-            setTimeout(function() {
-                firstLoad = true;
-                fetchTimeline();
-            }, delay);
+            setTimeout(fetchTimeline, delay);
         });
     });
 }
@@ -1904,14 +1910,21 @@ function hideAmeTyping() {
 }
 
 // ============================================================
-// Reply cycle — batches multiple player messages into one 糖糖 reply
+// Reply cycle — cancel in-flight request on new message, batch all unreplied into ONE reply
 // ============================================================
 function _startReplyCycle() {
-    if (_replyPending) return;  // already waiting for a reply
+    // If a request is already in flight, cancel it — we'll send a new one with all messages
+    if (_replyPending && _pendingController) {
+        _pendingController.abort();
+        _replyPending = false;
+        _pendingController = null;
+    }
+    if (_replyPending) return;  // abort was ignored (edge case), don't stack
+
     _replyPending = true;
     _pendingMsgIdx = jineChatMsgs.length;  // reply will go after current last message
 
-    // Collect all unreplied player texts since last reply
+    // Collect ALL unreplied player texts since last reply
     var texts = [];
     for (var i = jineChatMsgs.length - 1; i >= 0; i--) {
         var m = jineChatMsgs[i];
@@ -1933,6 +1946,8 @@ function _startReplyCycle() {
         body: JSON.stringify({text: combined}),
         signal: _pendingController.signal
     }).then(function(r) { return r.json(); }).then(function(data) {
+        // Release lock and timer FIRST — before any processing that could throw
+        _replyPending = false; _pendingController = null;
         clearTimeout(fetchTimeout);
         hideAmeTyping();
         endAmeResponse();
@@ -1950,7 +1965,6 @@ function _startReplyCycle() {
             jineChatMsgs.push(replyMsg);
         }
         SaveManager.addJineMessage(replyMsg);
-        _replyPending = false; _pendingController = null;
         if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
         // Check if more messages arrived during the API call
         var hasUnreplied = false;
@@ -2104,8 +2118,9 @@ window.sendText = function() {
     var now = new Date();
     var timeStr = ('0'+now.getHours()).slice(-2) + ':' + ('0'+now.getMinutes()).slice(-2);
 
-    // Trigger words: instant local reply, no API call
-    var trigger = checkTriggerWords(text);
+    // Trigger words: instant local reply, no API call (protected)
+    var trigger = null;
+    try { trigger = checkTriggerWords(text); } catch(e) { console.warn('[sendText] trigger error:', e); }
     if (trigger) {
         jineChatMsgs.push({ time: timeStr, player_text: text, reply: trigger.reply, ame_sticker: trigger.ame_sticker || null, recall: false });
         var last = jineChatMsgs[jineChatMsgs.length - 1];
@@ -2150,15 +2165,9 @@ jiggleLive();
 jiggleStats();
 setInterval(jiggleStats, 15000);
 fetchTimeline();
-// Static mode: no polling (content generated by GitHub Actions)
+// Poll for new content every 30s (empty-feed fast poll handled inside fetchTimeline)
 if (!isStaticMode) {
     setInterval(fetchTimeline, 30000);
-    // Fast poll if feed is empty (server may still be generating)
-    if (cachedTimeline.length === 0) {
-        setTimeout(function() { if (cachedTimeline.length === 0) fetchTimeline(); }, 3000);
-        setTimeout(function() { if (cachedTimeline.length === 0) fetchTimeline(); }, 7000);
-        setTimeout(function() { if (cachedTimeline.length === 0) fetchTimeline(); }, 12000);
-    }
 }
 console.log('+ Poketter v2.7.2 ready +');
 })();
