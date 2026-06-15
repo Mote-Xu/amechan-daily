@@ -131,20 +131,21 @@ def pop_from_pool() -> list[dict]:
         data["timeline"].append(entry)
         return entry
 
-    # 必须成对释放：两边都存在才弹出
+    # Release whatever's available — prefer pairs, but single is fine
     poke_item = _find_one("poketter")
     diary_item = _find_one("diary")
 
-    if poke_item and diary_item:
+    if poke_item:
         entries.append(_pop_it(poke_item))
+    if diary_item:
         entries.append(_pop_it(diary_item))
+
+    if entries:
         data["hidden_pool"] = pool
         _save_raw(data)
         return entries
 
-    # 不完整 → 返回空，触发服务端重新生成
-    data["hidden_pool"] = pool
-    _save_raw(data)
+    # Pool completely empty → trigger regeneration
     return []
 
 
