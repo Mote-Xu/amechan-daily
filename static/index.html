@@ -1348,6 +1348,7 @@ function updateSaveIndicator() {
 
 function reloadFromSlot() {
     jineChatMsgs = SaveManager.getJineChat();
+    _stressFromDanmaku = 0;  // reset accumulated danmaku stress for new slot
     loadStatsFromSlot(); updateSaveIndicator();
     renderFromCache();
     if (ACTIVE_TAB === "jine") renderJineChatMsgs();
@@ -1530,12 +1531,10 @@ function applyDanmakuStress() {
 }
 
 function refreshDanmaku() {
+    // Only refresh content — don't restart animation (sends everything off-screen)
     danmakuWraps.forEach(function(wrap) {
         if (wrap.classList.contains('trashed')) return;
-        if (Math.random() < 0.20) spawnDanmakuContent(wrap);
-        wrap.style.animation = 'none';
-        wrap.offsetHeight;
-        wrap.style.animationDuration = (14 + Math.random() * 8) + 's';
+        if (Math.random() < 0.15) spawnDanmakuContent(wrap);
     });
 }
 
