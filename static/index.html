@@ -1971,12 +1971,9 @@ function hideAmeTyping() {
 // Reply cycle v2.8 — overlap API time with typing time, unified endpoint
 // ============================================================
 function _startReplyCycle() {
-    // v2.8: Don't abort in-flight requests — let them complete naturally.
-    // If a new message arrives while one is pending, mark it for the NEXT cycle.
-    if (_replyPending) {
-        _hasPendingFollowup = true;  // will auto-trigger next cycle after current completes
-        return;
-    }
+    // v2.9: One request at a time. When current reply arrives, _checkUnreplied()
+    // scans for remaining messages and auto-triggers the next cycle.
+    if (_replyPending) return;
 
     _replyPending = true;
     var cycleStart = Date.now();
@@ -2042,9 +2039,8 @@ function _startReplyCycle() {
             }
             SaveManager.addJineMessage(replyMsg);
             if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
-            // Check if more messages arrived during the API call → another cycle
-            if (_hasPendingFollowup) {
-                _hasPendingFollowup = false;
+            // v2.9: Loop — after each reply, check if ANY unreplied messages remain
+            if (_checkUnreplied()) {
                 startAmeResponse();
                 _startReplyCycle();
             }
@@ -2065,8 +2061,15 @@ function _startReplyCycle() {
         }, remainWait);
     });
 }
-// Track whether new messages arrived while waiting for a reply
-var _hasPendingFollowup = false;
+// Check if any player messages are still waiting for a reply
+function _checkUnreplied() {
+    for (var i = 0; i < jineChatMsgs.length; i++) {
+        var m = jineChatMsgs[i];
+        if (m.reply || m.ame_sticker) continue;
+        if (m.player_text || m.sticker) return true;
+    }
+    return false;
+}
 
 function renderStickerBar() {
     var bar = document.getElementById('sticker-bar');
