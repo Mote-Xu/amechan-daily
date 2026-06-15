@@ -109,19 +109,29 @@
       "selfie_mood": "angel",
       "timestamp": 1781485583.8136976,
       "date": "2026-06-15 09:06:23"
+    },
+    {
+      "batch_id": "released_1781486184254",
+      "event": "随手一发",
+      "layer": "poketter",
+      "time": "09:16",
+      "text": "深夜睡不着～来猜猜糖糖今天用的什么味道的入浴剂？是草莓牛奶🍓🥛！整个浴室都变甜了✨",
+      "selfie_mood": "sleepy",
+      "timestamp": 1781486184.2548385,
+      "date": "2026-06-15 09:16:24"
+    },
+    {
+      "batch_id": "released_1781486412074",
+      "event": "随手一发",
+      "layer": "poketter",
+      "time": "09:20",
+      "text": "明天绝对要录完那首新歌！赌上糖糖之名！🌟失败的话就…就给大家发双倍福利写真💖",
+      "selfie_mood": "pray",
+      "timestamp": 1781486412.0743964,
+      "date": "2026-06-15 09:20:12"
     }
   ],
   "hidden_pool": [
-    {
-      "layer": "poketter",
-      "text": "深夜睡不着～来猜猜糖糖今天用的什么味道的入浴剂？是草莓牛奶🍓🥛！整个浴室都变甜了✨",
-      "selfie_mood": "sleepy"
-    },
-    {
-      "layer": "poketter",
-      "text": "明天绝对要录完那首新歌！赌上糖糖之名！🌟失败的话就…就给大家发双倍福利写真💖",
-      "selfie_mood": "pray"
-    },
     {
       "layer": "diary",
       "text": "吃光了最后那包过期的软糖，包装纸上写着当心意被看见就会发光。要是真这么简单就好了。",
@@ -129,113 +139,6 @@
     }
   ],
   "jine_chat": [
-    {
-      "time": "09:09",
-      "reply": "啥啊  \n你倒是说人话呀笨蛋",
-      "timestamp": 1781485777.9522307,
-      "player_text": "就是很奇怪啊",
-      "recall": true
-    },
-    {
-      "time": "09:09",
-      "reply": "知道错了就快解释清楚啦笨蛋",
-      "timestamp": 1781485781.2670097,
-      "player_text": "就是很奇怪啊 | [抱歉抱歉"
-    },
-    {
-      "time": "09:09",
-      "reply": "哼 我才懒得猜呢  \n你自己说清楚啦",
-      "timestamp": 1781485792.6003091,
-      "player_text": "你说呢"
-    },
-    {
-      "time": "09:09",
-      "reply": "哼 你这什么态度啊笨蛋\n揍你哦",
-      "timestamp": 1781485796.4473898,
-      "player_text": "你说呢 | [关我屁事"
-    },
-    {
-      "time": "09:09",
-      "reply": "谁要你突然说这个啦\n笨蛋…",
-      "timestamp": 1781485798.7208207,
-      "player_text": "[永远爱你"
-    },
-    {
-      "time": "09:11",
-      "reply": "笨蛋 哭什么哭\n我还没揍你呢",
-      "timestamp": 1781485860.4050024,
-      "player_text": "[嘤嘤"
-    },
-    {
-      "time": "09:11",
-      "reply": "关你啥事\n反正不是在等你消息",
-      "timestamp": 1781485865.716618,
-      "player_text": "你在干嘛？"
-    },
-    {
-      "time": "09:11",
-      "reply": "",
-      "timestamp": 1781485873.5696287,
-      "player_text": "你在干嘛？ | [啊对对",
-      "ame_sticker": "cat_ignore"
-    },
-    {
-      "time": "09:11",
-      "reply": "哈？学我说话是吧\n揍你哦",
-      "timestamp": 1781485875.843818,
-      "player_text": "[关我屁事",
-      "ame_sticker": "ame_tsun"
-    },
-    {
-      "time": "09:11",
-      "reply": "你又学我\n嘤嘤嘤个头啦\n揍你哦",
-      "timestamp": 1781485879.7089872,
-      "player_text": "[关我屁事 | [嘤嘤"
-    },
-    {
-      "time": "09:11",
-      "reply": "哈？突然夸我  \n揍你哦",
-      "timestamp": 1781485883.4940677,
-      "player_text": "[太强了"
-    },
-    {
-      "time": "09:11",
-      "reply": "哼 别以为这样我就不揍你了\n揍你哦",
-      "timestamp": 1781485888.1218977,
-      "player_text": "[太强了 | [太强了"
-    },
-    {
-      "time": "09:11",
-      "reply": "哼 谁要你永远爱了\n笨蛋",
-      "timestamp": 1781485890.8003495,
-      "player_text": "[永远爱你"
-    },
-    {
-      "time": "09:11",
-      "reply": "哼 犯什么病呢你\n永远爱我然后原地去世？逻辑呢!",
-      "timestamp": 1781485894.1225436,
-      "player_text": "[永远爱你 | [原地去世"
-    },
-    {
-      "time": "09:11",
-      "reply": "你啊对对对个鬼啦\n又要敷衍我是吧",
-      "timestamp": 1781485897.0718577,
-      "player_text": "[原地去世 | [啊对对",
-      "recall": true
-    },
-    {
-      "time": "09:11",
-      "reply": "你今天是欠揍模式吗",
-      "timestamp": 1781485902.8752623,
-      "player_text": "[啊对对 | [关我屁事",
-      "ame_sticker": "cat_ignore"
-    },
-    {
-      "time": "09:11",
-      "reply": "你又来 复读机啊你\n再刷屏我真揍你哦",
-      "timestamp": 1781485905.4424996,
-      "player_text": "[原地去世 | [啊对对"
-    },
     {
       "time": "09:11",
       "reply": "突然卖萌也没用哦\n揍你哦",
@@ -318,6 +221,112 @@
       "reply": "谁秒回了\n自作多情\n揍你哦",
       "timestamp": 1781485971.1451228,
       "player_text": "为什么老是秒回哦嗯 | [太强了"
+    },
+    {
+      "time": "09:16",
+      "reply": "你管我用什么味道 揍你哦",
+      "timestamp": 1781486192.0015736
+    },
+    {
+      "time": "09:16",
+      "reply": "啊？\n你是不是欠揍",
+      "timestamp": 1781486195.2304025
+    },
+    {
+      "time": "09:16",
+      "reply": "你学我说话干嘛\n揍你哦!\n你那学得也太不像了吧",
+      "timestamp": 1781486215.455498,
+      "player_text": "[关我屁事",
+      "recall": true
+    },
+    {
+      "time": "09:17",
+      "reply": "明明就有\n还敢狡辩",
+      "timestamp": 1781486230.567351,
+      "player_text": "我没有啊",
+      "ame_sticker": "ame_tsun"
+    },
+    {
+      "time": "09:17",
+      "reply": "星尘？你又在想什么奇怪的东西\n该不会是什么新的梗吧\n算了懒得问你",
+      "timestamp": 1781486234.448776,
+      "player_text": "你知道星尘吗？"
+    },
+    {
+      "time": "09:17",
+      "reply": "又问我？\n自己搜去啦笨蛋",
+      "timestamp": 1781486239.833742,
+      "player_text": "你知道星尘吗？ | [嘤嘤"
+    },
+    {
+      "time": "09:17",
+      "reply": "哼 突然夸我？\n肯定没好事",
+      "timestamp": 1781486243.0983634,
+      "player_text": "[太强了"
+    },
+    {
+      "time": "09:17",
+      "reply": "你又在那演什么独角戏\n贴图都发不明白",
+      "timestamp": 1781486245.5909538,
+      "player_text": "[太强了 | [啊对对"
+    },
+    {
+      "time": "09:20",
+      "reply": "你也嘤什么嘤",
+      "timestamp": 1781486404.9318144,
+      "sticker": "sticker_3"
+    },
+    {
+      "time": "09:20",
+      "reply": "",
+      "timestamp": 1781486419.5722024,
+      "ame_sticker": "ame_tsun"
+    },
+    {
+      "time": "09:20",
+      "reply": "你又在那自导自演什么\n揍你哦",
+      "timestamp": 1781486423.484069
+    },
+    {
+      "time": "09:21",
+      "reply": "",
+      "timestamp": 1781486463.3377383,
+      "sticker": "sticker_3",
+      "ame_sticker": "ame_tsun"
+    },
+    {
+      "time": "09:21",
+      "reply": "你也嘤什么嘤 我才是想哭的那个吧",
+      "timestamp": 1781486468.3142567,
+      "sticker": "sticker_3"
+    },
+    {
+      "time": "09:21",
+      "reply": "",
+      "timestamp": 1781486475.166214,
+      "sticker": "sticker_3",
+      "ame_sticker": "cat_sorry"
+    },
+    {
+      "time": "09:21",
+      "reply": "",
+      "timestamp": 1781486479.8871021,
+      "sticker": "sticker_3",
+      "ame_sticker": "cat_cry"
+    },
+    {
+      "time": "09:21",
+      "reply": "",
+      "timestamp": 1781486485.1390595,
+      "sticker": "sticker_3",
+      "ame_sticker": "cat_yeah"
+    },
+    {
+      "time": "09:21",
+      "reply": "",
+      "timestamp": 1781486488.2683105,
+      "sticker": "sticker_3",
+      "ame_sticker": "ame_pien"
     }
   ]
 }

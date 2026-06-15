@@ -1482,6 +1482,8 @@ function initDanmaku() {
     setInterval(autoCleanDanmaku, 15000);
 }
 
+function pickDanmaku(pool) { return pool[Math.floor(Math.random() * pool.length)]; }
+
 function spawnDanmakuContent(wrap) {
     // Clear existing
     wrap.innerHTML = '';
