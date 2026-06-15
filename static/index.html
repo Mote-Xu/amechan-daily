@@ -1919,16 +1919,17 @@ function _startReplyCycle() {
         _replyPending = false;
         _pendingController = null;
     }
-    if (_replyPending) return;  // abort was ignored (edge case), don't stack
+    if (_replyPending) return;
 
     _replyPending = true;
-    _pendingMsgIdx = jineChatMsgs.length;  // reply will go after current last message
+    // Capture state locally — prevents race with aborted request's catch handler
+    var replyIdx = jineChatMsgs.length;
 
     // Collect ALL unreplied player texts since last reply
     var texts = [];
     for (var i = jineChatMsgs.length - 1; i >= 0; i--) {
         var m = jineChatMsgs[i];
-        if (m.reply) break;  // stop at last replied message
+        if (m.reply) break;
         if (m.player_text) texts.unshift(m.player_text);
         if (m.sticker) texts.unshift('[' + (findSticker(m.sticker)||{}).label || '贴图' + ']');
     }
@@ -1946,19 +1947,15 @@ function _startReplyCycle() {
         body: JSON.stringify({text: combined}),
         signal: _pendingController.signal
     }).then(function(r) { return r.json(); }).then(function(data) {
-        // Release lock and timer FIRST — before any processing that could throw
         _replyPending = false; _pendingController = null;
         clearTimeout(fetchTimeout);
         hideAmeTyping();
         endAmeResponse();
-        // Place reply after the last pending message
-        var replyIdx = _pendingMsgIdx;
         var replyMsg = {
             time: data.time || ('0'+new Date().getHours()).slice(-2)+':'+('0'+new Date().getMinutes()).slice(-2),
             reply: data.reply || '', ame_sticker: data.ame_sticker || null,
             recall: data.recall || false
         };
-        // Insert reply at the right position (after last player msg at time of cycle start)
         if (replyIdx < jineChatMsgs.length) {
             jineChatMsgs.splice(replyIdx, 0, replyMsg);
         } else {
@@ -1975,16 +1972,19 @@ function _startReplyCycle() {
         if (hasUnreplied) { startAmeResponse(); _startReplyCycle(); }
     }).catch(function(err) {
         clearTimeout(fetchTimeout);
+        // Intentional abort (new message arrived) — skip fallback, don't touch shared state
+        if (err.name === 'AbortError') {
+            console.log('[replyCycle] aborted for new message batch');
+            return;
+        }
         console.warn('[replyCycle] error:', err.name || err.message);
         hideAmeTyping();
         endAmeResponse();
-        // Fallback reply
+        _replyPending = false; _pendingController = null;
         var fb = { time: ('0'+new Date().getHours()).slice(-2)+':'+('0'+new Date().getMinutes()).slice(-2),
             reply: ['...','嗯','哼','哦'][Math.floor(Math.random()*4)], recall: false };
-        var ri = _pendingMsgIdx;
-        if (ri < jineChatMsgs.length) { jineChatMsgs.splice(ri, 0, fb); } else { jineChatMsgs.push(fb); }
+        if (replyIdx < jineChatMsgs.length) { jineChatMsgs.splice(replyIdx, 0, fb); } else { jineChatMsgs.push(fb); }
         SaveManager.addJineMessage(fb);
-        _replyPending = false; _pendingController = null;
         if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
     });
 }
