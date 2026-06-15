@@ -119,15 +119,19 @@
       "selfie_mood": "angel",
       "timestamp": 1781488993.532649,
       "date": "2026-06-15 10:03:13"
-    }
-  ],
-  "hidden_pool": [
+    },
     {
+      "batch_id": "released_1781489408222",
+      "event": "随手一发",
       "layer": "diary",
+      "time": "10:10",
       "text": "凌晨三点，外面有猫在叫。至少它能自由地发出声音。",
-      "selfie_mood": "angel"
+      "selfie_mood": "angel",
+      "timestamp": 1781489408.2226253,
+      "date": "2026-06-15 10:10:08"
     }
   ],
+  "hidden_pool": [],
   "jine_chat": [
     {
       "time": "09:42",

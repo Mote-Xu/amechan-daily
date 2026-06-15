@@ -7,48 +7,37 @@
 
 ```bash
 conda activate deepseek_v4_api
-cd /mnt/e/Desktop/Deepseek_V4_API/amechan-daily
+cd e:/Desktop/Deepseek_V4_API/amechan-daily
 python server.py
 # → http://127.0.0.1:8930
 ```
 
+## 当前状态
+
+| 功能 | 状态 |
+|------|:--:|
+| F7 戳一戳 | ✅ 单条释放+自动补池 |
+| JINE 互动聊天 | ✅ 回复队列+贴图专属端点+动态延迟 |
+| 推博 Feed | ✅ 每存档独立 timeline |
+| 弹幕 | 🟡 72px/3轨/12条/stress联动，偶有刷新闪烁 |
+| JINE release 独白 | 🟡 格式强制重写，仍偶有对话泄漏 |
+| Webcam | ✅ 18状态/发型稀有/打字→egosearching |
+| 多存档 | ✅ 独立 timeline+JINE+stats+trash |
+
 ## 架构
 
 ```
-amechan-daily/
-  prompts.py               # JINE_REPLY/JINE_TEXT/JINE_RELEASE + 铁律
-  generator.py             # DeepSeek API + 重试 + JSON解析
-  feed.py                  # timeline/hidden_pool/JINE chat CRUD
-  server.py                # HTTP API (后台线程生成首条)
-  static/index.html        # 前端单文件 ~2300行
-  data/feed.json           # 持久化
+prompts.py     # KAngel/糖糖人设 + JINE_RELEASE(格式强制)/REPLY/TEXT
+generator.py   # DeepSeek API + 重试 + JSON解析
+feed.py        # CRUD + pop_from_pool(单条释放)
+server.py      # HTTP API + 后台线程生成首条
+static/index.html  # 前端单文件 ~2400行
 ```
-
-## 核心机制
-
-- **L1 Poketter**: 超天酱公开推文，绝口不提阿P
-- **L2 Diary**: 糖糖私密日记
-- **L3 JINE**: 糖糖→阿P 私信，统一聊天流
-- **回复队列**: `_startReplyCycle()` 合并多条玩家消息→一次 API→一条回复
-- **Webcam**: Canvas 18状态, rAF, 发型稀有池(10%)
-
-## v2.7.2 改动记录
-
-| 日期 | 改动 |
-|------|------|
-| 6/17 | fetchTimeline: 空数据不消费 firstLoad; 内部轮询 |
-| 6/17 | _startReplyCycle: abort 旧请求合并重发; AbortError 不插降级回复 |
-| 6/17 | _replyPending 移到 .then() 第一行释放; checkTriggerWords try/catch |
-| 6/17 | 贴图路由到 /api/jine/send; 最小打字延迟 2.5s |
-| 6/17 | 玩家消息立刻持久化到 SaveManager |
-| 6/17 | 弹幕: animation 简写→animationDuration 单独设 |
-| 6/17 | server.py 首条生成→后台线程; JINE prompt 严禁 meta+高频限制 |
 
 ## 已知问题
 
 | # | 问题 | 状态 |
 |---|------|:--:|
-| 1 | 弹幕看不到 | 🔴 |
-| 2 | JINE 贴图回复质量低 | 🟡 |
-| 3 | 回复太快不自然 | 🟡 |
-| 4 | 部分 CSS 细节 (v2.3 遗留) | 🟡 |
+| 1 | JINE release 偶有对话感泄漏 | 🔴 |
+| 2 | 弹幕偶尔全部消失再出现 | 🟡 |
+| 3 | 贴图回复质量不稳定 | 🟡 |
