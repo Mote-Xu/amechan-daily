@@ -732,7 +732,7 @@ body {
 @keyframes livePulse { 0%,100%{opacity:1;box-shadow:0 0 4px red} 50%{opacity:0.3;box-shadow:0 0 12px red} }
 .live-text { color:red; font-size:0.75rem; font-weight:bold; }
 .live-viewers { color:#ccc; font-size:0.7rem; }
-.danmaku-bar { height:48px; overflow:hidden; position:relative; margin-bottom:1rem; border-bottom:1px solid #333; cursor:default; background:rgba(0,0,0,0.35); border-top:1px solid rgba(255,255,255,0.05); }
+.danmaku-bar { height:48px; width:100%; overflow:hidden; position:relative; z-index:10; margin-bottom:1rem; border-bottom:1px solid #333; cursor:default; background:rgba(0,0,0,0.35); border-top:1px solid rgba(255,255,255,0.05); }
 .danmaku-wrap { position:absolute; white-space:nowrap; display:flex; align-items:center; gap:6px; will-change:left; padding:3px 6px; border-radius:3px; transition:background 0.15s; left:100%; animation:scrollR 16s linear infinite; }
 .danmaku-wrap:hover { animation-play-state:paused !important; background:rgba(255,0,0,0.08); z-index:10; }
 .danmaku-text { font-size:0.75rem; color:#aaa; pointer-events:none; line-height:1.4; }
@@ -1465,18 +1465,12 @@ function initDanmaku() {
         }
     });
 
-    var positions = [];
-	    var barH = bar.clientHeight || 56;
-	    var safeMax = Math.max(2, barH - 17);
-	    for (var i = 0; i < DANMAKU_COUNT; i++) {
-	        positions.push(2 + Math.floor((safeMax - 2) * i / (DANMAKU_COUNT - 1)));
-	    }
+    var TRACKS = 2;
+    var TRACK_H = 24;  // 2 tracks × 24px = 48px bar height
     for (var i = 0; i < DANMAKU_COUNT; i++) {
         var wrap = document.createElement('span');
         wrap.className = 'danmaku-wrap';
-        wrap.style.top = positions[i] + 'px';
-        // Position handled entirely by CSS animation (translateX) — don't set left
-        // Only override duration/delay — don't touch the CSS shorthand (order-sensitive)
+        wrap.style.top = (i % TRACKS) * TRACK_H + 'px';
         wrap.style.animationDuration = (12 + Math.random() * 8) + 's';
         wrap.style.animationDelay = (i < 2 ? Math.random() * 1.5 : Math.random() * 4) + 's';
 
@@ -1944,9 +1938,16 @@ function _startReplyCycle() {
     // Route: pure sticker(s) → /api/jine/send (Few-Shot prompt); text → /api/jine/text
     var isPureSticker = lastSticker && texts.every(function(t) { return t.charAt(0) === '['; });
     var endpoint = isPureSticker ? '/api/jine/send' : '/api/jine/text';
+    // Pass recent history so model has conversation context
+    var recentCtx = jineChatMsgs.slice(-8).map(function(m) {
+        if (m.player_text) return '阿P: ' + m.player_text;
+        if (m.sticker) return '阿P: [' + (findSticker(m.sticker)||{}).label || '?'] + ']';
+        if (m.reply) return '糖糖: ' + m.reply;
+        return '';
+    }).filter(Boolean);
     var body = isPureSticker
-        ? JSON.stringify({sticker: lastSticker})
-        : JSON.stringify({text: texts.join(' | ')});
+        ? JSON.stringify({sticker: lastSticker, history: recentCtx})
+        : JSON.stringify({text: texts.join(' | '), history: recentCtx});
 
     fetch(API + endpoint, {
         method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -1955,9 +1956,11 @@ function _startReplyCycle() {
         _replyPending = false; _pendingController = null;
         clearTimeout(fetchTimeout);
 
-        // Minimum typing delay: at least 2.5s from cycle start
+        // Dynamic typing delay: 1.5s base + 120ms per character, max 7s
+        var typingTime = 1500 + ((data.reply || '').length * 120);
+        typingTime = Math.min(typingTime, 7000);
         var elapsed = Date.now() - cycleStart;
-        var minDelay = Math.max(1200, 2500 - elapsed);
+        var remainWait = Math.max(800, typingTime - elapsed);
 
         setTimeout(function() {
             hideAmeTyping();
@@ -1981,7 +1984,7 @@ function _startReplyCycle() {
                 if (jineChatMsgs[j].player_text || jineChatMsgs[j].sticker) { hasUnreplied = true; break; }
             }
             if (hasUnreplied) { startAmeResponse(); _startReplyCycle(); }
-        }, minDelay);
+        }, remainWait);
     }).catch(function(err) {
         clearTimeout(fetchTimeout);
         if (err.name === 'AbortError') {
@@ -1990,7 +1993,7 @@ function _startReplyCycle() {
         }
         console.warn('[replyCycle] error:', err.name || err.message);
         var elapsed = Date.now() - cycleStart;
-        var minDelay = Math.max(800, 2200 - elapsed);
+        var remainWait = Math.max(800, 2200 - elapsed);
         setTimeout(function() {
             hideAmeTyping();
             endAmeResponse();
@@ -2000,7 +2003,7 @@ function _startReplyCycle() {
             if (replyIdx < jineChatMsgs.length) { jineChatMsgs.splice(replyIdx, 0, fb); } else { jineChatMsgs.push(fb); }
             SaveManager.addJineMessage(fb);
             if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
-        }, minDelay);
+        }, remainWait);
     });
 }
 
