@@ -108,10 +108,15 @@ def save_hidden_pool(items: list[dict]) -> int:
 
 def pop_from_pool() -> list[dict]:
     """从 hidden_pool 释放一对：一条 Poketter + 一条 Diary。
-    返回条目列表（1-2条）。糖糖同时用两个身份发动态——公开的超天酱和私密的自己。"""
+    返回条目列表（1-2条）。糖糖同时用两个身份发动态——公开的超天酱和私密的自己。
+    v2.8: 释放后自动检查水位线，低于阈值时后台静默补池。"""
+    global _is_generating
     data = _load_raw()
     pool = data.get("hidden_pool", [])
     if not pool:
+        # Pool completely empty — trigger regeneration inline and retry once
+        print("  [!] hidden_pool 已空，触发紧急生成...")
+        _trigger_background_generate()
         return []
 
     entries = []
@@ -137,6 +142,12 @@ def pop_from_pool() -> list[dict]:
         data["timeline"].append(entry)
         return entry
 
+    # Count available pairs in pool
+    def _count_pairs() -> int:
+        poke_count = sum(1 for it in pool if it.get("layer") == "poketter")
+        diary_count = sum(1 for it in pool if it.get("layer") == "diary")
+        return min(poke_count, diary_count)
+
     # Must release as a pair — both must exist
     poke_item = _find_one("poketter")
     diary_item = _find_one("diary")
@@ -146,11 +157,43 @@ def pop_from_pool() -> list[dict]:
         entries.append(_pop_it(diary_item))
         data["hidden_pool"] = pool
         _save_raw(data)
+
+        # 【核心优化】释放后检查水位线：剩余对 < WATERLINE 且未在生成 → 后台补池
+        remaining_pairs = _count_pairs()
+        print(f"  [OK] 释放 2 条 (剩余 {len(pool)} 条, ~{remaining_pairs} 对)")
+        if remaining_pairs < _WATERLINE and not _is_generating:
+            _trigger_background_generate()
         return entries
 
-    # Incomplete pair → regenerate pool (don't release singles)
+    # Incomplete pair → trigger regeneration (don't release singles)
     print(f"  [!] Pool imbalanced: poke={bool(poke_item)}, diary={bool(diary_item)} → trigger regeneration")
+    _trigger_background_generate()
     return []
+
+
+def _trigger_background_generate():
+    """后台静默触发生成，不阻塞当前请求。使用全局锁防并发。"""
+    global _is_generating
+    if _is_generating:
+        print("  [bg] 已在生成中，跳过")
+        return
+    _is_generating = True
+
+    def _bg_task():
+        global _is_generating
+        try:
+            from generator import generate_and_save
+            print("  [bg] 后台补池开始...")
+            generate_and_save()
+            print("  [bg] 后台补池完成 ✓")
+        except Exception as e:
+            print(f"  [bg] 后台补池失败: {e}")
+        finally:
+            _is_generating = False
+
+    t = threading.Thread(target=_bg_task, daemon=True)
+    t.start()
+    print("  [bg] 后台补池线程已启动")
 
 
 def pool_count() -> int:
