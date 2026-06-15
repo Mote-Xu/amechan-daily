@@ -949,6 +949,8 @@ var AME_STICKERS = [
     {id:'ame_blush', label:'', color:'#FF8090', cssClass:'ame-pixel-blush', pngFile:'stamp_ame_blush.png'},
     {id:'ame_dead',  label:'', color:'#AAA',    cssClass:'ame-pixel-dead',  pngFile:'stamp_ame_dead.png'},
     {id:'ame_shock', label:'', color:'#FFD060', cssClass:'ame-pixel-shock', pngFile:'stamp_ame_shock.png'},
+	    {id:'ame_sleep', label:'', color:'#AAA',    cssClass:'ame-pixel',       pngFile:'stamp_ame_sleep.png'},
+	    {id:'ame_ignore',label:'', color:'#AAA',    cssClass:'ame-pixel',       pngFile:'stamp_ame_ignore.png'},
     // 猫咪贴图（糖糖也能发）
     {id:'cat_good',   label:'好',     color:'#FF6060', catVar:'v1', pngFile:'stamp_cat_good.png'},
     {id:'cat_strong', label:'太强了', color:'#FFA060', catVar:'v2', pngFile:'stamp_cat_strong.png'},
@@ -1978,17 +1980,18 @@ function _startReplyCycle() {
 
     _replyPending = true;
     var cycleStart = Date.now();
-    var replyIdx = jineChatMsgs.length;
 
-    // Collect ALL unreplied player messages, tracking types
-    var texts = [], lastSticker = null;
-    for (var i = jineChatMsgs.length - 1; i >= 0; i--) {
+    // v2.9: Reply to ONE message at a time — find the OLDEST unreplied player message
+    // This prevents batching multiple player messages into one API call (forced Q&A pattern)
+    var targetIdx = -1, targetText = '', targetSticker = '';
+    for (var i = 0; i < jineChatMsgs.length; i++) {
         var m = jineChatMsgs[i];
-        if (m.reply) break;
-        if (m.player_text) texts.unshift(m.player_text);
-        if (m.sticker) { texts.unshift('[...]'); lastSticker = m.sticker; }
+        if (m.reply) continue;  // skip already-replied
+        if (m.player_text) { targetIdx = i; targetText = m.player_text; break; }
+        if (m.sticker)     { targetIdx = i; targetSticker = m.sticker; break; }
     }
-    if (texts.length === 0) { _replyPending = false; return; }
+    if (targetIdx < 0) { _replyPending = false; return; }
+    var replyIdx = targetIdx + 1;  // insert reply right after this message
 
     // Typing indicator after 800ms
     setTimeout(function() { showAmeTyping(); }, 800);
@@ -2002,10 +2005,10 @@ function _startReplyCycle() {
         if (m.ame_sticker) entry.ame_sticker = m.ame_sticker;
         return entry;
     });
-    var isPureSticker = lastSticker && texts.every(function(t) { return t === '[...]'; });
+    var isPureSticker = !targetText && !!targetSticker;
     var requestBody = {
-        text: isPureSticker ? '' : texts.join(' | '),
-        sticker: lastSticker || '',
+        text: targetText || '',
+        sticker: targetSticker || '',
         history: recentMsgs
     };
 
@@ -2137,7 +2140,21 @@ function renderJineChatUnified(timelineItems) {
         lastMins = mins;
         switch (m.type) {
         case 'ame-text':
-            html += '<div class="jine-msg ame"><div class="jine-avatar"><img src="img/icon_ame.png"></div><div class="bubble">' + esc(m.text) + '</div></div>';
+            // Safety: parse [stamp:xxx] markers that the backend may have missed
+            var cleanText = m.text || '';
+            var rx = /\[stamp:\s*([a-zA-Z_]+)\]/g;
+            var match;
+            while ((match = rx.exec(m.text)) !== null) {
+                var sid = match[1];
+                if (findSticker(sid)) {
+                    html += '<div class="jine-msg ame-sticker"><div class="jine-avatar"><img src="img/icon_ame.png"></div><div><div class="jine-bubble stamp-msg">' + stickerHTML(sid) + '</div></div></div>';
+                    cleanText = cleanText.replace(match[0], '');
+                }
+            }
+            cleanText = cleanText.replace(/\s+/g, ' ').trim();
+            if (cleanText) {
+                html += '<div class="jine-msg ame"><div class="jine-avatar"><img src="img/icon_ame.png"></div><div class="bubble">' + esc(cleanText) + '</div></div>';
+            }
             break;
         case 'recall': case 'recall-tl':
             html += '<div class="jine-system-msg recall">糖糖撤回了一条消息</div>';
