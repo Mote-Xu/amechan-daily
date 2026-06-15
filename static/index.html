@@ -978,6 +978,7 @@ var _batchSentIdx = 0;           // last index sent to API (prevents re-processi
 var _f7Timers = [];              // pending F7 JINE message timers (cleared on save switch)
 
 function _cancelF7Timers() {
+    console.log('[F7] cancelF7Timers: clearing', _f7Timers.length, 'timers');
     for (var i = 0; i < _f7Timers.length; i++) clearTimeout(_f7Timers[i]);
     _f7Timers = [];
 }
@@ -1922,8 +1923,8 @@ window.doRelease = function() {
                     jineMsgs.forEach(function(msg, i) {
                         var t2 = setTimeout(function() {
                             // Double guard: same slot + slot still exists (not deleted)
-                            if (SaveManager.getCurrentSlot().id !== _f7SlotId) return;
-                            if (!SaveManager.data.slots[_f7SlotId]) return;
+                            if (SaveManager.getCurrentSlot().id !== _f7SlotId) { console.warn('[F7] t2 skipped — slot mismatch'); return; }
+                            if (!SaveManager.data.slots[_f7SlotId]) { console.warn('[F7] t2 skipped — slot deleted'); return; }
                             var replyText = (msg.reply && msg.reply !== 'undefined') ? msg.reply : '';
                             var chatMsg = {
                                 time: msg.time || '', reply: replyText,
