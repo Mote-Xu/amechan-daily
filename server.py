@@ -144,7 +144,7 @@ class AmechanHandler(SimpleHTTPRequestHandler):
                 self._send_json(resp)
             else:
                 print("  [!] Pool 空，后台生成已触发，请稍后重试")
-                resp = {"ok": False, "retry": True, "msg": "后台生成中，请稍等几秒再戳哦～"}
+                resp = {"ok": False, "retry": True, "pool_remaining": pool_count(), "msg": "后台生成中，请稍等几秒再戳哦～"}
                 print(f"  [DBG] sending ok=False, retry=True")
                 self._send_json(resp)
 
