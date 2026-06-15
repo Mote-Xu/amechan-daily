@@ -1941,7 +1941,7 @@ function _startReplyCycle() {
     // Pass recent history so model has conversation context
     var recentCtx = jineChatMsgs.slice(-8).map(function(m) {
         if (m.player_text) return '阿P: ' + m.player_text;
-        if (m.sticker) return '阿P: [' + (findSticker(m.sticker)||{}).label || '?'] + ']';
+        if (m.sticker) return '阿P: [' + ((findSticker(m.sticker)||{}).label || '?') + ']';
         if (m.reply) return '糖糖: ' + m.reply;
         return '';
     }).filter(Boolean);
