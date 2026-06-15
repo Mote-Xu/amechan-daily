@@ -2015,7 +2015,7 @@ function _executeReply() {
         var m = jineChatMsgs[i];
         if (m.reply || m.ame_sticker) continue;
         if (m.player_text) { batchMsgs.push(m); lastTexts.push(m.player_text); }
-        if (m.sticker)     { batchMsgs.push(m); lastSticker = m.sticker; lastTexts.push('[...]'); }
+        if (m.sticker)     { batchMsgs.push(m); lastSticker = m.sticker; var s=findSticker(m.sticker); lastTexts.push('[' + (s?s.label:'贴图') + ']'); }
     }
     if (batchMsgs.length === 0) return;
 
