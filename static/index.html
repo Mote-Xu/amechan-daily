@@ -1299,11 +1299,57 @@ var SaveManager = {
         return {
             name: name, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
             jineChat: [], releasedEntries: [], timeline: [], feedCursor: 0,
+            hiddenPool: [],  // v4: frontend-owned pool
             stats: { followers: 980, stress: 42, affection: 78, darkness: 55 }, trashCount: 0
         };
     },
 
     _persist: function() { localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.data)); },
+
+    // v4: Pool management — frontend owns the hidden pool
+    getPool: function() {
+        var s = this.getCurrentSlot(); return s.data ? (s.data.hiddenPool || []).slice() : [];
+    },
+    savePool: function(items) {
+        var slot = this.data.slots[this.data.currentSlot]; if (!slot) return;
+        slot.hiddenPool = items; slot.updatedAt = new Date().toISOString(); this._persist();
+    },
+    releaseFromPool: function() {
+        var slot = this.data.slots[this.data.currentSlot]; if (!slot) return [];
+        var pool = slot.hiddenPool || [];
+        var pokeIdx = -1, diaryIdx = -1;
+        for (var i = 0; i < pool.length; i++) {
+            if (pool[i].layer === 'poketter' && pokeIdx < 0) pokeIdx = i;
+            if (pool[i].layer === 'diary' && diaryIdx < 0) diaryIdx = i;
+        }
+        if (pokeIdx < 0 || diaryIdx < 0) return [];
+        var poke = pool.splice(pokeIdx, 1)[0];
+        var diary = pool.splice(diaryIdx < pokeIdx ? diaryIdx : diaryIdx - 1, 1)[0];
+        var entries = [
+            { batch_id: 'released_' + Date.now(), event: '随手一发', layer: 'poketter',
+              time: ('0'+new Date().getHours()).slice(-2)+':'+('0'+new Date().getMinutes()).slice(-2),
+              text: poke.text, selfie_mood: poke.selfie_mood || 'angel', timestamp: Date.now()/1000, date: new Date().toISOString() },
+            { batch_id: 'released_' + Date.now(), event: '随手一发', layer: 'diary',
+              time: ('0'+new Date().getHours()).slice(-2)+':'+('0'+new Date().getMinutes()).slice(-2),
+              text: diary.text, selfie_mood: diary.selfie_mood || 'angel', timestamp: Date.now()/1000, date: new Date().toISOString() }
+        ];
+        slot.hiddenPool = pool;
+        for (var n = 0; n < entries.length; n++) {
+            slot.releasedEntries.push(entries[n]);
+            if (!slot.timeline) slot.timeline = [];
+            slot.timeline.push(entries[n]);
+        }
+        slot.feedCursor = (slot.feedCursor || 0) + 1;
+        slot.updatedAt = new Date().toISOString();
+        this._persist();
+        return entries;
+    },
+    poolRemaining: function() {
+        var pool = this.getPool();
+        var p = pool.filter(function(i){return i.layer==='poketter'}).length;
+        var d = pool.filter(function(i){return i.layer==='diary'}).length;
+        return { total: pool.length, pairs: Math.min(p,d) };
+    },
 
     getCurrentSlot: function() {
         var id = this.data.currentSlot;
@@ -1798,78 +1844,76 @@ function renderFeed(items) {
 function esc(t) { var d = document.createElement('div'); d.textContent = t||''; return d.innerHTML; }
 function rnd(min,max) { return Math.floor(Math.random()*(max-min+1))+min; }
 
-// Fetch
+// Fetch — v4: localStorage-only, no server timeline
 var _fetchRetries = 0;
 function fetchTimeline() {
-    console.log('[fetchTimeline] fetching... (retry#' + _fetchRetries + ')');
-    if (firstLoad && _fetchRetries === 0) {
-        CONTAINER.innerHTML = '<div class="empty-state"><div class="icon"><img src="img/icon_cho.png"></div><p>连接超天酱中...<br><span style="font-size:0.55rem;color:#555;">' + new Date().toLocaleTimeString() + '</span></p></div>';
-    }
-    fetch(API + '/api/timeline').then(function(r) { return r.json(); }).then(function(data) {
-        console.log('[fetchTimeline] got', data.count, 'items, pool:', data.pool_remaining);
-        var serverItems = data.timeline || [];
-        poolRemaining = data.pool_remaining || 0;
-        updatePoolCount();
+    console.log('[fetchTimeline] v4 localStorage-only');
+    cachedTimeline = SaveManager.getTimeline();
+    updatePoolCount();
 
-        // Merge server items into current slot — only entries after slot creation
-        if (serverItems.length > 0) {
-            var slotData = SaveManager.getCurrentSlot().data;
-            var slotBorn = slotData ? new Date(slotData.createdAt).getTime() : 0;
-            SaveManager.mergeTimeline(serverItems, slotBorn);
-        }
-        // Reload cachedTimeline from slot (includes previous sessions)
-        cachedTimeline = SaveManager.getTimeline();
-
-        // If still empty (server hasn't generated yet), keep polling
-        if (cachedTimeline.length === 0) {
-            console.log('[fetchTimeline] feed empty, polling in 3s...');
-            setTimeout(fetchTimeline, 3000);
-            return;
-        }
-
-        _fetchRetries = 0;
+    if (cachedTimeline.length === 0) {
+        console.log('[fetchTimeline] feed empty — triggering initial generation...');
         if (firstLoad) {
-            console.log('[fetchTimeline] firstLoad render, items:', cachedTimeline.length);
-            renderFromCache();
-            firstLoad = false;
-            return;
+            CONTAINER.innerHTML = '<div class="empty-state"><div class="icon"><img src="img/icon_cho.png"></div><p>超天酱正在准备第一条推文...<br><span style="font-size:0.55rem;color:#555;">请稍等~</span></p></div>';
         }
-        // Check for new batches
-        var hasNew = cachedTimeline.some(function(e) { return !knownBatches[e.batch_id]; });
-        if (hasNew) {
-            cachedTimeline.forEach(function(e) { knownBatches[e.batch_id] = true; });
-            renderFromCache();
-        }
-    }).catch(function(err) {
-        console.warn('[fetchTimeline] API unavailable, trying static mode:', err.message);
-        // Fallback: try loading feed.json directly (GitHub Pages)
-        fetch('data/feed.json').then(function(r) { return r.json(); }).then(function(data) {
-            _fetchRetries = 0;
-            isStaticMode = true;
-            var items = data.timeline || [];
-            poolRemaining = 0;
-            updatePoolCount();
-            if (items.length > 0) {
-                var slotData2 = SaveManager.getCurrentSlot().data;
-                var slotBorn2 = slotData2 ? new Date(slotData2.createdAt).getTime() : 0;
-                SaveManager.mergeTimeline(items, slotBorn2);
+        _refillPool(true);
+        return;
+    }
+    _fetchRetries = 0;
+    if (firstLoad) {
+        console.log('[fetchTimeline] firstLoad render, items:', cachedTimeline.length);
+        renderFromCache();
+        firstLoad = false;
+    }
+}
+
+// v4: Background pool refill via /api/generate
+var _isRefilling = false;
+function _refillPool(isInitial) {
+    if (_isRefilling) return;
+    _isRefilling = true;
+    console.log('[pool] refilling...');
+    fetch(API + '/api/generate', { method: 'POST', body: '{}' }).then(function(r) { return r.json(); }).then(function(data) {
+        _isRefilling = false;
+        if (data.ok) {
+            var timeline = data.timeline || [];
+            var pool = data.hidden_pool || [];
+            // Save timeline to localStorage
+            if (timeline.length > 0) {
+                var slotData = SaveManager.getCurrentSlot().data;
+                var slotBorn = slotData ? new Date(slotData.createdAt).getTime() : 0;
+                SaveManager.mergeTimeline(timeline, slotBorn);
+            }
+            // Save pool
+            if (pool.length > 0) {
+                SaveManager.savePool(pool);
             }
             cachedTimeline = SaveManager.getTimeline();
-            console.log('[fetchTimeline] static mode, items:', cachedTimeline.length);
-            if (cachedTimeline.length === 0) {
-                setTimeout(fetchTimeline, 5000);
-                return;
+            updatePoolCount();
+            if (isInitial && firstLoad) {
+                renderFromCache();
+                firstLoad = false;
             }
-            if (firstLoad) { renderFromCache(); firstLoad = false; enterStaticMode(); }
-        }).catch(function(err2) {
-            console.error('[fetchTimeline] static fallback also failed:', err2);
-            // Retry with backoff — keep firstLoad alive
-            _fetchRetries++;
-            var delay = Math.min(3000 * _fetchRetries, 15000);
-            console.log('[fetchTimeline] retry in', delay + 'ms');
-            setTimeout(fetchTimeline, delay);
-        });
+            console.log('[pool] refill done — timeline:', timeline.length, 'pool:', pool.length);
+        }
+    }).catch(function(err) {
+        _isRefilling = false;
+        console.warn('[pool] refill failed:', err);
+        if (isInitial) {
+            setTimeout(function() { _refillPool(true); }, 5000);
+        }
     });
+}
+
+function updatePoolCount() {
+    var info = SaveManager.poolRemaining();
+    var el = document.getElementById('f7-count');
+    if (el) el.textContent = info.pairs > 0 ? '(' + info.total + ' 条待发, ' + info.pairs + ' 对)' : '(空了..)';
+    poolRemaining = info.pairs;
+    // Auto-refill when low
+    if (info.pairs < 2 && cachedTimeline.length > 0 && !_isRefilling) {
+        _refillPool(false);
+    }
 }
 
 function enterStaticMode() {
@@ -1887,8 +1931,7 @@ function updatePoolCount() {
     if (el) el.textContent = poolRemaining > 0 ? '(' + poolRemaining + ' 条待发)' : '(空了..)';
 }
 
-// F7 Release — v2.8: O(1) single API call, no more generate+release
-// Backend handles regeneration internally (waterline + background thread)
+// F7 Release — v4: frontend-owned pool, instant display, backend only for JINE msgs
 window.doRelease = function() {
     if (isStaticMode) return;
     var btn = document.getElementById('f7-btn');
@@ -1897,68 +1940,72 @@ window.doRelease = function() {
     btn.textContent = '...';
     btn.disabled = true;
 
-    fetch(API + '/api/release', { method: 'POST' }).then(function(r) { return r.json(); }).then(function(data) {
+    // Release from localStorage pool (instant — no network)
+    var entries = SaveManager.releaseFromPool();
+    if (entries.length === 0) {
         btn.classList.remove('shaking');
         btn.disabled = false;
+        btn.textContent = '[ F7 ] 戳一戳 ✨';
+        alert('超天酱正在构思推文，请稍等几秒再戳哦！');
+        _refillPool(false);
+        updatePoolCount();
+        return;
+    }
+    console.log('[doRelease] released from localStorage:', entries.map(function(e){return e.layer;}));
+
+    // Render immediately from local data
+    updateSaveIndicator();
+    cachedTimeline = SaveManager.getTimeline();
+    renderFromCache();
+    btn.textContent = '已发送! ✨';
+    btn.classList.remove('shaking');
+    btn.disabled = false;
+    updatePoolCount();
+
+    // Call backend ONLY for JINE release messages (stateless)
+    var pokeEntry = entries.find(function(e){return e.layer==='poketter';});
+    var diaryEntry = entries.find(function(e){return e.layer==='diary';});
+    fetch(API + '/api/release', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+            poke_text: pokeEntry ? pokeEntry.text : '',
+            diary_text: diaryEntry ? diaryEntry.text : ''
+        })
+    }).then(function(r){return r.json();}).then(function(data){
         if (data.ok) {
-            var entries = data.entries || [];
-            console.log('[doRelease] got', entries.length, 'entries:', entries.map(function(e){return e.layer;}));
-            // Save to current save slot
-            for (var n = 0; n < entries.length; n++) {
-                SaveManager.incrementFeedCursor();
-                SaveManager.addReleasedEntry(entries[n]);
-            }
-            updateSaveIndicator();
-            // v2.8: Render directly from local cache — NO fetchTimeline race!
-            cachedTimeline = SaveManager.getTimeline();
-            renderFromCache();
-            btn.textContent = '已发送! ✨';
-            // JINE follow-up messages (staggered) — track timers to cancel on save switch
             var jineMsgs = data.jine_msgs || [];
             if (jineMsgs.length > 0) {
-                // Cancel any pending F7 timers from a previous release
                 _cancelF7Timers();
-                var _f7SlotId = SaveManager.getCurrentSlot().id;  // snapshot
-                var t1 = setTimeout(function() {
-                    jineMsgs.forEach(function(msg, i) {
-                        var t2 = setTimeout(function() {
-                            // Write DIRECTLY to original slot — bypass current slot entirely
+                var _f7SlotId = SaveManager.getCurrentSlot().id;
+                var t1 = setTimeout(function(){
+                    jineMsgs.forEach(function(msg,i){
+                        var t2 = setTimeout(function(){
                             var slot = SaveManager.data.slots[_f7SlotId];
-                            if (!slot) { console.warn('[F7] t2 skipped — slot gone'); return; }
-                            var replyText = (msg.reply && msg.reply !== 'undefined') ? msg.reply : '';
+                            if (!slot) return;
                             var chatMsg = {
-                                time: msg.time || '', reply: replyText,
-                                ame_sticker: msg.ame_sticker || null,
-                                player_text: '', sticker: ''
+                                time: msg.time||'', reply: msg.reply||'',
+                                ame_sticker: msg.ame_sticker||null, player_text:'', sticker:''
                             };
                             slot.jineChat.push(chatMsg);
-                            if (slot.jineChat.length > 60) slot.jineChat = slot.jineChat.slice(-60);
+                            if (slot.jineChat.length>60) slot.jineChat = slot.jineChat.slice(-60);
                             slot.updatedAt = new Date().toISOString();
                             SaveManager._persist();
-                            // Only update in-memory display if still viewing this slot
                             if (SaveManager.getCurrentSlot().id === _f7SlotId) {
                                 jineChatMsgs.push(chatMsg);
-                                if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
+                                if (ACTIVE_TAB==='jine') renderJineChatMsgs();
                             }
-                        }, i * 2000 + 600);
+                        }, i*2000+600);
                         _f7Timers.push(t2);
                     });
                 }, 800);
                 _f7Timers.push(t1);
             }
-            setTimeout(function() { btn.textContent = '[ F7 ] 戳一戳 ✨'; }, 2000);
-        } else {
-            // Pool completely empty — backend is regenerating, tell user to retry
-            console.log('[doRelease] pool empty, retry: ' + (data.msg || ''));
-            alert(data.msg || '超天酱正在构思推文，请稍等几秒再戳哦！');
-            btn.textContent = '[ F7 ] 戳一戳 ✨';
         }
-        updatePoolCount();
-    }).catch(function(err) {
-        console.error('[doRelease] error:', err);
-        btn.textContent = '[ F7 ] 戳一戳 ✨';
-        btn.disabled = false;
-        btn.classList.remove('shaking');
+        setTimeout(function(){ btn.textContent = '[ F7 ] 戳一戳 ✨'; }, 2000);
+    }).catch(function(err){
+        console.error('[doRelease] JINE error:', err);
+        setTimeout(function(){ btn.textContent = '[ F7 ] 戳一戳 ✨'; }, 2000);
     });
 };
 

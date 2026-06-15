@@ -1,23 +1,42 @@
 """
-HTTP 服务器 v2 — Poketter 三层时间线 API
+HTTP 服务器 v4 — 完全无状态 + 多线程 + 频率限制
 """
 import json
 import random
 import sys
 import time
+from collections import defaultdict
+from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
+from pathlib import Path
+from urllib.parse import urlparse
 
 try:
     sys.stdout.reconfigure(encoding="utf-8")
 except Exception:
     pass
 
-from http.server import HTTPServer, SimpleHTTPRequestHandler
-from pathlib import Path
-from urllib.parse import urlparse, unquote
-
 from config import HOST, PORT, STATIC_DIR, DATA_DIR, ROOT_DIR
-from feed import get_timeline, pool_count, pop_from_pool, feed_count, clear_feed, save_jine_message, get_jine_chat
-from generator import generate_and_save, generate_single, generate_jine_chat, generate_jine_release_msgs
+from generator import generate_timeline, generate_jine_chat, generate_jine_release_msgs
+
+
+# ============================================================
+# 频率限制（内存，重启清零）
+# ============================================================
+_ip_last_request: dict[str, float] = defaultdict(float)
+_ip_daily_count: dict[str, int] = defaultdict(int)
+RATE_INTERVAL = 5       # 同一 IP 两次请求最小间隔（秒）
+RATE_DAILY_CAP = 100    # 同一 IP 每天最大 POST 次数
+
+
+def check_rate_limit(client_ip: str) -> bool:
+    now = time.time()
+    if now - _ip_last_request[client_ip] < RATE_INTERVAL:
+        return False
+    if _ip_daily_count[client_ip] >= RATE_DAILY_CAP:
+        return False
+    _ip_last_request[client_ip] = now
+    _ip_daily_count[client_ip] += 1
+    return True
 
 
 class AmechanHandler(SimpleHTTPRequestHandler):
@@ -52,6 +71,13 @@ class AmechanHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _get_client_ip(self) -> str:
+        # 优先取 X-Forwarded-For（Cloudflare 代理后会加）
+        forwarded = self.headers.get("X-Forwarded-For", "")
+        if forwarded:
+            return forwarded.split(",")[0].strip()
+        return self.client_address[0]
+
     def log_message(self, format, *args):
         ts = time.strftime("%H:%M:%S")
         print(f"[{ts}] {args[0]}")
@@ -68,28 +94,18 @@ class AmechanHandler(SimpleHTTPRequestHandler):
         if path == "/" or path == "/index.html":
             self._send_html("index.html")
         elif path == "/api/timeline":
-            timeline = get_timeline()
-            self._send_json({"count": len(timeline), "pool_remaining": pool_count(), "timeline": timeline})
+            # v4: stateless — frontend manages timeline via localStorage
+            self._send_json({"count": 0, "pool_remaining": 0, "timeline": []})
         elif path == "/api/feed":
-            # 旧版兼容
-            timeline = get_timeline()
-            pool = pool_count()
-            self._send_json({"count": len(timeline), "pool": pool, "feed": timeline})
+            self._send_json({"count": 0, "pool": 0, "feed": []})
         elif path == "/api/jine/chat":
-            chat = get_jine_chat()
-            self._send_json({"chat": chat})
+            # v4: frontend manages JINE via localStorage
+            self._send_json({"chat": []})
         elif path == "/api/stats":
-            self._send_json({"count": feed_count(), "pool": pool_count(), "status": "ok"})
+            self._send_json({"count": 0, "pool": 0, "status": "ok"})
         elif path == "/data/feed.json":
-            # Static mode fallback: serve feed.json directly
-            feed_path = DATA_DIR / "feed.json"
-            if feed_path.exists():
-                self.send_response(200)
-                self.send_header("Content-Type", "application/json")
-                self.end_headers()
-                self.wfile.write(feed_path.read_bytes())
-            else:
-                self._send_json({"timeline": [], "hidden_pool": [], "jine_chat": []})
+            # Static fallback
+            self._send_json({"timeline": [], "hidden_pool": [], "jine_chat": []})
         else:
             super().do_GET()
 
@@ -97,76 +113,70 @@ class AmechanHandler(SimpleHTTPRequestHandler):
         parsed = urlparse(self.path)
         path = parsed.path
 
+        # Rate limit all POST endpoints (they call DeepSeek)
+        client_ip = self._get_client_ip()
+        if not check_rate_limit(client_ip):
+            self._send_json({"ok": False, "error": "超天酱正在休息，请稍后再来～"}, status=429)
+            return
+
         if path == "/api/generate":
-            try:
-                content_length = int(self.headers.get("Content-Length", 0))
-                body_raw = self.rfile.read(content_length) if content_length else b"{}"
-                body = json.loads(body_raw.decode("utf-8")) if body_raw else {}
-            except json.JSONDecodeError:
-                body = {}
+            body_raw = self._read_body()
+            body = self._parse_json(body_raw) if body_raw else {}
 
             topic = body.get("topic", None)
-            print(f"\n[*] POST /api/generate | topic: {topic or '随机'}")
+            print(f"\n[*] POST /api/generate (stateless) | topic: {topic or '随机'}")
 
             try:
-                data = generate_and_save(topic)
-                self._send_json({"ok": True, "event": data.get("event"), "timeline_count": len(data.get("timeline", [])), "pool_count": len(data.get("hidden_pool", []))})
+                data = generate_timeline(topic)
+                # v4: return JSON only, frontend saves to localStorage
+                self._send_json({
+                    "ok": True,
+                    "event": data.get("event", topic),
+                    "timeline": data.get("timeline", []),
+                    "hidden_pool": data.get("hidden_pool", []),
+                })
             except Exception as e:
                 print(f"  [X] 生成失败: {e}")
-                # 降级到旧版生成
-                try:
-                    print("  -> 降级到旧版生成...")
-                    kangel, ame, topic = generate_single(topic)
-                    from feed import save_tweet_pair
-                    entry = save_tweet_pair(kangel, ame, topic)
-                    self._send_json({"ok": True, "fallback": True, "entry": entry})
-                except Exception as e2:
-                    self._send_json({"ok": False, "error": str(e2)}, status=500)
+                self._send_json({"ok": False, "error": "生成失败，请稍后重试"}, status=500)
 
         elif path == "/api/release":
-            print("\n[*] POST /api/release — F7 戳一戳 (v2.8)")
-            entries = pop_from_pool()
-            print(f"  [DBG] pop_from_pool returned: {entries!r} (len={len(entries)})")
-            # v2.8: backend handles regeneration internally (waterline + background thread)
-            if entries:
-                layers = [e['layer'] for e in entries]
-                print(f"  [OK] 释放 {len(entries)} 条: {layers} (剩余 {pool_count()})")
-                jine_msgs = []
-                poke_text = next((e['text'][:40] for e in entries if e['layer'] == 'poketter'), '刚才的动态')
+            # v4 stateless: frontend sends poketter text, backend generates JINE release msgs
+            body_raw = self._read_body()
+            body = self._parse_json(body_raw) if body_raw else {}
+
+            poke_text = body.get("poke_text", "")
+            diary_text = body.get("diary_text", "")
+            print(f"\n[*] POST /api/release (stateless) | poke: {poke_text[:30] if poke_text else '(empty)'}")
+
+            if not poke_text:
+                self._send_json({"ok": False, "error": "missing poke_text"}, status=400)
+                return
+
+            try:
                 msg_count = random.randint(2, 5)
-                msgs = generate_jine_release_msgs(poke_text, '', count=msg_count)
+                msgs = generate_jine_release_msgs(poke_text, diary_text, count=msg_count)
+                jine_msgs = []
                 for m in msgs:
                     if m.get("reply"):
-                        t = time.strftime("%H:%M")
-                        jine_msgs.append({"reply": m["reply"], "ame_sticker": m.get("ame_sticker"), "time": t})
-                resp = {"ok": True, "entries": entries, "pool_remaining": pool_count(), "jine_msgs": jine_msgs}
-                print(f"  [DBG] sending ok=True, entries={len(entries)}")
-                self._send_json(resp)
-            else:
-                print("  [!] Pool 空，后台生成已触发，请稍后重试")
-                resp = {"ok": False, "retry": True, "pool_remaining": pool_count(), "msg": "后台生成中，请稍等几秒再戳哦～"}
-                print(f"  [DBG] sending ok=False, retry=True")
-                self._send_json(resp)
-
-        elif path == "/api/clear":
-            clear_feed()
-            print("\n[*] 数据已清空")
-            self._send_json({"ok": True})
+                        jine_msgs.append({
+                            "reply": m["reply"],
+                            "ame_sticker": m.get("ame_sticker"),
+                            "time": time.strftime("%H:%M"),
+                        })
+                self._send_json({"ok": True, "jine_msgs": jine_msgs})
+            except Exception as e:
+                print(f"  [X] JINE 释放消息生成失败: {e}")
+                self._send_json({"ok": False, "error": str(e)}, status=500)
 
         elif path == "/api/jine/chat":
-            # v2.8: Unified stateless endpoint — backend doesn't save JINE state
-            try:
-                content_length = int(self.headers.get("Content-Length", 0))
-                body_raw = self.rfile.read(content_length) if content_length else b"{}"
-                body = json.loads(body_raw.decode("utf-8")) if body_raw else {}
-            except json.JSONDecodeError:
-                body = {}
+            # v4: already stateless — no changes needed
+            body_raw = self._read_body()
+            body = self._parse_json(body_raw) if body_raw else {}
 
             text = body.get("text", "")
             sticker = body.get("sticker", "")
             history = body.get("history", [])
 
-            # Validate: need at least text or sticker
             if not text and not sticker:
                 self._send_json({"ok": False, "error": "missing text or sticker"}, status=400)
                 return
@@ -189,57 +199,46 @@ class AmechanHandler(SimpleHTTPRequestHandler):
                 print(f"  [X] JINE 回复失败: {e}")
                 self._send_json({"ok": False, "error": str(e)}, status=500)
 
+        elif path == "/api/clear":
+            # v4 stateless: no-op
+            print("\n[*] /api/clear — no-op (stateless)")
+            self._send_json({"ok": True})
+
         else:
             self.send_error(404, "Not Found")
+
+    def _read_body(self) -> bytes | None:
+        try:
+            content_length = int(self.headers.get("Content-Length", 0))
+            if content_length:
+                return self.rfile.read(content_length)
+        except Exception:
+            pass
+        return None
+
+    def _parse_json(self, raw: bytes) -> dict | None:
+        try:
+            return json.loads(raw.decode("utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return None
 
 
 def main():
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
     print("=" * 50)
-    print("  + Poketter v3.3 — Menhera soul + XML prompts + anti-cheap-tsundere +")
+    print("  + Poketter v4.0 — Stateless + Threading + Rate Limiter +")
     print("=" * 50)
     print(f"  地址: http://{HOST}:{PORT}")
-    print(f"  API:  GET  /api/timeline   -> 获取时间线")
-    print(f"       POST /api/generate    -> 生成新批次")
-    print(f"       POST /api/release     -> F7 释放 hidden_pool (O(1))")
-    print(f"       POST /api/jine/chat   -> F8 JINE 统一回复 (无状态)")
+    print(f"  API:  GET  /api/timeline   -> 空（前端 localStorage）")
+    print(f"       POST /api/generate    -> 生成 + 返回 JSON（不写盘）")
+    print(f"       POST /api/release     -> F7 JINE 消息（无状态）")
+    print(f"       POST /api/jine/chat   -> F8 聊天回复（无状态）")
+    print(f"  安全: IP 限频 {RATE_INTERVAL}s/{RATE_DAILY_CAP}次每天")
     print("=" * 50)
 
-    import socket
-    class ReuseHTTPServer(HTTPServer):
-        allow_reuse_address = True
-        def server_bind(self):
-            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            try:
-                self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-            except (AttributeError, OSError):
-                pass
-            HTTPServer.server_bind(self)
-
-    # Retry on port conflict (Windows TIME_WAIT)
-    for attempt in range(5):
-        try:
-            server = ReuseHTTPServer((HOST, PORT), AmechanHandler)
-            break
-        except PermissionError:
-            if attempt < 4:
-                print(f"  [!] 端口 {PORT} 被占用，{5-attempt}s 后重试...")
-                import time as _t; _t.sleep(5)
-            else:
-                raise
-
-    # Start server immediately, generate first batch in background
-    import threading
-    if feed_count() == 0:
-        print("\n[!] Feed 为空，后台生成首条...")
-        def _initial_generate():
-            try:
-                generate_and_save()
-                print("  [OK] 首条生成完成")
-            except Exception as e:
-                print(f"  [!] 生成失败: {e}")
-        threading.Thread(target=_initial_generate, daemon=True).start()
+    server = ThreadingHTTPServer((HOST, PORT), AmechanHandler)
+    server.allow_reuse_address = True
 
     print(f"\n[*] 服务器启动中...\n")
     try:
