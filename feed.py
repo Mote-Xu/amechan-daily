@@ -1,11 +1,17 @@
 """
 推文存储模块 v2 — 时间线 + hidden_pool + JINE 互动聊天
+v2.8: 水位线自动补池 — 后端后台静默生成，前端 O(1) 释放
 """
 import json
 import random
+import threading
 import time
 from pathlib import Path
 from config import FEED_FILE, DATA_DIR, MAX_FEED_ITEMS
+
+# 全局锁，防止并发生成
+_is_generating = False
+_WATERLINE = 2  # pool 少于 2 对时触发后台补池
 
 
 def _ensure_data_dir() -> None:
