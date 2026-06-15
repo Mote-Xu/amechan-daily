@@ -971,7 +971,9 @@ var jineChatMsgs = [];
 var jineSending = false;
 var _replyPending = false;       // true while waiting for 糖糖's reply
 var _pendingController = null;   // AbortController for current request
-var _pendingMsgIdx = -1;         // index in jineChatMsgs where reply will be placed
+var _batchTimer = null;          // setTimeout ID for aggregation window
+var _batchStartIdx = -1;         // index of first msg when batch window started
+var _batchWindowMs = 0;          // current window duration (random 300-1200ms)
 
 // Danmaku pools — 应援 and 吐槽 (color-independent)
 var DANMAKU_OEN   = ['✟升天✟','小天使请安','超天酱贴贴！','kirakira💖','888888','守护','好可爱','互联网天使','主播别走','www','可爱捏','天使降临','糖果雨','原地升天','甜甜圈'];
@@ -1968,64 +1970,89 @@ function hideAmeTyping() {
 }
 
 // ============================================================
-// Reply cycle v2.8 — overlap API time with typing time, unified endpoint
+// Reply engine v3 — micro-batch window, abort-on-input, anti-spam
 // ============================================================
-function _startReplyCycle() {
-    // v2.9: One request at a time. When current reply arrives, _checkUnreplied()
-    // scans for remaining messages and auto-triggers the next cycle.
-    if (_replyPending) return;
+// Strategy: 300-1200ms aggregation window. Continuously reset while
+// user types. When window expires, collect ALL unreplied messages
+// and send ONE API request. If new messages arrive during API call,
+// abort and restart the window.
+
+function _scheduleReply(isNewMsg) {
+    // If API is running, abort it — new input supersedes
+    if (_replyPending && _pendingController) {
+        _pendingController.abort();
+        _replyPending = false;
+        _pendingController = null;
+    }
+    // Clear existing batch timer
+    if (_batchTimer) { clearTimeout(_batchTimer); _batchTimer = null; }
+
+    // Record first unreplied index when starting a fresh batch
+    if (isNewMsg) {
+        _batchStartIdx = -1;
+        for (var i = 0; i < jineChatMsgs.length; i++) {
+            var m = jineChatMsgs[i];
+            if (m.reply || m.ame_sticker) continue;
+            if (m.player_text || m.sticker) { _batchStartIdx = i; break; }
+        }
+    }
+
+    // Random window 300-1200ms — simulates human "reading" pause
+    _batchWindowMs = 300 + Math.floor(Math.random() * 900);
+    _batchTimer = setTimeout(_executeReply, _batchWindowMs);
+}
+
+function _executeReply() {
+    _batchTimer = null;
+    if (_replyPending) return;  // should not happen, but guard
+
+    // Collect ALL unreplied player messages in this batch
+    var batchMsgs = [];
+    var lastTexts = [];
+    var lastSticker = null;
+    for (var i = 0; i < jineChatMsgs.length; i++) {
+        var m = jineChatMsgs[i];
+        if (m.reply || m.ame_sticker) continue;
+        if (m.player_text) { batchMsgs.push(m); lastTexts.push(m.player_text); }
+        if (m.sticker)     { batchMsgs.push(m); lastSticker = m.sticker; lastTexts.push('[...]'); }
+    }
+    if (batchMsgs.length === 0) return;
 
     _replyPending = true;
     var cycleStart = Date.now();
+    var replyIdx = jineChatMsgs.length;  // insert at end
 
-    // v2.9: Find OLDEST player msg that hasn't been replied to yet.
-    // "Replied" = the very next message in the array is an ame reply.
-    var targetIdx = -1, targetText = '', targetSticker = '';
-    for (var i = 0; i < jineChatMsgs.length; i++) {
-        var m = jineChatMsgs[i];
-        if (m.reply || m.ame_sticker) continue;  // skip ame messages
-        if (m.player_text || m.sticker) {
-            var next = jineChatMsgs[i + 1];
-            if (next && (next.reply || next.ame_sticker)) continue;  // already replied
-            targetIdx = i;
-            targetText = m.player_text || '';
-            targetSticker = m.sticker || '';
-            break;
-        }
-    }
-    if (targetIdx < 0) { _replyPending = false; return; }
-    var replyIdx = targetIdx + 1;  // insert reply right after this message
-
-    // Typing indicator after 800ms
+    // Typing indicator
     setTimeout(function() { showAmeTyping(); }, 800);
 
-    // Build unified request body — send full recent history to backend
+    // Build request — send the aggregated batch + history
     var recentMsgs = jineChatMsgs.slice(-10).map(function(m) {
-        var entry = {};
-        if (m.player_text) entry.player_text = m.player_text;
-        if (m.sticker) entry.sticker = m.sticker;
-        if (m.reply) entry.reply = m.reply;
-        if (m.ame_sticker) entry.ame_sticker = m.ame_sticker;
-        return entry;
+        var e = {};
+        if (m.player_text) e.player_text = m.player_text;
+        if (m.sticker) e.sticker = m.sticker;
+        if (m.reply) e.reply = m.reply;
+        if (m.ame_sticker) e.ame_sticker = m.ame_sticker;
+        return e;
     });
-    var isPureSticker = !targetText && !!targetSticker;
+    _pendingController = new AbortController();
+    var fetchTimeout = setTimeout(function() { if (_pendingController) _pendingController.abort(); }, 20000);
+
     var requestBody = {
-        text: targetText || '',
-        sticker: targetSticker || '',
+        text: lastTexts.join(' | '),
+        sticker: lastSticker || '',
         history: recentMsgs
     };
 
-    // Unified endpoint — backend routes internally
     fetch(API + '/api/jine/chat', {
         method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
+        signal: _pendingController.signal
     }).then(function(r) { return r.json(); }).then(function(data) {
-        _replyPending = false;
+        _replyPending = false; _pendingController = null;
+        clearTimeout(fetchTimeout);
 
         var replyText = data.reply || '';
         var apiDuration = Date.now() - cycleStart;
-
-        // v2.8: Overlap — API time IS 糖糖's "thinking and typing" time
         var expectedTypingTime = 1500 + (replyText.length * 100);
         expectedTypingTime = Math.min(expectedTypingTime, 7000);
         var remainWait = Math.max(0, expectedTypingTime - apiDuration);
@@ -2038,45 +2065,46 @@ function _startReplyCycle() {
                 reply: replyText, ame_sticker: data.ame_sticker || null,
                 recall: false
             };
-            if (replyIdx < jineChatMsgs.length) {
-                jineChatMsgs.splice(replyIdx, 0, replyMsg);
-            } else {
-                jineChatMsgs.push(replyMsg);
-            }
+            jineChatMsgs.push(replyMsg);
             SaveManager.addJineMessage(replyMsg);
             if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
-            // v2.9: Loop — after each reply, check if ANY unreplied messages remain
+            // Check if new messages arrived during API — if so, start fresh window
             if (_checkUnreplied()) {
                 startAmeResponse();
-                _startReplyCycle();
+                _scheduleReply(false);
             }
         }, remainWait);
     }).catch(function(err) {
-        console.warn('[replyCycle] error:', err.name || err.message);
+        clearTimeout(fetchTimeout);
+        if (err.name === 'AbortError') {
+            console.log('[reply] aborted — new input arrived');
+            return;  // _scheduleReply already called by the new input
+        }
+        console.warn('[reply] error:', err.name || err.message);
+        _replyPending = false; _pendingController = null;
         var elapsed = Date.now() - cycleStart;
         var remainWait = Math.max(800, 2200 - elapsed);
         setTimeout(function() {
             hideAmeTyping();
             endAmeResponse();
-            _replyPending = false;
             var fb = { time: ('0'+new Date().getHours()).slice(-2)+':'+('0'+new Date().getMinutes()).slice(-2),
                 reply: ['...','嗯','知道了','哼'][Math.floor(Math.random()*4)], recall: false };
-            if (replyIdx < jineChatMsgs.length) { jineChatMsgs.splice(replyIdx, 0, fb); } else { jineChatMsgs.push(fb); }
+            jineChatMsgs.push(fb);
             SaveManager.addJineMessage(fb);
             if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
         }, remainWait);
     });
 }
-// Check if any player messages are still waiting for a reply.
-// A player message is "replied" if the very next message is an ame reply.
+
+// Check for unreplied player messages (ignoring already-replied ones)
 function _checkUnreplied() {
     for (var i = 0; i < jineChatMsgs.length; i++) {
         var m = jineChatMsgs[i];
-        if (m.reply || m.ame_sticker) continue;  // skip ame messages
+        if (m.reply || m.ame_sticker) continue;
         if (m.player_text || m.sticker) {
             var next = jineChatMsgs[i + 1];
-            if (next && (next.reply || next.ame_sticker)) continue;  // already replied
-            return true;  // still waiting
+            if (next && (next.reply || next.ame_sticker)) continue;
+            return true;
         }
     }
     return false;
@@ -2238,7 +2266,7 @@ window.sendText = function() {
     jineChatMsgs.push(playerMsg);
     SaveManager.addJineMessage(playerMsg);  // persist immediately
     if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
-    _startReplyCycle();
+    _scheduleReply(true);
     } catch(e) { console.error('[sendText] crashed:', e); }
 };
 
@@ -2263,7 +2291,7 @@ function sendSticker(stickerId) {
     jineChatMsgs.push(stickerMsg);
     SaveManager.addJineMessage(stickerMsg);
     if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
-    _startReplyCycle();
+    _scheduleReply(true);
     } catch(e) { console.error('[sendSticker] crashed:', e); }
 }
 
