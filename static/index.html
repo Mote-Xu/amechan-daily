@@ -194,6 +194,7 @@ body {
 }
 .jine-msg.ame-sticker {
     justify-content: flex-start;
+    align-items: flex-start;
     padding: 4px 0;
 }
 .ame-sticker-bubble {
@@ -243,17 +244,28 @@ body {
 }
 .jine-system-msg.recall::before { content: '↩ '; }
 
-/* 糖糖正在输入 */
+/* 糖糖正在输入 — inline between chat and sticker bar */
 .jine-typing {
-    text-align: left;
-    padding: 4px 8px;
-    font-size: 11px;
-    color: rgba(0,0,0,0.5);
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
+    padding: 6px 16px;
+    font-size: 11px;
+    color: rgba(0,0,0,0.5);
+    background: rgba(160,216,240,0.15);
+    flex-shrink: 0;
 }
-.jine-typing .dots { display: inline-flex; gap: 2px; }
+.jine-typing .jine-avatar {
+    width: 28px; height: 28px;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+.jine-typing .jine-avatar img {
+    width: 100%; height: 100%;
+    image-rendering: pixelated;
+    border-radius: 4px;
+}
+.jine-typing .dots { display: inline-flex; gap: 2px; margin-left: 2px; }
 .jine-typing .dots span {
     width: 4px; height: 4px;
     background: rgba(0,0,0,0.4);
@@ -266,18 +278,11 @@ body {
 
 /* 互动聊天分隔 */
 .jine-interactive {
-    border-top: 2px solid #C888C0;
-    margin-top: 6px;
-    padding-top: 6px;
-}
-.jine-interactive-label {
-    text-align: center;
-    font-size: 10px;
-    color: rgba(0,0,0,0.4);
-    margin-bottom: 4px;
+    border-top: 1px solid rgba(200,136,192,0.4);
+    flex-shrink: 0;
 }
 .jine-chat-msgs {
-    max-height: 230px;
+    flex: 1;
     overflow-y: auto;
     padding: 4px 0;
 }
@@ -680,6 +685,7 @@ body {
     justify-content: space-between;
     align-items: center;
     border-bottom: 2px solid #C898D8;
+    flex-shrink: 0;
     font-family: 'DotGothic16', 'Microsoft YaHei', sans-serif;
 }
 .jine-titlebar .jine-logo {
@@ -714,6 +720,9 @@ body {
     background: linear-gradient(180deg, #F8A8E8 0%, #E898D8 100%);
     border: 2px solid #C898D8;
     border-top: none;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 /* LIVE WIDGET */
@@ -723,16 +732,16 @@ body {
 @keyframes livePulse { 0%,100%{opacity:1;box-shadow:0 0 4px red} 50%{opacity:0.3;box-shadow:0 0 12px red} }
 .live-text { color:red; font-size:0.75rem; font-weight:bold; }
 .live-viewers { color:#ccc; font-size:0.7rem; }
-.danmaku-bar { height:34px; overflow:hidden; position:relative; margin-bottom:1rem; border-bottom:1px solid #333; cursor:default; }
-.danmaku-wrap { position:absolute; white-space:nowrap; display:flex; align-items:center; gap:5px; will-change:transform; animation:scrollR linear forwards; padding:2px 4px; border-radius:3px; transition:background 0.15s; }
+.danmaku-bar { height:48px; overflow:hidden; position:relative; margin-bottom:1rem; border-bottom:1px solid #333; cursor:default; background:rgba(0,0,0,0.35); border-top:1px solid rgba(255,255,255,0.05); }
+.danmaku-wrap { position:absolute; white-space:nowrap; display:flex; align-items:center; gap:6px; will-change:left; padding:3px 6px; border-radius:3px; transition:background 0.15s; left:100%; animation:scrollR 16s linear infinite; }
 .danmaku-wrap:hover { animation-play-state:paused !important; background:rgba(255,0,0,0.08); z-index:10; }
-.danmaku-text { font-size:0.65rem; color:#aaa; pointer-events:none; line-height:1.4; }
+.danmaku-text { font-size:0.75rem; color:#aaa; pointer-events:none; line-height:1.4; }
 .danmaku-text.fan { color:var(--pink); text-shadow:0 0 4px rgba(255,105,180,0.3); }
-.danmaku-text.hate { color:#ccc; }
+.danmaku-text.hate { color:#ddd; }
 .danmaku-text.hate:hover { color:#ff4444; text-shadow:0 0 6px rgba(255,0,0,0.6); }
-.danmaku-trash { display:inline-block; width:16px; height:18px; cursor:crosshair; opacity:0.65; flex-shrink:0; transition:opacity 0.15s,transform 0.15s; }
+.danmaku-trash { display:inline-block; width:18px; height:20px; cursor:crosshair; opacity:0.7; flex-shrink:0; transition:opacity 0.15s,transform 0.15s; }
 .danmaku-trash:hover { opacity:1; transform:scale(1.2); }
-@keyframes scrollR { from { transform:translateX(105vw); } to { transform:translateX(-150vw); } }
+@keyframes scrollR { from { left:100%; } to { left:-300px; } }
 /* pixel trash can drawn with CSS */
 .pixel-trash { display:inline-block; width:16px; height:18px; image-rendering:pixelated; position:relative; }
 .pixel-trash::before { content:''; position:absolute; top:0;left:2px;width:12px;height:3px;background:#999;
@@ -886,7 +895,7 @@ body {
     </div>
     <div class="save-toast" id="save-toast"></div>
 
-<div class="footer"><div class="divider"></div>超天酱日常推文小站 · v2.2<br>游戏素材 © WSS playground / xemono</div>
+<div class="footer"><div class="divider"></div>超天酱日常推文小站 · v2.7.2<br>游戏素材 © WSS playground / xemono</div>
 
 </div>
 </div>
@@ -946,13 +955,16 @@ function findSticker(id) {
 }
 var jineChatMsgs = [];
 var jineSending = false;
+var _replyPending = false;       // true while waiting for 糖糖's reply
+var _pendingController = null;   // AbortController for current request
+var _pendingMsgIdx = -1;         // index in jineChatMsgs where reply will be placed
 
 // Danmaku pool
 var danmakuPool = {
     fan:  ['✟升天✟','小天使请安','超天酱贴贴！','kirakira💖','888888','守护','好可爱','互联网天使','主播别走','www','可爱捏','天使降临'], hate: ['草','www','kusa','？？？','草生える','大草原不可避','血压上来了','真实','草www','不愧是你','过于真实','你币没了','禁止好活','走远了','典中典'] }
 var danmakuWraps = [];
 var trashCount = 0;
-var DANMAKU_COUNT = 5;
+var DANMAKU_COUNT = 8;
 
         // ============================================================
         // WEBCAM ENGINE v3
@@ -1036,15 +1048,21 @@ var DANMAKU_COUNT = 5;
                 var img = null, startIdx = this.frameIdx;
                 do {
                     img = this.frames[this.frameIdx];
+                    if (img && img.complete && (img.naturalWidth || img.width) > 0) break;
+                    img = null;
                     this.frameIdx = (this.frameIdx + 1) % this.frames.length;
                     if (this.frameIdx === 0) {
                         this.loopCount++;
                         if (this.loopCount >= 2 && !this.smileTimer) this._autoCycleState();
                     }
-                    if (img && img.complete && (img.naturalWidth || img.width) > 0) break;
-                    img = null;
                 } while (this.frameIdx !== startIdx);
-                if (!img) { this._tick(); return; }
+                if (!img) { this._tick(); return; }  // no frame loaded yet — keep last frame, don't clear
+                // Advance to next frame for the next tick
+                this.frameIdx = (this.frameIdx + 1) % this.frames.length;
+                if (this.frameIdx === 0) {
+                    this.loopCount++;
+                    if (this.loopCount >= 2 && !this.smileTimer) this._autoCycleState();
+                }
                 var ctx = this.ctx, cw = this.canvas.width, ch = this.canvas.height;
                 ctx.clearRect(0, 0, cw, ch);
                 var iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
@@ -1053,11 +1071,18 @@ var DANMAKU_COUNT = 5;
                 this._tick();
             },
 
+            _typingMode: false,  // set true while 糖糖 is typing a reply
+
             _autoCycleState: function() {
+                if (this._typingMode) { this.loopCount = 0; return; }  // don't interrupt typing
                 var self = this; this.loopCount = 0;
-                var pool = ['smile','selfie','tv','voice_training','egosearching','comic','hair_drill','hair_long','hair_poney','hair_side'];
+                // Common pool (90% chance)
+                var common = ['smile','selfie','tv','voice_training','egosearching','comic','handspinner','headphone','henoji','movie','nail','sleep'];
+                // Rare pool — hair variants (10% chance)
+                var rare = ['hair_drill','hair_long','hair_poney','hair_side','henoji_dark','egosearching_ura'];
+                var pool = Math.random() < 0.10 ? rare : common;
                 var next = pool[Math.floor(Math.random() * pool.length)];
-                if (next === this.currentState) next = 'smile';
+                if (next === this.currentState) next = common[0];  // fallback to smile
                 setTimeout(function() { self.switchState(next); }, 500 + Math.random() * 1500);
             },
 
@@ -1089,6 +1114,10 @@ var DANMAKU_COUNT = 5;
                     self.menuOpen = !self.menuOpen;
                     menu.classList.toggle('open', self.menuOpen);
                 });
+                // Prevent click from bubbling to document (would immediately close menu)
+                titlebar.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
                 menu.addEventListener('click', function(e) {
                     var opt = e.target.closest('.state-opt');
                     if (!opt) return;
@@ -1118,8 +1147,9 @@ var DANMAKU_COUNT = 5;
             }
         };
 
-        // Init webcam
-        WebcamEngine.init();
+        // Init webcam — deferred to avoid blocking timeline fetch
+        // Webcam frames load on-demand per state (~2-12 images each), not all 84 at once
+        setTimeout(function() { WebcamEngine.init(); }, 400);
 
         // Drag webcam window (fixed positioning)
         (function() {
@@ -1445,9 +1475,10 @@ function initDanmaku() {
         var wrap = document.createElement('span');
         wrap.className = 'danmaku-wrap';
         wrap.style.top = positions[i] + 'px';
-        wrap.style.left = '110vw'; // start off-screen right
-        wrap.style.animation = 'scrollR linear infinite ' + (18 + Math.random() * 10) + 's';
-        wrap.style.animationDelay = (Math.random() * 10) + 's';
+        // Position handled entirely by CSS animation (translateX) — don't set left
+        wrap.style.animation = 'scrollR linear infinite ' + (12 + Math.random() * 8) + 's';
+        // First 2 danmaku: short delay so they appear within ~1s
+        wrap.style.animationDelay = (i < 2 ? Math.random() * 1.5 : Math.random() * 4) + 's';
 
         spawnDanmakuContent(wrap);
         bar.appendChild(wrap);
@@ -1484,7 +1515,7 @@ function refreshDanmaku() {
         }
         wrap.style.animation = 'none';
         wrap.offsetHeight;
-        wrap.style.animation = 'scrollR linear infinite ' + (18 + Math.random() * 10) + 's';
+        wrap.style.animation = 'scrollR linear infinite ' + (12 + Math.random() * 8) + 's';
     });
 }
 
@@ -1587,36 +1618,23 @@ function renderFeed(items) {
     // JINE tab always renders the chat screen (even without timeline items)
     if (ACTIVE_TAB === 'jine') {
         items = items || [];
+        // Ensure chat messages loaded from SaveManager
+        if (jineChatMsgs.length === 0) {
+            jineChatMsgs = SaveManager.getJineChat();
+        }
         var html = '<div class="jine-screen">';
-        html = '<div class="jine-screen">'; // wrapper with game-accurate pink gradient bg
 
         // JINE title bar
         html += '<div class="jine-titlebar"><div class="jine-logo"><span class="square"></span> JINE</div><div class="window-btns"><span>─</span><span>□</span><span>✕</span></div></div>';
 
-        // Date divider
-        html += ''; // date dividers now handled by renderJineChatUnified
-
-        // Timeline-generated JINE messages
-        html += '<div class="jine-chat-msgs" id="jine-chat-msgs">';
-        if (items.length === 0) {
-            html += '<div class="empty-state"><p style="font-size:0.7rem;color:rgba(0,0,0,0.4);">糖糖还没发消息...</p></div>';
-        } else {
-            items.forEach(function(e) {
-                if (e.type === 'system') {
-                    html += '<div class="jine-system-msg recall">' + esc(e.text) + '</div>';
-                } else {
-                    html += '<div class="jine-msg ame"><div class="jine-avatar"><img src="img/icon_ame.png"></div><div><span class="time">' + esc(e.time||'') + '</span><div class="bubble">' + esc(e.text) + '</div></div></div>';
-                }
-            });
-        }
-        html += '</div>';
+        // Unified JINE chat container (timeline + interactive merged)
+        html += '<div class="jine-chat-msgs" id="jine-chat-msgs"></div>';
 
         // Interactive chat section (hidden in static/GitHub Pages mode)
         if (!isStaticMode) {
+            // Typing indicator — placed between chat and sticker bar like real messengers
+            html += '<div class="jine-typing" id="jine-typing" style="display:none"><span>糖糖正在输入<span class="dots"><span></span><span></span><span></span></span></span></div>';
             html += '<div class="jine-interactive">';
-            html += '<div class="jine-interactive-label">— 阿P 的聊天 —</div>';
-            html += '<div class="jine-chat-msgs" id="jine-chat-msgs"></div>';
-            html += '<div class="jine-typing" id="jine-typing" style="display:none">糖糖正在输入<span class="dots"><span></span><span></span><span></span></span></div>';
             html += '<div class="sticker-bar" id="sticker-bar"></div>';
             html += '<div class="jine-text-area"><textarea class="jine-text-input" id="jine-text-input" placeholder="给糖糖发消息..." maxlength="200" rows="2"></textarea><button class="jine-text-send" id="jine-text-send" onclick="sendText()">发送</button></div>';
             html += '</div>';
@@ -1631,7 +1649,6 @@ function renderFeed(items) {
         // Render sticker bar once DOM is in place
         renderStickerBar();
         renderJineChatUnified(items);
-        fetchJineChat();
         return;
     }
 
@@ -1681,9 +1698,13 @@ function renderFeed(items) {
         }
     });
 
-    // No items in current tab
-    if (!html && ACTIVE_TAB !== 'all') {
-        html = '<div class="empty-state"><div class="icon"><img src="img/icon_ame.png"></div><p>这里还没有内容</p></div>';
+    // No items rendered — show empty state regardless of tab
+    if (!html) {
+        if (ACTIVE_TAB === 'diary') {
+            html = '<div class="empty-state"><div class="icon"><img src="img/icon_ame.png"></div><p>糖糖还没写日记...</p></div>';
+        } else {
+            html = '<div class="empty-state"><div class="icon"><img src="img/icon_cho.png"></div><p>这里还没有内容</p></div>';
+        }
     }
 
     CONTAINER.innerHTML = html;
@@ -1693,12 +1714,24 @@ function esc(t) { var d = document.createElement('div'); d.textContent = t||''; 
 function rnd(min,max) { return Math.floor(Math.random()*(max-min+1))+min; }
 
 // Fetch
+var _fetchRetries = 0;
 function fetchTimeline() {
+    console.log('[fetchTimeline] fetching... (retry#' + _fetchRetries + ')');
+    if (firstLoad && _fetchRetries === 0) {
+        CONTAINER.innerHTML = '<div class="empty-state"><div class="icon"><img src="img/icon_cho.png"></div><p>连接超天酱中...<br><span style="font-size:0.55rem;color:#555;">' + new Date().toLocaleTimeString() + '</span></p></div>';
+    }
     fetch(API + '/api/timeline').then(function(r) { return r.json(); }).then(function(data) {
+        _fetchRetries = 0;
+        console.log('[fetchTimeline] got', data.count, 'items, pool:', data.pool_remaining);
         cachedTimeline = data.timeline || [];
         poolRemaining = data.pool_remaining || 0;
         updatePoolCount();
-        if (firstLoad) { renderFromCache(); firstLoad = false; return; }
+        if (firstLoad) {
+            console.log('[fetchTimeline] firstLoad render, items:', cachedTimeline.length);
+            renderFromCache();
+            firstLoad = false;
+            return;
+        }
         // Check for new batches
         var hasNew = cachedTimeline.some(function(e) { return !knownBatches[e.batch_id]; });
         if (hasNew) {
@@ -1706,20 +1739,30 @@ function fetchTimeline() {
             renderFromCache();
         }
     }).catch(function(err) {
-        console.warn('API unavailable, trying static mode:', err.message);
+        console.warn('[fetchTimeline] API unavailable, trying static mode:', err.message);
         // Fallback: try loading feed.json directly (GitHub Pages)
         fetch('data/feed.json').then(function(r) { return r.json(); }).then(function(data) {
+            _fetchRetries = 0;
             isStaticMode = true;
             cachedTimeline = data.timeline || [];
             poolRemaining = 0;
             updatePoolCount();
+            console.log('[fetchTimeline] static mode, items:', cachedTimeline.length);
             if (firstLoad) { renderFromCache(); firstLoad = false; enterStaticMode(); }
         }).catch(function(err2) {
-            console.error('Static fallback also failed:', err2);
+            console.error('[fetchTimeline] static fallback also failed:', err2);
             if (firstLoad) {
-                CONTAINER.innerHTML = '<div class="empty-state"><div class="icon"><img src="img/icon_cho_res.png"></div><p>超天酱暂时失联...</p></div>';
+                CONTAINER.innerHTML = '<div class="empty-state"><div class="icon"><img src="img/icon_cho.png"></div><p>超天酱暂时失联...<br><span style="font-size:0.6rem;color:#666;">确认服务器已启动？python server.py</span></p></div>';
                 firstLoad = false;
             }
+            // Retry with backoff
+            _fetchRetries++;
+            var delay = Math.min(3000 * _fetchRetries, 15000);
+            console.log('[fetchTimeline] retry in', delay + 'ms');
+            setTimeout(function() {
+                firstLoad = true;
+                fetchTimeline();
+            }, delay);
         });
     });
 }
@@ -1829,8 +1872,108 @@ document.addEventListener('error', function(e) {
 }, true);
 
 // ============================================================
-// F8: JINE Interactive Chat
+// Typing indicator + webcam sync
 // ============================================================
+// Called IMMEDIATELY when player sends message — 糖糖 picks up phone
+function startAmeResponse() {
+    if (typeof WebcamEngine !== 'undefined' && WebcamEngine.switchState) {
+        if (WebcamEngine.currentState !== 'egosearching') {
+            WebcamEngine._preTypingState = WebcamEngine.currentState;
+        }
+        WebcamEngine._typingMode = true;
+        WebcamEngine.switchState('egosearching');
+    }
+}
+// Called when reply arrives — 糖糖 puts phone down
+function endAmeResponse() {
+    if (typeof WebcamEngine !== 'undefined' && WebcamEngine.switchState) {
+        WebcamEngine._typingMode = false;
+        var restore = WebcamEngine._preTypingState || 'smile';
+        WebcamEngine._preTypingState = null;
+        WebcamEngine.switchState(restore);
+    }
+}
+// Typing indicator "糖糖正在输入..." — delayed, separate from webcam
+function showAmeTyping() {
+    var el = document.getElementById('jine-typing');
+    if (el) el.style.display = 'flex';
+}
+function hideAmeTyping() {
+    var el = document.getElementById('jine-typing');
+    if (el) el.style.display = 'none';
+}
+
+// ============================================================
+// Reply cycle — batches multiple player messages into one 糖糖 reply
+// ============================================================
+function _startReplyCycle() {
+    if (_replyPending) return;  // already waiting for a reply
+    _replyPending = true;
+    _pendingMsgIdx = jineChatMsgs.length;  // reply will go after current last message
+
+    // Collect all unreplied player texts since last reply
+    var texts = [];
+    for (var i = jineChatMsgs.length - 1; i >= 0; i--) {
+        var m = jineChatMsgs[i];
+        if (m.reply) break;  // stop at last replied message
+        if (m.player_text) texts.unshift(m.player_text);
+        if (m.sticker) texts.unshift('[' + (findSticker(m.sticker)||{}).label || '贴图' + ']');
+    }
+    var combined = texts.join(' | ') || '...';
+    if (texts.length === 0) { _replyPending = false; return; }
+
+    var typingEl = document.getElementById('jine-typing');
+    setTimeout(function() { if (typingEl) showAmeTyping(); }, 800);
+
+    _pendingController = new AbortController();
+    var fetchTimeout = setTimeout(function() { if (_pendingController) _pendingController.abort(); }, 20000);
+
+    fetch(API + '/api/jine/text', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({text: combined}),
+        signal: _pendingController.signal
+    }).then(function(r) { return r.json(); }).then(function(data) {
+        clearTimeout(fetchTimeout);
+        hideAmeTyping();
+        endAmeResponse();
+        // Place reply after the last pending message
+        var replyIdx = _pendingMsgIdx;
+        var replyMsg = {
+            time: data.time || ('0'+new Date().getHours()).slice(-2)+':'+('0'+new Date().getMinutes()).slice(-2),
+            reply: data.reply || '', ame_sticker: data.ame_sticker || null,
+            recall: data.recall || false
+        };
+        // Insert reply at the right position (after last player msg at time of cycle start)
+        if (replyIdx < jineChatMsgs.length) {
+            jineChatMsgs.splice(replyIdx, 0, replyMsg);
+        } else {
+            jineChatMsgs.push(replyMsg);
+        }
+        SaveManager.addJineMessage(replyMsg);
+        _replyPending = false; _pendingController = null;
+        if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
+        // Check if more messages arrived during the API call
+        var hasUnreplied = false;
+        for (var j = jineChatMsgs.length - 1; j >= 0; j--) {
+            if (jineChatMsgs[j].reply) break;
+            if (jineChatMsgs[j].player_text || jineChatMsgs[j].sticker) { hasUnreplied = true; break; }
+        }
+        if (hasUnreplied) { startAmeResponse(); _startReplyCycle(); }
+    }).catch(function(err) {
+        clearTimeout(fetchTimeout);
+        console.warn('[replyCycle] error:', err.name || err.message);
+        hideAmeTyping();
+        endAmeResponse();
+        // Fallback reply
+        var fb = { time: ('0'+new Date().getHours()).slice(-2)+':'+('0'+new Date().getMinutes()).slice(-2),
+            reply: ['...','嗯','哼','哦'][Math.floor(Math.random()*4)], recall: false };
+        var ri = _pendingMsgIdx;
+        if (ri < jineChatMsgs.length) { jineChatMsgs.splice(ri, 0, fb); } else { jineChatMsgs.push(fb); }
+        SaveManager.addJineMessage(fb);
+        _replyPending = false; _pendingController = null;
+        if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
+    });
+}
 
 function renderStickerBar() {
     var bar = document.getElementById('sticker-bar');
@@ -1852,7 +1995,7 @@ function renderStickerBar() {
         wrap.appendChild(imgEl);
         btn.appendChild(wrap);
         btn.addEventListener('click', function() {
-            if (!jineSending) sendSticker(s.id);
+            sendSticker(s.id);
         });
         bar.appendChild(btn);
     });
@@ -1940,62 +2083,40 @@ function fetchJineChat() {
     if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
 }
 
-// Send text from textarea
+// Trigger words — local instant replies without API (F12)
+function checkTriggerWords(text) {
+    if (!text) return null;
+    var t = text.toLowerCase();
+    if (/(爱你|喜欢|想你|抱|亲|贴贴|老婆|宝贝)/.test(t)) return { reply: '...笨蛋', ame_sticker: 'ame_blush' };
+    if (/(晚安|睡觉|拜拜|再见|bye)/.test(t)) return { reply: '嗯...晚安', ame_sticker: null };
+    if (/(揍你|打你|敲你|笨蛋|傻瓜)/.test(t)) return { reply: '你才笨蛋！', ame_sticker: 'ame_tsun' };
+    return null;
+}
+
+// Send text from textarea — queues message, triggers batched reply cycle
 window.sendText = function() {
     var input = document.getElementById('jine-text-input');
-    if (!input || jineSending) return;
+    if (!input) return;
     var text = input.value.trim();
     if (!text) return;
     input.value = '';
-    jineSending = true;
+    startAmeResponse();
     var now = new Date();
     var timeStr = ('0'+now.getHours()).slice(-2) + ':' + ('0'+now.getMinutes()).slice(-2);
-    jineChatMsgs.push({ time: timeStr, player_text: text, reply: '', recall: false });
-    if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
 
+    // Trigger words: instant local reply, no API call
     var trigger = checkTriggerWords(text);
     if (trigger) {
-        var typingEl = document.getElementById('jine-typing');
-        setTimeout(function() { if (typingEl) typingEl.style.display = 'flex'; }, 600);
-        setTimeout(function() {
-            if (typingEl) typingEl.style.display = 'none';
-            var last = jineChatMsgs[jineChatMsgs.length - 1];
-            if (last && !last.reply) {
-                last.reply = trigger.reply; last.ame_sticker = trigger.ame_sticker || null;
-                last.time = ('0'+new Date().getHours()).slice(-2) + ':' + ('0'+new Date().getMinutes()).slice(-2);
-            }
-            if (last) SaveManager.addJineMessage(last);
-            if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
-            jineSending = false; input.focus();
-        }, 1800);
+        jineChatMsgs.push({ time: timeStr, player_text: text, reply: trigger.reply, ame_sticker: trigger.ame_sticker || null, recall: false });
+        var last = jineChatMsgs[jineChatMsgs.length - 1];
+        if (last) SaveManager.addJineMessage(last);
+        setTimeout(function() { endAmeResponse(); if (ACTIVE_TAB === 'jine') renderJineChatMsgs(); }, 600);
         return;
     }
 
-    var typingEl = document.getElementById('jine-typing');
-    setTimeout(function() { if (typingEl) typingEl.style.display = 'flex'; }, 800);
-    fetch(API + '/api/jine/text', {
-        method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({text: text})
-    }).then(function(r) { return r.json(); }).then(function(data) {
-        var last = jineChatMsgs[jineChatMsgs.length - 1];
-        if (last && !last.reply) {
-            last.reply = data.reply || ''; last.ame_sticker = data.ame_sticker || null;
-            last.time = data.time; last.recall = data.recall || false;
-            SaveManager.addJineMessage(last);
-        }
-        setTimeout(function() {
-            if (typingEl) typingEl.style.display = 'none';
-            if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
-            jineSending = false; input.focus();
-        }, 1200);
-    }).catch(function() {
-        if (typingEl) typingEl.style.display = 'none';
-        var last = jineChatMsgs[jineChatMsgs.length - 1];
-        if (last && !last.reply) last.reply = ['...','嗯','哼','哦'][Math.floor(Math.random()*4)];
-        if (last) SaveManager.addJineMessage(last);
-        if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
-        jineSending = false;
-    });
+    jineChatMsgs.push({ time: timeStr, player_text: text, reply: '', recall: false });
+    if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
+    _startReplyCycle();
 };
 
 // Enter sends, Shift+Enter newline
@@ -2008,69 +2129,15 @@ document.addEventListener('keydown', function(e) {
 });
 
 function sendSticker(stickerId) {
-    jineSending = true;
+    startAmeResponse();
     var sticker = STICKERS.find(function(s) { return s.id === stickerId; });
-    if (!sticker) { jineSending = false; return; }
+    if (!sticker) { endAmeResponse(); return; }
 
     var now = new Date();
     var timeStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
-
-    // Show sticker immediately (with "已读" rendered below by renderJineChatMsgs)
-    jineChatMsgs.push({
-        time: timeStr,
-        sticker: stickerId,
-        reply: '',
-        recall: false
-    });
+    jineChatMsgs.push({ time: timeStr, sticker: stickerId, reply: '', recall: false });
     if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
-
-    // Show "糖糖正在输入..." after ~2s
-    var typingEl = document.getElementById('jine-typing');
-    var container = document.getElementById('jine-chat-msgs');
-    setTimeout(function() {
-        if (ACTIVE_TAB === 'jine' && typingEl) {
-            typingEl.style.display = 'flex';
-            if (container) container.scrollTop = container.scrollHeight;
-        }
-    }, 1500 + Math.random() * 1000);
-
-    // Send to API
-    fetch(API + '/api/jine/send', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({sticker: stickerId})
-    }).then(function(r) { return r.json(); }).then(function(data) {
-        if (!data.ok) throw new Error(data.error);
-
-        // Update last message with reply
-        var last = jineChatMsgs[jineChatMsgs.length - 1];
-        if (last && !last.reply) {
-            last.reply = data.reply || '';
-            last.ame_sticker = data.ame_sticker || null;
-            last.time = data.time || last.time;
-            last.recall = data.recall || false;
-        }
-
-        // Persist to current save slot
-        if (last) SaveManager.addJineMessage(last);
-        // Delay showing reply for typing realism
-        setTimeout(function() {
-            if (typingEl) typingEl.style.display = 'none';
-            if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
-            jineSending = false;
-        }, 1200 + Math.random() * 1500);
-    }).catch(function(err) {
-        console.error('JINE send error:', err);
-        if (typingEl) typingEl.style.display = 'none';
-        var fallbacks = ['...','嗯','好...吧','知道了','算了'];
-        var last = jineChatMsgs[jineChatMsgs.length - 1];
-        if (last && !last.reply) {
-            last.reply = fallbacks[Math.floor(Math.random() * fallbacks.length)];
-        }
-        if (last) SaveManager.addJineMessage(last);
-        if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
-        jineSending = false;
-    });
+    _startReplyCycle();
 }
 
 // Init
@@ -2086,8 +2153,14 @@ fetchTimeline();
 // Static mode: no polling (content generated by GitHub Actions)
 if (!isStaticMode) {
     setInterval(fetchTimeline, 30000);
+    // Fast poll if feed is empty (server may still be generating)
+    if (cachedTimeline.length === 0) {
+        setTimeout(function() { if (cachedTimeline.length === 0) fetchTimeline(); }, 3000);
+        setTimeout(function() { if (cachedTimeline.length === 0) fetchTimeline(); }, 7000);
+        setTimeout(function() { if (cachedTimeline.length === 0) fetchTimeline(); }, 12000);
+    }
 }
-console.log('+ Poketter v2.7.1 ready +');
+console.log('+ Poketter v2.7.2 ready +');
 })();
 </script>
 </body>

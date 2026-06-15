@@ -227,7 +227,7 @@ def main():
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
     print("=" * 50)
-    print("  + Poketter v2.7.1 -- 铁律JINE + 微信时间线 + 多行输入 + 96px贴图 +")
+    print("  + Poketter v2.7.2 -- 场景剥夺JINE + 微信时间线 + 多行输入 + 96px贴图 +")
     print("=" * 50)
     print(f"  地址: http://{HOST}:{PORT}")
     print(f"  API:  GET  /api/timeline  -> 获取时间线")
@@ -236,16 +236,22 @@ def main():
     print(f"       POST /api/jine/send  -> F8 JINE 互动聊天")
     print("=" * 50)
 
-    if feed_count() == 0:
-        print("\n[!] Feed 为空，自动生成首条...")
-        try:
-            generate_and_save()
-        except Exception as e:
-            print(f"  [!] 生成失败: {e}")
-
-    print(f"\n[*] 服务器启动中...\n")
     server = HTTPServer((HOST, PORT), AmechanHandler)
     server.allow_reuse_address = True
+
+    # Start server immediately, generate first batch in background
+    import threading
+    if feed_count() == 0:
+        print("\n[!] Feed 为空，后台生成首条...")
+        def _initial_generate():
+            try:
+                generate_and_save()
+                print("  [OK] 首条生成完成")
+            except Exception as e:
+                print(f"  [!] 生成失败: {e}")
+        threading.Thread(target=_initial_generate, daemon=True).start()
+
+    print(f"\n[*] 服务器启动中...\n")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
