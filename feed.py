@@ -131,21 +131,19 @@ def pop_from_pool() -> list[dict]:
         data["timeline"].append(entry)
         return entry
 
-    # Release whatever's available — prefer pairs, but single is fine
+    # Must release as a pair — both must exist
     poke_item = _find_one("poketter")
     diary_item = _find_one("diary")
 
-    if poke_item:
+    if poke_item and diary_item:
         entries.append(_pop_it(poke_item))
-    if diary_item:
         entries.append(_pop_it(diary_item))
-
-    if entries:
         data["hidden_pool"] = pool
         _save_raw(data)
         return entries
 
-    # Pool completely empty → trigger regeneration
+    # Incomplete pair → regenerate pool (don't release singles)
+    print(f"  [!] Pool imbalanced: poke={bool(poke_item)}, diary={bool(diary_item)} → trigger regeneration")
     return []
 
 
