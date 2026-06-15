@@ -974,6 +974,7 @@ var _pendingController = null;   // AbortController for current request
 var _batchTimer = null;          // setTimeout ID for aggregation window
 var _batchStartIdx = -1;         // index of first msg when batch window started
 var _batchWindowMs = 0;          // current window duration (random 300-1200ms)
+var _batchSentIdx = 0;           // last index sent to API (prevents re-processing)
 
 // Danmaku pools — 应援 and 吐槽 (color-independent)
 var DANMAKU_OEN   = ['✟升天✟','小天使请安','超天酱贴贴！','kirakira💖','888888','守护','好可爱','互联网天使','主播别走','www','可爱捏','天使降临','糖果雨','原地升天','甜甜圈'];
@@ -2006,11 +2007,11 @@ function _executeReply() {
     _batchTimer = null;
     if (_replyPending) return;  // should not happen, but guard
 
-    // Collect ALL unreplied player messages in this batch
+    // Collect NEW unreplied player messages (from _batchSentIdx onward only)
     var batchMsgs = [];
     var lastTexts = [];
     var lastSticker = null;
-    for (var i = 0; i < jineChatMsgs.length; i++) {
+    for (var i = _batchSentIdx; i < jineChatMsgs.length; i++) {
         var m = jineChatMsgs[i];
         if (m.reply || m.ame_sticker) continue;
         if (m.player_text) { batchMsgs.push(m); lastTexts.push(m.player_text); }
@@ -2019,8 +2020,8 @@ function _executeReply() {
     if (batchMsgs.length === 0) return;
 
     _replyPending = true;
+    var newSentIdx = jineChatMsgs.length;  // track where new messages would start next time
     var cycleStart = Date.now();
-    var replyIdx = jineChatMsgs.length;  // insert at end
 
     // Typing indicator
     setTimeout(function() { showAmeTyping(); }, 800);
@@ -2066,6 +2067,7 @@ function _executeReply() {
                 recall: false
             };
             jineChatMsgs.push(replyMsg);
+            _batchSentIdx = jineChatMsgs.length;  // advance past this reply
             SaveManager.addJineMessage(replyMsg);
             if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
             // Check if new messages arrived during API — if so, start fresh window
@@ -2090,22 +2092,19 @@ function _executeReply() {
             var fb = { time: ('0'+new Date().getHours()).slice(-2)+':'+('0'+new Date().getMinutes()).slice(-2),
                 reply: ['...','嗯','知道了','哼'][Math.floor(Math.random()*4)], recall: false };
             jineChatMsgs.push(fb);
+            _batchSentIdx = jineChatMsgs.length;  // advance past fallback reply
             SaveManager.addJineMessage(fb);
             if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
         }, remainWait);
     });
 }
 
-// Check for unreplied player messages (ignoring already-replied ones)
+// Check for NEW unreplied player messages (only after _batchSentIdx)
 function _checkUnreplied() {
-    for (var i = 0; i < jineChatMsgs.length; i++) {
+    for (var i = _batchSentIdx; i < jineChatMsgs.length; i++) {
         var m = jineChatMsgs[i];
         if (m.reply || m.ame_sticker) continue;
-        if (m.player_text || m.sticker) {
-            var next = jineChatMsgs[i + 1];
-            if (next && (next.reply || next.ame_sticker)) continue;
-            return true;
-        }
+        if (m.player_text || m.sticker) return true;
     }
     return false;
 }
