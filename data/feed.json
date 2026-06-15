@@ -1,106 +1,6 @@
 {
   "timeline": [
     {
-      "batch_id": "released_1781561534985",
-      "event": "随手一发",
-      "layer": "poketter",
-      "time": "06:12",
-      "text": "今天直播结束啦～大家今天开心吗？超天酱可是超级开心的！明天也要来看我哦✨💕",
-      "selfie_mood": "happy",
-      "timestamp": 1781561534.985953,
-      "date": "2026-06-16 06:12:14"
-    },
-    {
-      "batch_id": "released_1781561534985",
-      "event": "随手一发",
-      "layer": "diary",
-      "time": "06:12",
-      "text": "他今天回消息好慢，是我太烦了吗。但是不找他我就会乱想。",
-      "selfie_mood": "angel",
-      "timestamp": 1781561534.985953,
-      "date": "2026-06-16 06:12:14"
-    },
-    {
-      "batch_id": "released_1781561641277",
-      "event": "随手一发",
-      "layer": "poketter",
-      "time": "06:14",
-      "text": "今天的自拍是睡醒的迷糊小天使哦～刚起床头发翘翘的，宝宝们不许笑我＞＜💕 #超天酱早起打卡",
-      "selfie_mood": "sleepy",
-      "timestamp": 1781561641.2770975,
-      "date": "2026-06-16 06:14:01"
-    },
-    {
-      "batch_id": "released_1781561641277",
-      "event": "随手一发",
-      "layer": "diary",
-      "time": "06:14",
-      "text": "今天吃了便利店饭团，微波炉叮的那一声很像家里以前的破微波炉。突然就想起妈妈最后那一天递来的便当，全是凉的。",
-      "selfie_mood": "angel",
-      "timestamp": 1781561641.2770975,
-      "date": "2026-06-16 06:14:01"
-    },
-    {
-      "batch_id": "released_1781561729585",
-      "event": "随手一发",
-      "layer": "poketter",
-      "time": "06:15",
-      "text": "早安！今天也要一起kirakira～✨💖 大家吃早饭了吗？",
-      "selfie_mood": "happy",
-      "timestamp": 1781561729.5855465,
-      "date": "2026-06-16 06:15:29"
-    },
-    {
-      "batch_id": "released_1781561729585",
-      "event": "随手一发",
-      "layer": "diary",
-      "time": "06:15",
-      "text": "今天吃了双倍的药 手还是抖 可能快撑不住了吧",
-      "selfie_mood": "angel",
-      "timestamp": 1781561729.5855465,
-      "date": "2026-06-16 06:15:29"
-    },
-    {
-      "batch_id": "released_1781562657082",
-      "event": "随手一发",
-      "layer": "poketter",
-      "time": "06:30",
-      "text": "今天天气超好～✨ 出门买了草莓可丽饼🍓 咬一口感觉幸福在嘴里爆炸啦💕 宝宝们也要记得吃点甜甜的东西让自己开心起来哦☆彡",
-      "selfie_mood": "happy",
-      "timestamp": 1781562657.0848181,
-      "date": "2026-06-16 06:30:57"
-    },
-    {
-      "batch_id": "released_1781562657082",
-      "event": "随手一发",
-      "layer": "diary",
-      "time": "06:30",
-      "text": "直播时有个粉丝说每天都来看我 突然觉得好像被人捡起来了 虽然只有那么一小会儿",
-      "selfie_mood": "angel",
-      "timestamp": 1781562657.0848181,
-      "date": "2026-06-16 06:30:57"
-    },
-    {
-      "batch_id": "released_1781562687425",
-      "event": "随手一发",
-      "layer": "poketter",
-      "time": "06:31",
-      "text": "今天开完直播觉得自己闪闪发光✨✨ 宝宝们的应援是我的充电宝～💕 明天也要一起kirakira哦☆彡",
-      "selfie_mood": "happy",
-      "timestamp": 1781562687.4254534,
-      "date": "2026-06-16 06:31:27"
-    },
-    {
-      "batch_id": "released_1781562687425",
-      "event": "随手一发",
-      "layer": "diary",
-      "time": "06:31",
-      "text": "今天直播时笑了好多，脸有点僵。关掉摄像头之后就不想说话了。我想喝热可可，但是懒得动。",
-      "selfie_mood": null,
-      "timestamp": 1781562687.4254534,
-      "date": "2026-06-16 06:31:27"
-    },
-    {
       "batch_id": "released_1781562891154",
       "event": "随手一发",
       "layer": "poketter",
@@ -179,33 +79,143 @@
       "selfie_mood": "angel",
       "timestamp": 1781563395.392936,
       "date": "2026-06-16 06:43:15"
+    },
+    {
+      "batch_id": "released_1781564133535",
+      "event": "随手一发",
+      "layer": "poketter",
+      "time": "06:55",
+      "text": "大家晚安～今天梦到我变成真正的天使了！👼💤 晚安吻送你们！💋",
+      "selfie_mood": "sleepy",
+      "timestamp": 1781564133.5352302,
+      "date": "2026-06-16 06:55:33"
+    },
+    {
+      "batch_id": "released_1781564133535",
+      "event": "随手一发",
+      "layer": "diary",
+      "time": "06:55",
+      "text": "今天又什么都没做。吃了药，睡了很久。醒来还是一个人。阿P说晚上来，可是现在还没来。",
+      "selfie_mood": "angel",
+      "timestamp": 1781564133.5352302,
+      "date": "2026-06-16 06:55:33"
+    },
+    {
+      "batch_id": "released_1781564870381",
+      "event": "随手一发",
+      "layer": "poketter",
+      "time": "07:07",
+      "text": "今天也有在努力闪闪发光✨宝宝们的每次小礼物都是超天酱的动力💕",
+      "selfie_mood": "happy",
+      "timestamp": 1781564870.3810844,
+      "date": "2026-06-16 07:07:50"
+    },
+    {
+      "batch_id": "released_1781564870381",
+      "event": "随手一发",
+      "layer": "diary",
+      "time": "07:07",
+      "text": "不小心点了粉丝的主页 看见他们在别的主播那边说超天酱过气了 恶心 好想全部拉黑",
+      "selfie_mood": "angel",
+      "timestamp": 1781564870.3810844,
+      "date": "2026-06-16 07:07:50"
+    },
+    {
+      "batch_id": "released_1781564979664",
+      "event": "随手一发",
+      "layer": "poketter",
+      "time": "07:09",
+      "text": "今天被大家夸裙子可爱了～开心得转圈圈💕 以后也要一直一直看着超天酱哦！🎀",
+      "selfie_mood": "happy",
+      "timestamp": 1781564979.6649792,
+      "date": "2026-06-16 07:09:39"
+    },
+    {
+      "batch_id": "released_1781564979664",
+      "event": "随手一发",
+      "layer": "diary",
+      "time": "07:09",
+      "text": "直播笑得脸好僵 药又忘了 血管里痒得想拿刀划开 阿P不看我就没意义",
+      "selfie_mood": "angel",
+      "timestamp": 1781564979.6649792,
+      "date": "2026-06-16 07:09:39"
+    },
+    {
+      "batch_id": "released_1781565123040",
+      "event": "随手一发",
+      "layer": "poketter",
+      "time": "07:12",
+      "text": "晚安宝宝们✨ 梦里也会有超天酱的kirakira能量哦～明天见♡",
+      "selfie_mood": "sleepy",
+      "timestamp": 1781565123.040544,
+      "date": "2026-06-16 07:12:03"
+    },
+    {
+      "batch_id": "released_1781565123040",
+      "event": "随手一发",
+      "layer": "diary",
+      "time": "07:12",
+      "text": "阿P是不是觉得我很烦 为什么已读不回 想吞掉整板药 死了就没人需要忍受我了",
+      "selfie_mood": "angel",
+      "timestamp": 1781565123.040544,
+      "date": "2026-06-16 07:12:03"
+    },
+    {
+      "batch_id": "released_1781565173611",
+      "event": "随手一发",
+      "layer": "poketter",
+      "time": "07:12",
+      "text": "大家早安✨💕 超天酱今天也是kirakira☆彡 昨晚梦到和宝宝们一起开茶会啦～好幸福🎀🌟",
+      "selfie_mood": "happy",
+      "timestamp": 1781565173.611327,
+      "date": "2026-06-16 07:12:53"
+    },
+    {
+      "batch_id": "released_1781565173611",
+      "event": "随手一发",
+      "layer": "diary",
+      "time": "07:12",
+      "text": "梦到他不要我了 醒过来一身冷汗 摸手机看到零个消息 活着就是等消息吗 好恶心",
+      "selfie_mood": "angel",
+      "timestamp": 1781565173.611327,
+      "date": "2026-06-16 07:12:53"
+    },
+    {
+      "batch_id": "released_1781566465946",
+      "event": "随手一发",
+      "layer": "poketter",
+      "time": "07:34",
+      "text": "今天直播的时候收到宝宝们送的草莓味零食 闻到味道突然就好幸福💕✨ 大家都好温柔哦 超天酱会继续加油的🌟🎀",
+      "selfie_mood": "angel",
+      "timestamp": 1781566465.9467025,
+      "date": "2026-06-16 07:34:25"
+    },
+    {
+      "batch_id": "released_1781566465946",
+      "event": "随手一发",
+      "layer": "diary",
+      "time": "07:34",
+      "text": "收到草莓糖了 不想吃 粉丝好恶心 但是不吃大家会走的 只有可爱才能活着 可爱可爱可爱 好累",
+      "selfie_mood": "angel",
+      "timestamp": 1781566465.9509993,
+      "date": "2026-06-16 07:34:25"
     }
   ],
   "hidden_pool": [
     {
       "layer": "poketter",
-      "text": "大家晚安～今天梦到我变成真正的天使了！👼💤 晚安吻送你们！💋",
-      "selfie_mood": "sleepy"
-    },
-    {
-      "layer": "diary",
-      "text": "今天又什么都没做。吃了药，睡了很久。醒来还是一个人。阿P说晚上来，可是现在还没来。",
-      "selfie_mood": "angel"
-    },
-    {
-      "layer": "poketter",
-      "text": "新发色大家觉得怎么样？是不是更像棉花糖了？🍬💕 转推抽奖马上开！",
+      "text": "有没有人跟超天酱一样 吃甜食的时候会忍不住眯起眼睛笑呀🍰✨ 那个瞬间真的超级kirakira的💖☆彡",
       "selfie_mood": "happy"
     },
     {
       "layer": "diary",
-      "text": "播到一半突然觉得好空虚。原来大家喜欢的不是真正的我。但是没人知道真正的我，所以没关系。",
+      "text": "对着蛋糕拍了十四张照片 选了一张最可爱的发了 其他都删了 我笑得像假的一样 反正也没人在乎是不是真的",
       "selfie_mood": "angel"
     },
     {
       "layer": "poketter",
-      "text": "悄悄地...有点想哭。不过没关系！因为超天酱有大家在！🌟 明天也会加油的！☆彡",
-      "selfie_mood": "sorrow"
+      "text": "宝宝们晚安💤🌟 今天也是被甜品之神眷顾的一天呢 明天直播见！梦里会有草莓蛋糕的吧🍓🎀 Love you～♡",
+      "selfie_mood": "sleepy"
     }
   ],
   "jine_chat": []

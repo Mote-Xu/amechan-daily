@@ -45,6 +45,10 @@ python server.py  # → http://127.0.0.1:8930
 - `/api/jine/chat` 统一无状态端点
 - `generate_jine_chat(text, sticker, history)`
 
+## 🔴 当前阶段：公共部署
+见 `REQUIREMENTS.md` P2 + `GEMINI_PROMPT.md`
+
 ## 已知问题
 1. 弹幕 CSS 动画偶尔消失
 2. 刷新后偶发发不了消息
+3. API 端点无鉴权（部署前必须解决）
