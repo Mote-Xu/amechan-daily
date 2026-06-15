@@ -129,86 +129,20 @@
       "selfie_mood": "pray",
       "timestamp": 1781486412.0743964,
       "date": "2026-06-15 09:20:12"
-    }
-  ],
-  "hidden_pool": [
+    },
     {
+      "batch_id": "released_1781487288194",
+      "event": "随手一发",
       "layer": "diary",
+      "time": "09:34",
       "text": "吃光了最后那包过期的软糖，包装纸上写着当心意被看见就会发光。要是真这么简单就好了。",
-      "selfie_mood": "angel"
+      "selfie_mood": "angel",
+      "timestamp": 1781487288.1943161,
+      "date": "2026-06-15 09:34:48"
     }
   ],
+  "hidden_pool": [],
   "jine_chat": [
-    {
-      "time": "09:11",
-      "reply": "突然卖萌也没用哦\n揍你哦",
-      "timestamp": 1781485909.554566,
-      "player_text": "[嘤嘤 | [太强了",
-      "recall": true
-    },
-    {
-      "time": "09:11",
-      "reply": "啧 又来\n你到底是来聊天还是来表演去世的",
-      "timestamp": 1781485913.2252307,
-      "player_text": "[原地去世 | [啊对对"
-    },
-    {
-      "time": "09:12",
-      "reply": "好什么好\n你又敷衍我",
-      "timestamp": 1781485926.8512795,
-      "player_text": "[好"
-    },
-    {
-      "time": "09:12",
-      "reply": "你打算靠贴图蒙混过关是吧\n别以为这样我就不追究了",
-      "timestamp": 1781485931.0038042,
-      "player_text": "[好 | [太强了",
-      "recall": true
-    },
-    {
-      "time": "09:12",
-      "reply": "你嘤什么嘤\n卖萌也没用",
-      "timestamp": 1781485934.4587116,
-      "player_text": "[嘤嘤",
-      "recall": true
-    },
-    {
-      "time": "09:12",
-      "reply": "你每天到底要死几次\n装死也没用！",
-      "timestamp": 1781485940.1071763,
-      "player_text": "[嘤嘤 | [原地去世"
-    },
-    {
-      "time": "09:12",
-      "reply": "别又来这招\n你演技真的很差诶",
-      "timestamp": 1781485943.1602783,
-      "player_text": "[原地去世"
-    },
-    {
-      "time": "09:12",
-      "reply": "死了还怎么永远爱我啊笨蛋  \n肉麻死了……揍你哦",
-      "timestamp": 1781485947.4447024,
-      "player_text": "[原地去世 | [永远爱你",
-      "recall": true
-    },
-    {
-      "time": "09:12",
-      "reply": "哼\n明明是你先来惹我的\n笨蛋P",
-      "timestamp": 1781485950.721642,
-      "player_text": "[关我屁事"
-    },
-    {
-      "time": "09:12",
-      "reply": "又来\n你存心气我是不是",
-      "timestamp": 1781485953.7886174,
-      "player_text": "[关我屁事 | [太强了"
-    },
-    {
-      "time": "09:12",
-      "reply": "哼  \n道歉也这么没诚意  \n罚你今晚陪我直播",
-      "timestamp": 1781485958.0929759,
-      "player_text": "[抱歉抱歉 | [原地去世"
-    },
     {
       "time": "09:12",
       "reply": "在准备直播啦 你最好别迟到 揍你哦",
@@ -327,6 +261,80 @@
       "timestamp": 1781486488.2683105,
       "sticker": "sticker_3",
       "ame_sticker": "ame_pien"
+    },
+    {
+      "time": "09:24",
+      "reply": "",
+      "timestamp": 1781486644.647383,
+      "sticker": "sticker_3",
+      "ame_sticker": "ame_pien"
+    },
+    {
+      "time": "09:24",
+      "reply": "",
+      "timestamp": 1781486649.2658648,
+      "sticker": "sticker_3",
+      "ame_sticker": "ame_pien"
+    },
+    {
+      "time": "09:24",
+      "reply": "",
+      "timestamp": 1781486653.4223673,
+      "sticker": "sticker_3",
+      "ame_sticker": "ame_pien"
+    },
+    {
+      "time": "09:24",
+      "reply": "",
+      "timestamp": 1781486657.0962281,
+      "sticker": "sticker_3",
+      "ame_sticker": "ame_pien"
+    },
+    {
+      "time": "09:24",
+      "reply": "",
+      "timestamp": 1781486661.642848,
+      "sticker": "sticker_3",
+      "ame_sticker": "ame_pien"
+    },
+    {
+      "time": "09:24",
+      "reply": "",
+      "timestamp": 1781486666.8448348,
+      "sticker": "sticker_3",
+      "ame_sticker": "ame_smile"
+    },
+    {
+      "time": "09:24",
+      "reply": "",
+      "timestamp": 1781486677.1376514,
+      "sticker": "sticker_3",
+      "ame_sticker": "ame_tsun"
+    },
+    {
+      "time": "09:24",
+      "reply": "",
+      "timestamp": 1781486683.7488847,
+      "sticker": "sticker_3",
+      "ame_sticker": "ame_pien"
+    },
+    {
+      "time": "09:24",
+      "reply": "",
+      "timestamp": 1781486688.3729677,
+      "sticker": "sticker_3",
+      "ame_sticker": "ame_pien"
+    },
+    {
+      "time": "09:34",
+      "reply": "",
+      "timestamp": 1781487292.1030898,
+      "ame_sticker": "cat_ignore"
+    },
+    {
+      "time": "09:34",
+      "reply": "坏阿P！\n又吊我胃口\n不理你啦",
+      "timestamp": 1781487295.8010406
     }
   ]
 }

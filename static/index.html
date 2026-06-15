@@ -732,14 +732,18 @@ body {
 @keyframes livePulse { 0%,100%{opacity:1;box-shadow:0 0 4px red} 50%{opacity:0.3;box-shadow:0 0 12px red} }
 .live-text { color:red; font-size:0.75rem; font-weight:bold; }
 .live-viewers { color:#ccc; font-size:0.7rem; }
-.danmaku-bar { height:48px; width:100%; overflow:hidden; position:relative; z-index:10; margin-bottom:1rem; border-bottom:1px solid #333; cursor:default; background:rgba(0,0,0,0.35); border-top:1px solid rgba(255,255,255,0.05); }
-.danmaku-wrap { position:absolute; white-space:nowrap; display:flex; align-items:center; gap:6px; will-change:left; padding:3px 6px; border-radius:3px; transition:background 0.15s; left:100%; animation:scrollR 16s linear infinite; }
-.danmaku-wrap:hover { animation-play-state:paused !important; background:rgba(255,0,0,0.08); z-index:10; }
-.danmaku-text { font-size:0.75rem; color:#aaa; pointer-events:none; line-height:1.4; }
-.danmaku-text.fan { color:var(--pink); text-shadow:0 0 4px rgba(255,105,180,0.3); }
-.danmaku-text.hate { color:#ddd; }
-.danmaku-text.hate:hover { color:#ff4444; text-shadow:0 0 6px rgba(255,0,0,0.6); }
-.danmaku-trash { display:inline-block; width:18px; height:20px; cursor:crosshair; opacity:0.7; flex-shrink:0; transition:opacity 0.15s,transform 0.15s; }
+.danmaku-bar { height:56px; width:100%; overflow:hidden; position:relative; z-index:10; margin-bottom:1rem; border-bottom:1px solid #333; cursor:default; background:rgba(0,0,0,0.35); border-top:1px solid rgba(255,255,255,0.05); }
+.danmaku-wrap { position:absolute; white-space:nowrap; display:flex; align-items:center; gap:6px; will-change:left; padding:3px 6px; border-radius:3px; left:100%; animation:scrollR 16s linear infinite; }
+.danmaku-wrap[data-color="white"]:hover { animation-play-state:paused !important; cursor:pointer; }
+.danmaku-wrap[data-color="colored"] { pointer-events:none; }
+.danmaku-text { font-size:0.8rem; line-height:1.4; pointer-events:none; }
+.danmaku-text.colored { font-weight:bold; }
+.danmaku-text.c-pink  { color:#FF69B4; text-shadow:0 0 6px rgba(255,105,180,0.5); }
+.danmaku-text.c-cyan  { color:#00E5FF; text-shadow:0 0 6px rgba(0,229,255,0.5); }
+.danmaku-text.c-green { color:#69F0AE; text-shadow:0 0 6px rgba(105,240,174,0.5); }
+.danmaku-text.c-yellow{ color:#FFD740; text-shadow:0 0 6px rgba(255,215,64,0.5); }
+.danmaku-trash { display:none; width:18px; height:20px; cursor:pointer; opacity:0.7; flex-shrink:0; pointer-events:auto; }
+.danmaku-wrap[data-color="white"] .danmaku-trash { display:inline-block; }
 .danmaku-trash:hover { opacity:1; transform:scale(1.2); }
 @keyframes scrollR { from { left:100%; } to { left:-300px; } }
 /* pixel trash can drawn with CSS */
@@ -959,12 +963,14 @@ var _replyPending = false;       // true while waiting for 糖糖's reply
 var _pendingController = null;   // AbortController for current request
 var _pendingMsgIdx = -1;         // index in jineChatMsgs where reply will be placed
 
-// Danmaku pool
-var danmakuPool = {
-    fan:  ['✟升天✟','小天使请安','超天酱贴贴！','kirakira💖','888888','守护','好可爱','互联网天使','主播别走','www','可爱捏','天使降临'], hate: ['草','www','kusa','？？？','草生える','大草原不可避','血压上来了','真实','草www','不愧是你','过于真实','你币没了','禁止好活','走远了','典中典'] }
+// Danmaku pools — 应援 and 吐槽 (color-independent)
+var DANMAKU_OEN   = ['✟升天✟','小天使请安','超天酱贴贴！','kirakira💖','888888','守护','好可爱','互联网天使','主播别走','www','可爱捏','天使降临','糖果雨','原地升天','甜甜圈'];
+var DANMAKU_TUCAO = ['草','www','kusa','？？？','草生える','大草原不可避','血压上来了','真实','草www','不愧是你','过于真实','你币没了','典中典','禁止好活','走远了'];
+var DANMAKU_COLORS = ['c-pink','c-cyan','c-green','c-yellow'];
 var danmakuWraps = [];
 var trashCount = 0;
 var DANMAKU_COUNT = 8;
+var _stressFromDanmaku = 0;  // accumulated stress delta from danmaku
 
         // ============================================================
         // WEBCAM ENGINE v3
@@ -1455,95 +1461,109 @@ var cc = document.querySelector("#save-new-form .cancel-btn"); if (cc) cc.addEve
 function initDanmaku() {
     var bar = document.getElementById('danmaku-bar');
 
-    // Event delegation: click on any part of a hate danmaku = trash it (hover pauses it for easy targeting)
-    bar.addEventListener('mousedown', function(e) {
+    // Click on white danmaku → delete (tucao) or just remove (oen)
+    bar.addEventListener('click', function(e) {
         var wrap = e.target.closest('.danmaku-wrap');
-        if (!wrap) return;
-        if (wrap.querySelector('.danmaku-trash')) {
-            e.stopPropagation();
-            trashDanmaku(wrap);
-        }
+        if (!wrap || wrap.dataset.color !== 'white') return;
+        e.stopPropagation();
+        trashDanmaku(wrap);
     });
 
     var TRACKS = 2;
-    var TRACK_H = 24;  // 2 tracks × 24px = 48px bar height
+    var TRACK_H = 28;  // 2 tracks × 28px = 56px bar
     for (var i = 0; i < DANMAKU_COUNT; i++) {
         var wrap = document.createElement('span');
         wrap.className = 'danmaku-wrap';
         wrap.style.top = (i % TRACKS) * TRACK_H + 'px';
-        wrap.style.animationDuration = (12 + Math.random() * 8) + 's';
-        wrap.style.animationDelay = (i < 2 ? Math.random() * 1.5 : Math.random() * 4) + 's';
-
+        wrap.style.animationDuration = (14 + Math.random() * 8) + 's';
+        wrap.style.animationDelay = (Math.random() * 6) + 's';
         spawnDanmakuContent(wrap);
         bar.appendChild(wrap);
         danmakuWraps.push(wrap);
     }
-    setInterval(refreshDanmaku, 6000);
-    setInterval(autoCleanDanmaku, 15000);
+    setInterval(refreshDanmaku, 8000);
 }
 
 function pickDanmaku(pool) { return pool[Math.floor(Math.random() * pool.length)]; }
 
 function spawnDanmakuContent(wrap) {
-    // Clear existing
+    // Subtract old stress contribution before replacing
+    if (wrap.dataset.type === 'tucao') { _stressFromDanmaku -= 1; }
+
     wrap.innerHTML = '';
-    var isHate = Math.random() < 0.15;
-    var pool = isHate ? danmakuPool.hate : danmakuPool.fan;
+    var isTucao = Math.random() < 0.25;  // ~25% 吐槽
+    var isWhite = Math.random() < 0.80;   // ~80% white, ~20% colored
+
+    var pool = isTucao ? DANMAKU_TUCAO : DANMAKU_OEN;
+    var text = pickDanmaku(pool);
 
     var textEl = document.createElement('span');
-    textEl.className = 'danmaku-text' + (isHate ? ' hate' : ' fan');
-    textEl.textContent = pickDanmaku(pool);
+    textEl.className = 'danmaku-text';
+    if (!isWhite) {
+        textEl.classList.add('colored', pickDanmaku(DANMAKU_COLORS));
+    }
+    textEl.textContent = text;
     wrap.appendChild(textEl);
 
-    if (isHate) {
-        var trashIcon = document.createElement('span');
-        trashIcon.className = 'danmaku-trash pixel-trash';
-        trashIcon.title = '扔进垃圾桶';
-        wrap.appendChild(trashIcon);
+    if (isWhite) {
+        wrap.dataset.color = 'white';
+        var icon = document.createElement('span');
+        icon.className = 'danmaku-trash pixel-trash';
+        icon.title = '删除';
+        wrap.appendChild(icon);
+    } else {
+        wrap.dataset.color = 'colored';
     }
+    wrap.dataset.type = isTucao ? 'tucao' : 'oen';
+
+    // Stress: 吐槽 (any color) → +1
+    if (isTucao) { _stressFromDanmaku += 1; }
+    applyDanmakuStress();
+}
+
+function applyDanmakuStress() {
+    var stressBar = document.getElementById('bar-stress');
+    var cur = parseInt(stressBar.style.width) || parseInt(document.getElementById('stat-stress').textContent) || 42;
+    var sv = Math.max(5, Math.min(95, cur + _stressFromDanmaku));
+    stressBar.style.width = sv + '%';
+    var ss = document.getElementById('stat-stress'); if (ss) ss.textContent = sv;
 }
 
 function refreshDanmaku() {
     danmakuWraps.forEach(function(wrap) {
         if (wrap.classList.contains('trashed')) return;
-        if (Math.random() < 0.25) {
-            spawnDanmakuContent(wrap);
-        }
+        if (Math.random() < 0.20) spawnDanmakuContent(wrap);
         wrap.style.animation = 'none';
-        wrap.offsetHeight;  // force reflow to restart animation
-        wrap.style.animationDuration = (12 + Math.random() * 8) + 's';
+        wrap.offsetHeight;
+        wrap.style.animationDuration = (14 + Math.random() * 8) + 's';
     });
 }
 
-function autoCleanDanmaku() {
-    danmakuWraps.forEach(function(wrap) {
-        if (wrap.classList.contains('trashed')) return;
-        if (wrap.querySelector('.danmaku-trash') && Math.random() < 0.12) {
-            trashDanmaku(wrap, true);
-        }
-    });
-}
-
-function trashDanmaku(wrap, silent) {
+function trashDanmaku(wrap) {
     if (!wrap || wrap.classList.contains('trashed')) return;
+    if (wrap.dataset.color !== 'white') return;  // colored can't be deleted
+
+    var wasTucao = wrap.dataset.type === 'tucao';
     wrap.classList.add('trashed');
     trashCount++;
     document.getElementById('trash-count').textContent = trashCount;
+    SaveManager.setTrashCount(trashCount);
 
     var can = document.getElementById('trash-can');
-    can.classList.add('shake');
-    if (!silent) { can.classList.add('active'); }
+    can.classList.add('shake','active');
     setTimeout(function() { can.classList.remove('shake','active'); }, 400);
 
-    var stressBar = document.getElementById('bar-stress');
-    var curStress = parseInt(stressBar.style.width) || 42;
-    stressBar.style.width = Math.max(10, curStress - 3) + '%';
+    // Delete 吐槽 → Stress −1
+    if (wasTucao) {
+        _stressFromDanmaku -= 1;
+        applyDanmakuStress();
+    }
 
-    // Respawn after elimination
+    // Respawn after 1s
     setTimeout(function() {
         wrap.classList.remove('trashed');
         spawnDanmakuContent(wrap);
-    }, 500);
+    }, 1000);
 }
 
 // Live viewer count
