@@ -1646,11 +1646,16 @@ document.querySelectorAll('.desktop-icon').forEach(function(i) {
 var cachedTimeline = [];
 
 function renderFromCache() {
+    // Sort newest-first by batch_id+time (server may return unsorted after merge)
+    cachedTimeline.sort(function(a, b) {
+        var ba = (a.batch_id || '').localeCompare(b.batch_id || '');
+        if (ba !== 0) return -ba;  // reverse: newer batch first
+        return -(a.time || '').localeCompare(b.time || '');
+    });
     var filtered = cachedTimeline;
     if (ACTIVE_TAB === 'diary') {
         filtered = cachedTimeline.filter(function(e) { return e.layer === 'diary'; });
     } else if (ACTIVE_TAB === 'jine') {
-        // JINE tab shows interactive chat only — not timeline-generated monologues
         renderFeed([]);
         return;
     }
@@ -2165,16 +2170,12 @@ function renderJineChatUnified(timelineItems) {
 
     container.innerHTML = html || '<div class="empty-state"><div class="icon"><img src="img/icon_ame.png"></div><p style="font-size:0.7rem;color:rgba(0,0,0,0.4);">糖糖还没发消息...</p></div>';
     container.scrollTop = container.scrollHeight;
-    // Only animate NEW receipts (without .show) — don't reset already-visible ones
-    var newReceipts = container.querySelectorAll('.jine-read-receipt:not(.show)');
-    if (newReceipts.length > 0) {
-        clearTimeout(window._jineReadTimer);
-        window._jineReadTimer = setTimeout(function() {
-            for (var rj = 0; rj < newReceipts.length; rj++) {
-                if (newReceipts[rj].parentNode) newReceipts[rj].classList.add('show');
-            }
-        }, 2200);
-    }
+    // Show all read receipts 2.2s after last render (debounced timer)
+    clearTimeout(window._jineReadTimer);
+    window._jineReadTimer = setTimeout(function() {
+        var all = container.querySelectorAll('.jine-read-receipt');
+        for (var rj = 0; rj < all.length; rj++) { all[rj].classList.add('show'); }
+    }, 2200);
 }
 function fetchJineChat() {
     jineChatMsgs = SaveManager.getJineChat();
