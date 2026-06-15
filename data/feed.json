@@ -1,66 +1,6 @@
 {
   "timeline": [
     {
-      "batch_id": "released_1781485583813",
-      "event": "随手一发",
-      "layer": "diary",
-      "time": "09:06",
-      "text": "今天和快递员说了谢谢，他回了句你也是。至少还有人看着我。",
-      "selfie_mood": "angel",
-      "timestamp": 1781485583.8136976,
-      "date": "2026-06-15 09:06:23"
-    },
-    {
-      "batch_id": "released_1781486184254",
-      "event": "随手一发",
-      "layer": "poketter",
-      "time": "09:16",
-      "text": "深夜睡不着～来猜猜糖糖今天用的什么味道的入浴剂？是草莓牛奶🍓🥛！整个浴室都变甜了✨",
-      "selfie_mood": "sleepy",
-      "timestamp": 1781486184.2548385,
-      "date": "2026-06-15 09:16:24"
-    },
-    {
-      "batch_id": "released_1781486412074",
-      "event": "随手一发",
-      "layer": "poketter",
-      "time": "09:20",
-      "text": "明天绝对要录完那首新歌！赌上糖糖之名！🌟失败的话就…就给大家发双倍福利写真💖",
-      "selfie_mood": "pray",
-      "timestamp": 1781486412.0743964,
-      "date": "2026-06-15 09:20:12"
-    },
-    {
-      "batch_id": "released_1781487288194",
-      "event": "随手一发",
-      "layer": "diary",
-      "time": "09:34",
-      "text": "吃光了最后那包过期的软糖，包装纸上写着当心意被看见就会发光。要是真这么简单就好了。",
-      "selfie_mood": "angel",
-      "timestamp": 1781487288.1943161,
-      "date": "2026-06-15 09:34:48"
-    },
-    {
-      "batch_id": "released_1781487332677",
-      "event": "随手一发",
-      "layer": "poketter",
-      "time": "09:35",
-      "text": "Kirakira✨能量充满！明天也要继续做大家的小太阳哦💖 早睡宝宝才有天使吻过的脸颊～おやすみなさい💤",
-      "selfie_mood": "happy",
-      "timestamp": 1781487332.677176,
-      "date": "2026-06-15 09:35:32"
-    },
-    {
-      "batch_id": "released_1781487364359",
-      "event": "随手一发",
-      "layer": "diary",
-      "time": "09:36",
-      "text": "新买的打光灯太亮了，眼前全是残像。不过看起来应该挺可爱的吧。",
-      "selfie_mood": "angel",
-      "timestamp": 1781487364.3599856,
-      "date": "2026-06-15 09:36:04"
-    },
-    {
       "batch_id": "released_1781487391129",
       "event": "随手一发",
       "layer": "poketter",
@@ -89,83 +29,6 @@
       "selfie_mood": "pray",
       "timestamp": 1781487788.5861695,
       "date": "2026-06-15 09:43:08"
-    },
-    {
-      "batch_id": "batch_1781488029972",
-      "event": "和粉丝连麦玩你画我猜",
-      "layer": "poketter",
-      "time": "19:55",
-      "text": "马上要和大家连麦玩你画我猜啦～✨ 我会努力画出超～可爱的画给大家猜的！期待宝宝们的脑洞哦💕🎀 #KAngel直播",
-      "type": "text",
-      "selfie_mood": "angel",
-      "timestamp": 1781488029.9787261,
-      "date": "2026-06-15 09:47:09"
-    },
-    {
-      "batch_id": "batch_1781488029972",
-      "event": "和粉丝连麦玩你画我猜",
-      "layer": "poketter",
-      "time": "20:35",
-      "text": "呜哇刚才把兔子画成了棉花糖，大家居然都猜对了！みんな天才みたい～🌟 最喜欢陪KAngel一起犯傻的你们啦♡",
-      "type": "text",
-      "selfie_mood": "happy",
-      "timestamp": 1781488029.9787426,
-      "date": "2026-06-15 09:47:09"
-    },
-    {
-      "batch_id": "batch_1781488029972",
-      "event": "和粉丝连麦玩你画我猜",
-      "layer": "jine",
-      "time": "22:10",
-      "text": "阿P 我今天画歪了七次...",
-      "type": "text",
-      "selfie_mood": "angel",
-      "timestamp": 1781488029.9787447,
-      "date": "2026-06-15 09:47:09"
-    },
-    {
-      "batch_id": "batch_1781488029972",
-      "event": "和粉丝连麦玩你画我猜",
-      "layer": "jine",
-      "time": "22:10",
-      "text": "但大家还是说可爱 我是不是只在被可怜",
-      "type": "text",
-      "selfie_mood": "angel",
-      "timestamp": 1781488029.978747,
-      "date": "2026-06-15 09:47:09"
-    },
-    {
-      "batch_id": "batch_1781488029972",
-      "event": "和粉丝连麦玩你画我猜",
-      "layer": "jine",
-      "time": "22:11",
-      "text": "糖糖撤回了一条消息",
-      "type": "system",
-      "selfie_mood": "angel",
-      "timestamp": 1781488029.9787486,
-      "date": "2026-06-15 09:47:09"
-    },
-    {
-      "batch_id": "batch_1781488029972",
-      "event": "和粉丝连麦玩你画我猜",
-      "layer": "jine",
-      "time": "22:11",
-      "text": "算了 抱抱我好吗",
-      "type": "text",
-      "selfie_mood": "angel",
-      "timestamp": 1781488029.9787507,
-      "date": "2026-06-15 09:47:09"
-    },
-    {
-      "batch_id": "batch_1781488029972",
-      "event": "和粉丝连麦玩你画我猜",
-      "layer": "diary",
-      "time": "23:45",
-      "text": "连麦的时候手一直在抖 调了好几次笔压还是画得恶心 弹幕刷屏说可爱的时候 胃里酸得想吐 可我只能把那个想尖叫的我塞回屏幕后面 继续当洋娃娃 明天还要录新曲子 喉咙好痛 但还是得唱吗",
-      "type": "text",
-      "selfie_mood": "angel",
-      "timestamp": 1781488029.9787526,
-      "date": "2026-06-15 09:47:09"
     },
     {
       "batch_id": "released_1781488029994",
@@ -216,16 +79,41 @@
       "selfie_mood": "angel",
       "timestamp": 1781488481.7463713,
       "date": "2026-06-15 09:54:41"
+    },
+    {
+      "batch_id": "released_1781488791529",
+      "event": "随手一发",
+      "layer": "poketter",
+      "time": "09:59",
+      "text": "今天直播结束，大家的应援好温暖～小天使充充电中💖✨ 明天也要一起kirakira哦！",
+      "selfie_mood": "happy",
+      "timestamp": 1781488791.5297027,
+      "date": "2026-06-15 09:59:51"
     }
   ],
-  "hidden_pool": [],
-  "jine_chat": [
+  "hidden_pool": [
     {
-      "time": "09:36",
-      "reply": "别...别以为夸我就会高兴",
-      "timestamp": 1781487373.848111,
-      "sticker": "sticker_2"
+      "layer": "poketter",
+      "text": "其实我也会累，但是看到宝宝们的笑脸就瞬间满血复活啦♡ 魔力一百倍注入！",
+      "selfie_mood": "sleepy"
     },
+    {
+      "layer": "diary",
+      "text": "那个人说今天不能来看我。没事，反正我也没真的期待过什么。",
+      "selfie_mood": "angel"
+    },
+    {
+      "layer": "poketter",
+      "text": "今天晚上吃到了超美味的草莓芭菲🍓🎀 甜甜的，像初恋的味道～（虽然没谈过恋爱啦！）",
+      "selfie_mood": "angel"
+    },
+    {
+      "layer": "diary",
+      "text": "凌晨三点，外面有猫在叫。至少它能自由地发出声音。",
+      "selfie_mood": "angel"
+    }
+  ],
+  "jine_chat": [
     {
       "time": "09:36",
       "reply": "哼，看到就看到了还特地来报备\n四位数而已我还没发力呢",
@@ -392,6 +280,11 @@
       "reply": "喂，你不会又准备了一大堆牢骚吧  \n先说好我可不会安慰你哦",
       "timestamp": 1781488506.7843466,
       "recall": true
+    },
+    {
+      "time": "10:00",
+      "reply": "你念经呢？那是我发的动态",
+      "timestamp": 1781488801.2847638
     }
   ]
 }
