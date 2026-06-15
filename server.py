@@ -17,7 +17,7 @@ from urllib.parse import urlparse, unquote
 
 from config import HOST, PORT, STATIC_DIR, DATA_DIR, ROOT_DIR
 from feed import get_timeline, pool_count, pop_from_pool, feed_count, clear_feed, save_jine_message, get_jine_chat
-from generator import generate_and_save, generate_single, generate_jine_reply, generate_jine_text_reply, generate_jine_release_msgs
+from generator import generate_and_save, generate_single, generate_jine_chat, generate_jine_release_msgs
 
 
 class AmechanHandler(SimpleHTTPRequestHandler):
@@ -124,48 +124,37 @@ class AmechanHandler(SimpleHTTPRequestHandler):
                     self._send_json({"ok": False, "error": str(e2)}, status=500)
 
         elif path == "/api/release":
-            print("\n[*] POST /api/release — F7 戳一戳")
+            print("\n[*] POST /api/release — F7 戳一戳 (v2.8)")
             entries = pop_from_pool()
+            print(f"  [DBG] pop_from_pool returned: {entries!r} (len={len(entries)})")
+            # v2.8: backend handles regeneration internally (waterline + background thread)
             if entries:
                 layers = [e['layer'] for e in entries]
                 print(f"  [OK] 释放 {len(entries)} 条: {layers} (剩余 {pool_count()})")
-                # 糖糖刚用超天酱和糖糖两个身份都发了动态，主动来 JINE 找阿P（2-5条）
-                # v2.7: 使用专用的 release prompt — 明确玩家处于沉默状态
                 jine_msgs = []
                 poke_text = next((e['text'][:40] for e in entries if e['layer'] == 'poketter'), '刚才的动态')
                 msg_count = random.randint(2, 5)
                 msgs = generate_jine_release_msgs(poke_text, '', count=msg_count)
                 for m in msgs:
                     if m.get("reply"):
-                        msg = save_jine_message(reply=m["reply"], ame_sticker=m.get("ame_sticker"), player_text="")
-                        jine_msgs.append({"reply": m["reply"], "ame_sticker": m.get("ame_sticker"), "time": msg.get("time", time.strftime("%H:%M"))})
-                self._send_json({"ok": True, "entries": entries, "pool_remaining": pool_count(), "jine_msgs": jine_msgs})
+                        t = time.strftime("%H:%M")
+                        jine_msgs.append({"reply": m["reply"], "ame_sticker": m.get("ame_sticker"), "time": t})
+                resp = {"ok": True, "entries": entries, "pool_remaining": pool_count(), "jine_msgs": jine_msgs}
+                print(f"  [DBG] sending ok=True, entries={len(entries)}")
+                self._send_json(resp)
             else:
-                print("  [!] hidden_pool 已空，尝试生成...")
-                try:
-                    data = generate_and_save()
-                    entries2 = pop_from_pool()
-                    if entries2:
-                        jine_msgs = []
-                        poke_text = next((e['text'][:40] for e in entries2 if e['layer'] == 'poketter'), '刚才的动态')
-                        msg_count = random.randint(2, 5)
-                        msgs = generate_jine_release_msgs(poke_text, '', count=msg_count)
-                        for m in msgs:
-                            if m.get("reply"):
-                                msg = save_jine_message(reply=m["reply"], ame_sticker=m.get("ame_sticker"), player_text="")
-                                jine_msgs.append({"reply": m["reply"], "ame_sticker": m.get("ame_sticker"), "time": msg.get("time", time.strftime("%H:%M"))})
-                        self._send_json({"ok": True, "entries": entries2, "pool_remaining": pool_count(), "regenerated": True, "jine_msgs": jine_msgs})
-                    else:
-                        self._send_json({"ok": False, "error": "pool exhausted after regenerate"}, status=500)
-                except Exception as e:
-                    self._send_json({"ok": False, "error": str(e)}, status=500)
+                print("  [!] Pool 空，后台生成已触发，请稍后重试")
+                resp = {"ok": False, "retry": True, "msg": "后台生成中，请稍等几秒再戳哦～"}
+                print(f"  [DBG] sending ok=False, retry=True")
+                self._send_json(resp)
 
         elif path == "/api/clear":
             clear_feed()
             print("\n[*] 数据已清空")
             self._send_json({"ok": True})
 
-        elif path == "/api/jine/send":
+        elif path == "/api/jine/chat":
+            # v2.8: Unified stateless endpoint — backend doesn't save JINE state
             try:
                 content_length = int(self.headers.get("Content-Length", 0))
                 body_raw = self.rfile.read(content_length) if content_length else b"{}"
@@ -173,48 +162,31 @@ class AmechanHandler(SimpleHTTPRequestHandler):
             except json.JSONDecodeError:
                 body = {}
 
+            text = body.get("text", "")
             sticker = body.get("sticker", "")
-            if not sticker:
-                self._send_json({"ok": False, "error": "missing sticker"}, status=400)
+            history = body.get("history", [])
+
+            # Validate: need at least text or sticker
+            if not text and not sticker:
+                self._send_json({"ok": False, "error": "missing text or sticker"}, status=400)
                 return
 
-            print(f"\n[*] POST /api/jine/send | sticker: {sticker}")
+            is_pure_sticker = bool(sticker) and not text.replace("[...]", "").strip()
+            tag = f"sticker:{sticker}" if is_pure_sticker else f"text:{text[:30]}"
+            print(f"\n[*] POST /api/jine/chat | {tag} | history: {len(history)} msgs")
 
             try:
-                reply, ame_sticker = generate_jine_reply(sticker)
-                msg = save_jine_message(sticker, reply, ame_sticker)
-                resp = {"ok": True, "sticker": sticker, "reply": reply, "time": msg.get("time"), "recall": msg.get("recall", False)}
-                if ame_sticker:
-                    resp["ame_sticker"] = ame_sticker
+                result = generate_jine_chat(text=text, sticker=sticker, history=history)
+                resp = {
+                    "ok": True,
+                    "reply": result.get("reply", ""),
+                    "time": time.strftime("%H:%M"),
+                }
+                if result.get("ame_sticker"):
+                    resp["ame_sticker"] = result["ame_sticker"]
                 self._send_json(resp)
             except Exception as e:
                 print(f"  [X] JINE 回复失败: {e}")
-                self._send_json({"ok": False, "error": str(e)}, status=500)
-
-        elif path == "/api/jine/text":
-            try:
-                content_length = int(self.headers.get("Content-Length", 0))
-                body_raw = self.rfile.read(content_length) if content_length else b"{}"
-                body = json.loads(body_raw.decode("utf-8")) if body_raw else {}
-            except json.JSONDecodeError:
-                body = {}
-
-            player_text = body.get("text", "").strip()
-            if not player_text:
-                self._send_json({"ok": False, "error": "missing text"}, status=400)
-                return
-
-            print(f"\n[*] POST /api/jine/text | text: {player_text[:30]}...")
-
-            try:
-                reply, ame_sticker = generate_jine_text_reply(player_text)
-                msg = save_jine_message(reply=reply, ame_sticker=ame_sticker, player_text=player_text)
-                resp = {"ok": True, "player_text": player_text, "reply": reply, "time": msg.get("time"), "recall": msg.get("recall", False)}
-                if ame_sticker:
-                    resp["ame_sticker"] = ame_sticker
-                self._send_json(resp)
-            except Exception as e:
-                print(f"  [X] JINE 文字回复失败: {e}")
                 self._send_json({"ok": False, "error": str(e)}, status=500)
 
         else:
@@ -225,17 +197,37 @@ def main():
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
     print("=" * 50)
-    print("  + Poketter v2.7.2 -- 场景剥夺JINE + 微信时间线 + 多行输入 + 96px贴图 +")
+    print("  + Poketter v2.8 — 水位线补池 + 无状态JINE + 耗时重叠 +")
     print("=" * 50)
     print(f"  地址: http://{HOST}:{PORT}")
-    print(f"  API:  GET  /api/timeline  -> 获取时间线")
-    print(f"       POST /api/generate   -> 生成新批次")
-    print(f"       POST /api/release    -> F7 释放 hidden_pool")
-    print(f"       POST /api/jine/send  -> F8 JINE 互动聊天")
+    print(f"  API:  GET  /api/timeline   -> 获取时间线")
+    print(f"       POST /api/generate    -> 生成新批次")
+    print(f"       POST /api/release     -> F7 释放 hidden_pool (O(1))")
+    print(f"       POST /api/jine/chat   -> F8 JINE 统一回复 (无状态)")
     print("=" * 50)
 
-    server = HTTPServer((HOST, PORT), AmechanHandler)
-    server.allow_reuse_address = True
+    import socket
+    class ReuseHTTPServer(HTTPServer):
+        allow_reuse_address = True
+        def server_bind(self):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            try:
+                self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+            except (AttributeError, OSError):
+                pass
+            HTTPServer.server_bind(self)
+
+    # Retry on port conflict (Windows TIME_WAIT)
+    for attempt in range(5):
+        try:
+            server = ReuseHTTPServer((HOST, PORT), AmechanHandler)
+            break
+        except PermissionError:
+            if attempt < 4:
+                print(f"  [!] 端口 {PORT} 被占用，{5-attempt}s 后重试...")
+                import time as _t; _t.sleep(5)
+            else:
+                raise
 
     # Start server immediately, generate first batch in background
     import threading

@@ -161,7 +161,7 @@ def generate_single(topic: str | None = None) -> tuple[str, str, str]:
 
 
 # ============================================================
-# F8: JINE 互动回复生成
+# F8: JINE 互动回复生成 (v2.8 — 无状态统一入口)
 # ============================================================
 
 # Stress level 变化规则（基于玩家发的 sticker）
@@ -177,26 +177,23 @@ _STICKER_STRESS_DELTA = {
 }
 
 
-def _calc_stress_level(chat_history: list[dict]) -> int:
+def _calc_stress_from_history(history: list[dict]) -> int:
     """
-    基于最近的 JINE 聊天记录计算糖糖的情绪压力值 (0-100)。
-    基础值 50，根据最近的 sticker 类型累积调整。
+    基于前端传来的 JINE 聊天记录计算糖糖的情绪压力值 (0-100)。
+    v2.8: 接受前端传来的 history 列表，不再读取 feed.json。
     """
     stress = 50
-    if not chat_history:
+    if not history:
         return stress
 
-    # 最近的消息权重更高
     recent_weight = 1.5
-    for i, msg in enumerate(reversed(chat_history[-8:])):  # 最近 8 条
+    for i, msg in enumerate(reversed(history[-8:])):
         sid = msg.get("sticker", "")
         delta = _STICKER_STRESS_DELTA.get(sid, 0)
-        # 越近的消息权重越高
         weight = recent_weight - (i * 0.15)
         stress += delta * max(weight, 0.3)
 
-    # 如果长时间没有互动（10+条无回复），缓慢加压
-    if len(chat_history) > 10:
+    if len(history) > 10:
         stress += 3
 
     return max(0, min(100, int(stress)))
@@ -211,9 +208,7 @@ def _parse_stamp_reply(raw: str) -> tuple[str, str | None]:
     stamp_match = re.search(r'\[stamp:\s*([a-zA-Z_]+)\]', raw)
     if stamp_match:
         stamp_id = stamp_match.group(1)
-        # 移除 stamp 标记，剩余为纯文本
         text = re.sub(r'\[stamp:\s*[a-zA-Z_]+\]', '', raw).strip()
-        # 验证 stamp_id 是否在已知池中
         valid_stamps = set(AME_STAMP_POOL)
         if stamp_id in valid_stamps:
             return (text, stamp_id)
@@ -223,37 +218,123 @@ def _parse_stamp_reply(raw: str) -> tuple[str, str | None]:
     return (raw, None)
 
 
+def _format_history_for_prompt(history: list[dict]) -> list[str]:
+    """将前端传来的 history 格式化为 prompt 可用的字符串列表。"""
+    lines = []
+    for msg in history:
+        if msg.get("sticker"):
+            from prompts import STICKER_MAP
+            label = STICKER_MAP.get(msg["sticker"], "贴图")
+            lines.append(f"阿P: [{label}]")
+        elif msg.get("player_text"):
+            lines.append(f"阿P: {msg['player_text']}")
+        if msg.get("reply"):
+            lines.append(f"糖糖: {msg['reply']}")
+    return lines
+
+
+def generate_jine_chat(text: str = "", sticker: str = "", history: list[dict] | None = None) -> dict:
+    """
+    v2.8 统一入口：根据玩家消息生成糖糖的 JINE 回复。
+    - 纯贴图 → Few-Shot 贴图 prompt（温度 0.85）
+    - 文字/混合 → 文字 prompt（温度 0.7，降低发散度）
+    - 后端无状态：不读不写 feed.json，完全依赖前端传来的 history
+
+    返回 {"reply": str, "ame_sticker": str|None}
+    """
+    if history is None:
+        history = []
+
+    is_pure_sticker = bool(sticker) and not text.replace("[...]", "").strip()
+    stress = _calc_stress_from_history(history)
+    recent = _format_history_for_prompt(history)
+
+    if is_pure_sticker:
+        # Pure sticker → Few-Shot prompt
+        prompt = get_jine_reply_prompt(sticker, recent, stress)
+        temperature = 0.85
+        print(f"[*] JINE 贴图回复 | sticker: {sticker} | stress: {stress}")
+    else:
+        # Text or mixed → text prompt
+        effective_text = text if text else f"[{sticker}]"
+        prompt = get_jine_text_prompt(effective_text, recent, stress)
+        temperature = 0.7  # v2.8: 降低温度，锁住 Few-Shot 风格
+        print(f"[*] JINE 文字回复 | text: {effective_text[:30]}... | stress: {stress} | temp: {temperature}")
+
+    try:
+        system = JINE_REPLY_SYSTEM if is_pure_sticker else JINE_TEXT_REPLY_SYSTEM
+        raw = _call_api(system, prompt, temperature=temperature)
+        raw = raw.strip().strip('"').strip("'").strip('"').strip('「').strip('」')
+
+        reply_text, ame_sticker = _parse_stamp_reply(raw)
+
+        max_len = 60 if is_pure_sticker else 80
+        if reply_text and len(reply_text) > max_len:
+            reply_text = reply_text[:max_len] + "..."
+
+        if ame_sticker:
+            print(f"  [OK] 糖糖回复贴图: {ame_sticker}" + (f" + 文字: {reply_text[:30]}..." if reply_text else ""))
+        else:
+            print(f"  [OK] 糖糖回复 (stress={stress}): {reply_text[:40]}...")
+        return {"reply": reply_text, "ame_sticker": ame_sticker}
+    except Exception as e:
+        print(f"  [X] JINE 回复生成失败: {e}")
+        # 降级回复
+        if is_pure_sticker:
+            _sticker_fallbacks = {
+                "sticker_1": ["嘿嘿！就是这样", "你就这张嘴甜", "你懂就好"],
+                "sticker_2": ["你就这张嘴甜", "一丁点诚意都感受不到", "讨厌你的回答！"],
+                "sticker_3": ["我才是该哭的那个吧！", "烦！！！！死！！！！啦！！！！！！！！！！！！"],
+                "sticker_4": ["再也不看你的JINE了", "看到你这张脸我就来气！", "一脸发自内心的冷漠啊你"],
+                "sticker_5": ["好吧，原谅……个屁啦！", "要不……就原谅你吧", "下次再这样，我就拉黑你。"],
+                "sticker_6": ["我现在就让你复活 等着我", "确认死亡"],
+                "sticker_7": ["你心里一定不是这么想的对吧", "不跟你过了！我有阿宅们宠，我要去找阿宅了再见……算了还是阿P好"],
+                "sticker_8": ["我是不会原谅你的 绝对不会", "再不肯好好听我说话咱们就分手 没有啦……我不想分手"],
+            }
+            _ai_fallbacks = ["嗯", "哼", "笨蛋", "揍你哦!", "知道了", "算了", "...", "哦", "好哦"]
+            if sticker in _sticker_fallbacks and random.random() < 0.4:
+                text = random.choice(_sticker_fallbacks[sticker])
+            else:
+                text = random.choice(_ai_fallbacks)
+        else:
+            _game_lines = [
+                "嘿嘿！就是这样", "揍你哦！", "你就这张嘴甜", "一丁点诚意都感受不到",
+                "讨厌你的回答！", "看到你这张脸我就来气！", "要不……就原谅你吧",
+                "我是不会原谅你的 绝对不会", "你懂就好", "一脸发自内心的冷漠啊你",
+                "下次再这样，我就拉黑你。",
+            ]
+            _ai_lines = ["嗯", "知道了", "然后呢", "哼", "哦", "说完了？", "...", "好哦", "笨蛋"]
+            if random.random() < 0.35:
+                text = random.choice(_game_lines)
+            else:
+                text = random.choice(_ai_lines)
+        ame_sticker = None
+        if random.random() < 0.15:
+            ame_sticker = random.choice(AME_STAMP_POOL)
+        return {"reply": text, "ame_sticker": ame_sticker}
+
+
+# ============================================================
+# Legacy: kept for backward compatibility (F7 release messages)
+# ============================================================
+
 def generate_jine_reply(sticker_id: str) -> tuple[str, str | None]:
     """
-    根据玩家发送的 sticker，生成糖糖的 JINE 回复。
-    返回 (reply_text: str, ame_sticker: str | None)。
-
-    读取最近的 JINE 聊天记录以维持语境连贯 + 计算 stress_level。
-    糖糖 ~25% 概率回复贴图，stress 低时更倾向于贴图。
+    [DEPRECATED] 旧版贴图回复。v2.8 请用 generate_jine_chat()。
+    保留以支持 F7 release 消息生成（generate_jine_release_msgs 内部调用）。
     """
-    # 获取最近聊天历史
     chat_history = get_jine_chat(limit=10)
-    stress = _calc_stress_level(chat_history)
-
-    recent = []
-    for msg in chat_history:
-        recent.append(f"玩家: [{msg.get('sticker', '?')}]")
-        recent.append(f"糖糖: {msg.get('reply', '')}")
-
+    stress = _calc_stress_from_history(chat_history)
+    recent = _format_history_for_prompt(chat_history)
     prompt = get_jine_reply_prompt(sticker_id, recent, stress)
     print(f"[*] JINE 回复生成 | sticker: {sticker_id} | stress: {stress}")
 
     try:
         raw = _call_api(JINE_REPLY_SYSTEM, prompt, temperature=0.85)
         raw = raw.strip().strip('"').strip("'").strip('"').strip('「').strip('」')
-
-        # 解析 [stamp:] 标记
         text, ame_sticker = _parse_stamp_reply(raw)
-
-        # 限制文字长度
         if text and len(text) > 60:
             text = text[:60] + "..."
-
         if ame_sticker:
             print(f"  [OK] 糖糖回复贴图: {ame_sticker}" + (f" + 文字: {text[:30]}..." if text else ""))
         else:
@@ -261,7 +342,6 @@ def generate_jine_reply(sticker_id: str) -> tuple[str, str | None]:
         return (text, ame_sticker)
     except Exception as e:
         print(f"  [X] JINE 回复生成失败: {e}")
-        # 降级回复 — 游戏原版台词 + AI 风格混合
         _sticker_fallbacks = {
             "sticker_1": ["嘿嘿！就是这样", "你就这张嘴甜", "你懂就好"],
             "sticker_2": ["你就这张嘴甜", "一丁点诚意都感受不到", "讨厌你的回答！"],
@@ -273,7 +353,6 @@ def generate_jine_reply(sticker_id: str) -> tuple[str, str | None]:
             "sticker_8": ["我是不会原谅你的 绝对不会", "再不肯好好听我说话咱们就分手 没有啦……我不想分手"],
         }
         _ai_fallbacks = ["嗯", "哼", "笨蛋", "揍你哦!", "知道了", "算了", "...", "哦", "好哦"]
-        # ~40% 概率使用游戏原版台词，~60% 通用 AI 风格
         if sticker_id in _sticker_fallbacks and random.random() < 0.4:
             text = random.choice(_sticker_fallbacks[sticker_id])
         else:
@@ -284,32 +363,20 @@ def generate_jine_reply(sticker_id: str) -> tuple[str, str | None]:
         return (text, ame_sticker)
 
 
-# ============================================================
-# F8b: JINE 文字消息回复
-# ============================================================
-
 def generate_jine_text_reply(player_text: str) -> tuple[str, str | None]:
     """
-    根据玩家发送的文字消息，生成糖糖的 JINE 回复。
-    返回 (reply_text: str, ame_sticker: str | None)。
+    [DEPRECATED] 旧版文字回复。v2.8 请用 generate_jine_chat()。
     """
     chat_history = get_jine_chat(limit=10)
-    stress = _calc_stress_level(chat_history)
-
-    recent = []
-    for msg in chat_history:
-        text_info = msg.get('player_text', msg.get('sticker', '?'))
-        recent.append(f"玩家: {text_info}")
-        recent.append(f"糖糖: {msg.get('reply', '')}")
-
+    stress = _calc_stress_from_history(chat_history)
+    recent = _format_history_for_prompt(chat_history)
     prompt = get_jine_text_prompt(player_text, recent, stress)
     print(f"[*] JINE 文字回复生成 | text: {player_text[:20]}... | stress: {stress}")
 
     try:
-        raw = _call_api(JINE_TEXT_REPLY_SYSTEM, prompt, temperature=0.85)
+        raw = _call_api(JINE_TEXT_REPLY_SYSTEM, prompt, temperature=0.7)
         raw = raw.strip().strip('"').strip("'").strip('"').strip('「').strip('」')
         text, ame_sticker = _parse_stamp_reply(raw)
-
         if text and len(text) > 80:
             text = text[:80] + "..."
         if ame_sticker:
@@ -319,7 +386,6 @@ def generate_jine_text_reply(player_text: str) -> tuple[str, str | None]:
         return (text, ame_sticker)
     except Exception as e:
         print(f"  [X] JINE 文字回复生成失败: {e}")
-        # 降级回复 — 游戏原版台词 (~35%) + AI 风格 (~65%) 混合
         _game_lines = [
             "嘿嘿！就是这样", "揍你哦！", "你就这张嘴甜", "一丁点诚意都感受不到",
             "讨厌你的回答！", "看到你这张脸我就来气！", "要不……就原谅你吧",
@@ -348,7 +414,7 @@ def generate_jine_release_msgs(poke_text: str, diary_text: str = "", count: int 
     返回 [{"reply": str, "ame_sticker": str|None}, ...]
     """
     chat_history = get_jine_chat(limit=10)
-    stress = _calc_stress_level(chat_history)
+    stress = _calc_stress_from_history(chat_history)
 
     # Extract recent ame replies for cross-batch anti-repeat
     recent_ame = []
