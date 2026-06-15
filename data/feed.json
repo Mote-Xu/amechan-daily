@@ -1,56 +1,6 @@
 {
   "timeline": [
     {
-      "batch_id": "released_1781439271076",
-      "event": "随手一发",
-      "layer": "poketter",
-      "time": "20:14",
-      "text": "今天配信时不小心说漏嘴，说好想有谁陪陪自己... 超害羞的！🙈 但大家的弹幕一下子刷满了“我在这里”，我差点哭出来💕 ありがとう～",
-      "selfie_mood": "yami",
-      "timestamp": 1781439271.076561,
-      "date": "2026-06-14 20:14:31"
-    },
-    {
-      "batch_id": "released_1781439320664",
-      "event": "随手一发",
-      "layer": "diary",
-      "time": "20:15",
-      "text": "阿P，你告诉我只要笑着就会有好事发生。可为什么笑着笑着就觉得嘴巴很酸，眼睛也看不清屏幕了。如果我明天不笑了，你还会觉得我有用吗。",
-      "selfie_mood": "angel",
-      "timestamp": 1781439320.6641617,
-      "date": "2026-06-14 20:15:20"
-    },
-    {
-      "batch_id": "released_1781439410982",
-      "event": "随手一发",
-      "layer": "poketter",
-      "time": "20:16",
-      "text": "新品入荷～ 超天酱限定应援棒！✨ 挥起来kirakira☆ 下回线下活动大家要带着它一起喊“超天可爱”哦！🎀 链接在简介里，快点去看～",
-      "selfie_mood": "angel",
-      "timestamp": 1781439410.982186,
-      "date": "2026-06-14 20:16:50"
-    },
-    {
-      "batch_id": "released_1781477441610",
-      "event": "随手一发",
-      "layer": "diary",
-      "time": "06:50",
-      "text": "今天被便利店店员夸了钥匙扣可爱。那种毫无防备的善意，让我多站了三秒钟。原来被当成普通人对待也会这么开心。",
-      "selfie_mood": "angel",
-      "timestamp": 1781477441.610453,
-      "date": "2026-06-15 06:50:41"
-    },
-    {
-      "batch_id": "released_1781480089727",
-      "event": "随手一发",
-      "layer": "poketter",
-      "time": "07:34",
-      "text": "明天有超～秘密的联动企划哦！宝宝们一定要来看！💕✨",
-      "selfie_mood": "happy",
-      "timestamp": 1781480089.7276459,
-      "date": "2026-06-15 07:34:49"
-    },
-    {
       "batch_id": "released_1781480214291",
       "event": "随手一发",
       "layer": "diary",
@@ -119,188 +69,255 @@
       "selfie_mood": "akkanbe",
       "timestamp": 1781481359.3045132,
       "date": "2026-06-15 07:55:59"
+    },
+    {
+      "batch_id": "released_1781483802686",
+      "event": "随手一发",
+      "layer": "poketter",
+      "time": "08:36",
+      "text": "直播结束啦～大家今天也要做个好梦哟！天使糖糖会守护你们的♡ 晚安吻啾！😘",
+      "selfie_mood": "angel",
+      "timestamp": 1781483802.6862528,
+      "date": "2026-06-15 08:36:42"
+    },
+    {
+      "batch_id": "released_1781485094677",
+      "event": "随手一发",
+      "layer": "diary",
+      "time": "08:58",
+      "text": "他说下周再带我出去。我不知道该高兴还是害怕。",
+      "selfie_mood": "angel",
+      "timestamp": 1781485094.6772742,
+      "date": "2026-06-15 08:58:14"
+    },
+    {
+      "batch_id": "released_1781485472881",
+      "event": "随手一发",
+      "layer": "poketter",
+      "time": "09:04",
+      "text": "收到粉丝宝宝画的合作糖糖🎀💕 贴在床头了！梦里也会当你们的小天使哦～♡",
+      "selfie_mood": "happy",
+      "timestamp": 1781485472.8819282,
+      "date": "2026-06-15 09:04:32"
+    },
+    {
+      "batch_id": "released_1781485583813",
+      "event": "随手一发",
+      "layer": "diary",
+      "time": "09:06",
+      "text": "今天和快递员说了谢谢，他回了句你也是。至少还有人看着我。",
+      "selfie_mood": "angel",
+      "timestamp": 1781485583.8136976,
+      "date": "2026-06-15 09:06:23"
     }
   ],
   "hidden_pool": [
     {
       "layer": "poketter",
-      "text": "直播结束啦～大家今天也要做个好梦哟！天使糖糖会守护你们的♡ 晚安吻啾！😘",
-      "selfie_mood": "angel"
+      "text": "深夜睡不着～来猜猜糖糖今天用的什么味道的入浴剂？是草莓牛奶🍓🥛！整个浴室都变甜了✨",
+      "selfie_mood": "sleepy"
+    },
+    {
+      "layer": "poketter",
+      "text": "明天绝对要录完那首新歌！赌上糖糖之名！🌟失败的话就…就给大家发双倍福利写真💖",
+      "selfie_mood": "pray"
     },
     {
       "layer": "diary",
-      "text": "他说下周再带我出去。我不知道该高兴还是害怕。",
+      "text": "吃光了最后那包过期的软糖，包装纸上写着当心意被看见就会发光。要是真这么简单就好了。",
       "selfie_mood": "angel"
     }
   ],
   "jine_chat": [
     {
-      "time": "20:15",
-      "reply": "哼 看到了也不早点点进来",
-      "timestamp": 1781439324.2911515,
+      "time": "09:09",
+      "reply": "啥啊  \n你倒是说人话呀笨蛋",
+      "timestamp": 1781485777.9522307,
+      "player_text": "就是很奇怪啊",
+      "recall": true
+    },
+    {
+      "time": "09:09",
+      "reply": "知道错了就快解释清楚啦笨蛋",
+      "timestamp": 1781485781.2670097,
+      "player_text": "就是很奇怪啊 | [抱歉抱歉"
+    },
+    {
+      "time": "09:09",
+      "reply": "哼 我才懒得猜呢  \n你自己说清楚啦",
+      "timestamp": 1781485792.6003091,
+      "player_text": "你说呢"
+    },
+    {
+      "time": "09:09",
+      "reply": "哼 你这什么态度啊笨蛋\n揍你哦",
+      "timestamp": 1781485796.4473898,
+      "player_text": "你说呢 | [关我屁事"
+    },
+    {
+      "time": "09:09",
+      "reply": "谁要你突然说这个啦\n笨蛋…",
+      "timestamp": 1781485798.7208207,
+      "player_text": "[永远爱你"
+    },
+    {
+      "time": "09:11",
+      "reply": "笨蛋 哭什么哭\n我还没揍你呢",
+      "timestamp": 1781485860.4050024,
+      "player_text": "[嘤嘤"
+    },
+    {
+      "time": "09:11",
+      "reply": "关你啥事\n反正不是在等你消息",
+      "timestamp": 1781485865.716618,
+      "player_text": "你在干嘛？"
+    },
+    {
+      "time": "09:11",
+      "reply": "",
+      "timestamp": 1781485873.5696287,
+      "player_text": "你在干嘛？ | [啊对对",
+      "ame_sticker": "cat_ignore"
+    },
+    {
+      "time": "09:11",
+      "reply": "哈？学我说话是吧\n揍你哦",
+      "timestamp": 1781485875.843818,
+      "player_text": "[关我屁事",
       "ame_sticker": "ame_tsun"
     },
     {
-      "time": "20:15",
-      "reply": "不在\n你找我干嘛",
-      "timestamp": 1781439327.311753,
+      "time": "09:11",
+      "reply": "你又学我\n嘤嘤嘤个头啦\n揍你哦",
+      "timestamp": 1781485879.7089872,
+      "player_text": "[关我屁事 | [嘤嘤"
+    },
+    {
+      "time": "09:11",
+      "reply": "哈？突然夸我  \n揍你哦",
+      "timestamp": 1781485883.4940677,
+      "player_text": "[太强了"
+    },
+    {
+      "time": "09:11",
+      "reply": "哼 别以为这样我就不揍你了\n揍你哦",
+      "timestamp": 1781485888.1218977,
+      "player_text": "[太强了 | [太强了"
+    },
+    {
+      "time": "09:11",
+      "reply": "哼 谁要你永远爱了\n笨蛋",
+      "timestamp": 1781485890.8003495,
+      "player_text": "[永远爱你"
+    },
+    {
+      "time": "09:11",
+      "reply": "哼 犯什么病呢你\n永远爱我然后原地去世？逻辑呢!",
+      "timestamp": 1781485894.1225436,
+      "player_text": "[永远爱你 | [原地去世"
+    },
+    {
+      "time": "09:11",
+      "reply": "你啊对对对个鬼啦\n又要敷衍我是吧",
+      "timestamp": 1781485897.0718577,
+      "player_text": "[原地去世 | [啊对对",
       "recall": true
     },
     {
-      "time": "20:16",
-      "reply": "你不是在看别人吗\n怎么有空看我的动态了",
-      "timestamp": 1781439416.2218497
-    },
-    {
-      "time": "20:17",
-      "reply": "干嘛 突然不说话又想让我猜啊",
-      "timestamp": 1781439421.0966494
-    },
-    {
-      "time": "06:50",
-      "reply": "哼 连店员都比你懂我\n你怎么不学着点",
-      "timestamp": 1781477445.9505572
-    },
-    {
-      "time": "06:50",
-      "reply": "那你倒是说句话啊\n不然我就要揍你了",
-      "timestamp": 1781477447.993441
-    },
-    {
-      "time": "06:56",
-      "reply": "",
-      "timestamp": 1781477798.7880824,
-      "sticker": "sticker_7",
-      "ame_sticker": "ame_blush"
-    },
-    {
-      "time": "06:56",
-      "reply": "敷衍。",
-      "timestamp": 1781477805.559632,
-      "sticker": "sticker_8"
-    },
-    {
-      "time": "07:22",
-      "reply": "",
-      "timestamp": 1781479328.0082283,
-      "sticker": "sticker_4",
+      "time": "09:11",
+      "reply": "你今天是欠揍模式吗",
+      "timestamp": 1781485902.8752623,
+      "player_text": "[啊对对 | [关我屁事",
       "ame_sticker": "cat_ignore"
     },
     {
-      "time": "07:34",
-      "reply": "你倒是转发啊笨蛋",
-      "timestamp": 1781480097.1278577
+      "time": "09:11",
+      "reply": "你又来 复读机啊你\n再刷屏我真揍你哦",
+      "timestamp": 1781485905.4424996,
+      "player_text": "[原地去世 | [啊对对"
     },
     {
-      "time": "07:35",
-      "reply": "对了对了！你昨天是不是偷看我手机了",
-      "timestamp": 1781480101.823853
-    },
-    {
-      "time": "07:35",
-      "reply": "哦。",
-      "timestamp": 1781480137.2870388,
-      "sticker": "sticker_4"
-    },
-    {
-      "time": "07:37",
-      "reply": "……你看到了吧。别问我是不是真的。",
-      "timestamp": 1781480220.7640483
-    },
-    {
-      "time": "07:37",
-      "reply": "哼 你都不问我是不是真的",
-      "timestamp": 1781480225.4611552,
-      "ame_sticker": "cat_cry"
-    },
-    {
-      "time": "07:37",
-      "reply": "都怪你，害我数羊都走神。",
-      "timestamp": 1781480249.5715868
-    },
-    {
-      "time": "07:37",
-      "reply": "烦死了，都是你害的，害我又想起那天的事。",
-      "timestamp": 1781480252.9562366
-    },
-    {
-      "time": "07:38",
-      "reply": "看到流星帮你许愿了，笨蛋 夸我",
-      "timestamp": 1781480286.8249574,
+      "time": "09:11",
+      "reply": "突然卖萌也没用哦\n揍你哦",
+      "timestamp": 1781485909.554566,
+      "player_text": "[嘤嘤 | [太强了",
       "recall": true
     },
     {
-      "time": "07:38",
-      "reply": "你又发什么神经",
-      "timestamp": 1781480289.8157108
+      "time": "09:11",
+      "reply": "啧 又来\n你到底是来聊天还是来表演去世的",
+      "timestamp": 1781485913.2252307,
+      "player_text": "[原地去世 | [啊对对"
     },
     {
-      "time": "07:42",
-      "reply": "哼，谁要你看了\n别假装关心我哦",
-      "timestamp": 1781480572.0054193
+      "time": "09:12",
+      "reply": "好什么好\n你又敷衍我",
+      "timestamp": 1781485926.8512795,
+      "player_text": "[好"
     },
     {
-      "time": "07:42",
-      "reply": "",
-      "timestamp": 1781480574.5909176,
-      "ame_sticker": "cat_good"
-    },
-    {
-      "time": "07:45",
-      "reply": "谁要跟你说什么了\n只是顺便叫你抬头而已\n揍你哦",
-      "timestamp": 1781480735.07291,
+      "time": "09:12",
+      "reply": "你打算靠贴图蒙混过关是吧\n别以为这样我就不追究了",
+      "timestamp": 1781485931.0038042,
+      "player_text": "[好 | [太强了",
       "recall": true
     },
     {
-      "time": "07:45",
-      "reply": "你管我 不许笑 揍你哦",
-      "timestamp": 1781480743.6935747,
+      "time": "09:12",
+      "reply": "你嘤什么嘤\n卖萌也没用",
+      "timestamp": 1781485934.4587116,
+      "player_text": "[嘤嘤",
       "recall": true
     },
     {
-      "time": "07:47",
-      "reply": "",
-      "timestamp": 1781480830.7017837,
-      "sticker": "sticker_4",
-      "ame_sticker": "cat_ignore"
+      "time": "09:12",
+      "reply": "你每天到底要死几次\n装死也没用！",
+      "timestamp": 1781485940.1071763,
+      "player_text": "[嘤嘤 | [原地去世"
     },
     {
-      "time": "07:47",
-      "reply": "那是当然的吧\n哼 你才知道",
-      "timestamp": 1781480836.5804603,
-      "sticker": "sticker_2"
+      "time": "09:12",
+      "reply": "别又来这招\n你演技真的很差诶",
+      "timestamp": 1781485943.1602783,
+      "player_text": "[原地去世"
     },
     {
-      "time": "07:47",
-      "reply": "笨蛋...",
-      "timestamp": 1781480844.048664,
-      "sticker": "sticker_7"
+      "time": "09:12",
+      "reply": "死了还怎么永远爱我啊笨蛋  \n肉麻死了……揍你哦",
+      "timestamp": 1781485947.4447024,
+      "player_text": "[原地去世 | [永远爱你",
+      "recall": true
     },
     {
-      "time": "07:48",
-      "reply": "哦",
-      "timestamp": 1781480919.9176285,
-      "sticker": "sticker_4"
+      "time": "09:12",
+      "reply": "哼\n明明是你先来惹我的\n笨蛋P",
+      "timestamp": 1781485950.721642,
+      "player_text": "[关我屁事"
     },
     {
-      "time": "07:50",
-      "reply": "干嘛 你看到了？\n别太在意啦 笨蛋",
-      "timestamp": 1781481015.8337789
+      "time": "09:12",
+      "reply": "又来\n你存心气我是不是",
+      "timestamp": 1781485953.7886174,
+      "player_text": "[关我屁事 | [太强了"
     },
     {
-      "time": "07:50",
-      "reply": "你催什么催啦！\n我刚要说的！",
-      "timestamp": 1781481020.4620397
+      "time": "09:12",
+      "reply": "哼  \n道歉也这么没诚意  \n罚你今晚陪我直播",
+      "timestamp": 1781485958.0929759,
+      "player_text": "[抱歉抱歉 | [原地去世"
     },
     {
-      "time": "07:56",
-      "reply": "看到了吧！你也觉得不好看？  \n哼 反正我就要戴",
-      "timestamp": 1781481362.554575
+      "time": "09:12",
+      "reply": "在准备直播啦 你最好别迟到 揍你哦",
+      "timestamp": 1781485966.7920191,
+      "player_text": "[啊对对 | 你在干嘛",
+      "recall": true
     },
     {
-      "time": "07:56",
-      "reply": "等等我还有件事没说\n你别想溜",
-      "timestamp": 1781481364.7251303
+      "time": "09:12",
+      "reply": "谁秒回了\n自作多情\n揍你哦",
+      "timestamp": 1781485971.1451228,
+      "player_text": "为什么老是秒回哦嗯 | [太强了"
     }
   ]
 }
