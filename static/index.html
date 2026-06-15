@@ -2158,12 +2158,11 @@ function renderJineChatUnified(timelineItems) {
 
     container.innerHTML = html || '<div class="empty-state"><div class="icon"><img src="img/icon_ame.png"></div><p style="font-size:0.7rem;color:rgba(0,0,0,0.4);">糖糖还没发消息...</p></div>';
     container.scrollTop = container.scrollHeight;
-    // Show all read receipts 2.2s after last render (debounced timer)
-    clearTimeout(window._jineReadTimer);
-    window._jineReadTimer = setTimeout(function() {
+    // Show read receipts progressively — first batch at 1.2s, each subsequent render fires independently
+    setTimeout(function() {
         var all = container.querySelectorAll('.jine-read-receipt');
         for (var rj = 0; rj < all.length; rj++) { all[rj].classList.add('show'); }
-    }, 2200);
+    }, 1200);
 }
 function fetchJineChat() {
     jineChatMsgs = SaveManager.getJineChat();
