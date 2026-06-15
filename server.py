@@ -142,7 +142,10 @@ class AmechanHandler(SimpleHTTPRequestHandler):
         elif path == "/api/release":
             # v4 stateless: frontend sends poketter text, backend generates JINE release msgs
             body_raw = self._read_body()
-            body = self._parse_json(body_raw) if body_raw else {}
+            body = self._parse_json(body_raw) if body_raw else None
+            if not body:
+                self._send_json({"ok": False, "error": "invalid JSON body"}, status=400)
+                return
 
             poke_text = body.get("poke_text", "")
             diary_text = body.get("diary_text", "")

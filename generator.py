@@ -17,7 +17,7 @@ from openai import OpenAI
 from config import API_KEY, BASE_URL, MODEL, MAX_TOKENS, MAX_RETRIES
 from prompts import get_timeline_prompt, get_kangel_user_prompt, get_ame_user_prompt, get_jine_reply_prompt, get_jine_text_prompt, get_jine_release_prompt
 from prompts import KANGEL_SYSTEM_PROMPT, AME_SYSTEM_PROMPT, JINE_REPLY_SYSTEM, JINE_TEXT_REPLY_SYSTEM, JINE_RELEASE_SYSTEM, AME_STAMP_POOL
-from feed import save_timeline, save_hidden_pool, get_jine_chat
+from feed import get_jine_chat  # stub: returns [] in stateless mode
 
 client = OpenAI(api_key=API_KEY, base_url=BASE_URL)
 
@@ -118,28 +118,20 @@ def generate_timeline(topic: str | None = None) -> dict:
 
 
 def generate_and_save(topic: str | None = None) -> dict:
-    """生成时间线并保存到 feed，返回保存结果。"""
+    """v4 stateless: 生成时间线并打印预览（不写盘）。"""
     from prompts import _pick_topic
     topic = topic or _pick_topic()
 
     data = generate_timeline(topic)
     event = data.get("event", topic)
 
-    # 保存时间线
-    timeline_count = save_timeline(data["timeline"], event)
-    print(f"  [OK] 时间线已保存: {timeline_count} 条")
-
-    # 保存 hidden_pool
-    pool = data.get("hidden_pool", [])
-    if pool:
-        save_hidden_pool(pool)
-        print(f"  [OK] hidden_pool 已更新: {len(pool)} 条")
-
     # 打印预览
-    print(f"\n  === 预览 ===")
-    for item in data["timeline"]:
+    print(f"\n  === 预览 ({event}) ===")
+    for item in data.get("timeline", []):
         layer_tag = {"poketter": "💖", "diary": "💊", "jine": "💬"}.get(item.get("layer"), "?")
         print(f"  {layer_tag} [{item.get('time', '??:??')}] {item.get('text', '')[:50]}...")
+    if data.get("hidden_pool"):
+        print(f"  [pool] {len(data['hidden_pool'])} 条")
 
     return data
 
