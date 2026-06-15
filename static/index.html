@@ -1313,7 +1313,10 @@ var SaveManager = {
     },
     addReleasedEntry: function(entry) {
         var slot = this.data.slots[this.data.currentSlot]; if (!slot) return;
-        slot.releasedEntries.push(entry); slot.updatedAt = new Date().toISOString(); this._persist();
+        slot.releasedEntries.push(entry);
+        if (!slot.timeline) slot.timeline = [];
+        slot.timeline.push(entry);  // also store in per-slot timeline
+        slot.updatedAt = new Date().toISOString(); this._persist();
     },
     getReleasedEntries: function() { var s = this.getCurrentSlot(); return s.data ? s.data.releasedEntries.slice() : []; },
     getStats: function() { var s = this.getCurrentSlot(); return s.data ? Object.assign({}, s.data.stats) : { followers: 980, stress: 42, affection: 78, darkness: 55 }; },
@@ -1338,13 +1341,15 @@ var SaveManager = {
     getTimeline: function() {
         var s = this.getCurrentSlot(); return s.data ? (s.data.timeline || []).slice() : [];
     },
-    mergeTimeline: function(items) {
+    mergeTimeline: function(items, sinceTimestamp) {
         var slot = this.data.slots[this.data.currentSlot]; if (!slot) return 0;
         if (!slot.timeline) slot.timeline = [];
         var existing = {};
         slot.timeline.forEach(function(e) { existing[e.batch_id + '|' + e.time + '|' + e.text] = true; });
         var added = 0;
         items.forEach(function(e) {
+            // Only accept entries created after slot was born (prevents cross-slot leakage)
+            if (sinceTimestamp && (e.timestamp || 0) * 1000 <= sinceTimestamp) return;
             var key = (e.batch_id || '') + '|' + (e.time || '') + '|' + (e.text || '');
             if (!existing[key]) { slot.timeline.push(e); existing[key] = true; added++; }
         });
@@ -1760,9 +1765,11 @@ function fetchTimeline() {
         poolRemaining = data.pool_remaining || 0;
         updatePoolCount();
 
-        // Merge server items into current save slot
+        // Merge server items into current slot — only entries after slot creation
         if (serverItems.length > 0) {
-            SaveManager.mergeTimeline(serverItems);
+            var slotData = SaveManager.getCurrentSlot().data;
+            var slotBorn = slotData ? new Date(slotData.createdAt).getTime() : 0;
+            SaveManager.mergeTimeline(serverItems, slotBorn);
         }
         // Reload cachedTimeline from slot (includes previous sessions)
         cachedTimeline = SaveManager.getTimeline();
@@ -1796,7 +1803,11 @@ function fetchTimeline() {
             var items = data.timeline || [];
             poolRemaining = 0;
             updatePoolCount();
-            if (items.length > 0) { SaveManager.mergeTimeline(items); }
+            if (items.length > 0) {
+                var slotData2 = SaveManager.getCurrentSlot().data;
+                var slotBorn2 = slotData2 ? new Date(slotData2.createdAt).getTime() : 0;
+                SaveManager.mergeTimeline(items, slotBorn2);
+            }
             cachedTimeline = SaveManager.getTimeline();
             console.log('[fetchTimeline] static mode, items:', cachedTimeline.length);
             if (cachedTimeline.length === 0) {
