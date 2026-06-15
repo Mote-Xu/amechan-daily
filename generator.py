@@ -235,9 +235,10 @@ def _format_history_for_prompt(history: list[dict]) -> list[str]:
 
 def generate_jine_chat(text: str = "", sticker: str = "", history: list[dict] | None = None) -> dict:
     """
-    v2.8 统一入口：根据玩家消息生成糖糖的 JINE 回复。
-    - 纯贴图 → Few-Shot 贴图 prompt（温度 0.85）
-    - 文字/混合 → 文字 prompt（温度 0.7，降低发散度）
+    v3.3 统一入口：根据玩家消息生成糖糖的 JINE 回复。
+    - 纯贴图 → Few-Shot 贴图 prompt，温度 0.85，~50% 概率回贴图
+    - 文字/混合 → 文字 prompt，温度 0.85（v3.3 提升防模式崩塌）
+    - 回复包含负面情绪词 → 强制附加贴图
     - 后端无状态：不读不写 feed.json，完全依赖前端传来的 history
 
     返回 {"reply": str, "ame_sticker": str|None}
@@ -250,15 +251,15 @@ def generate_jine_chat(text: str = "", sticker: str = "", history: list[dict] | 
     recent = _format_history_for_prompt(history)
 
     if is_pure_sticker:
-        # Pure sticker → Few-Shot prompt
+        # Pure sticker → Few-Shot prompt. AI decides text/sticker/both (~50% sticker)
         prompt = get_jine_reply_prompt(sticker, recent, stress)
         temperature = 0.85
         print(f"[*] JINE 贴图回复 | sticker: {sticker} | stress: {stress}")
     else:
-        # Text or mixed → text prompt
+        # Text or mixed → text prompt. v3.3: raised for richer vocabulary
         effective_text = text if text else f"[{sticker}]"
         prompt = get_jine_text_prompt(effective_text, recent, stress)
-        temperature = 0.7  # v2.8: 降低温度，锁住 Few-Shot 风格
+        temperature = 0.85  # v3.3: raised from 0.7 to avoid mode collapse
         print(f"[*] JINE 文字回复 | text: {effective_text[:30]}... | stress: {stress} | temp: {temperature}")
 
     try:
