@@ -1,7 +1,7 @@
 # amechan-daily — 超天酱日常推文小站
 
 > DeepSeek V4 驱动的超天酱模拟账号。
-> 最后更新：2026-06-16 (v2.8.0)
+> 最后更新：2026-06-16 (v3.0.0)
 
 ## 启动
 
@@ -14,31 +14,48 @@ python server.py  # → http://127.0.0.1:8930
 
 | 功能 | 状态 | 备注 |
 |------|:--:|------|
-| F7 戳一戳 | 🟢 | v2.8: 水位线后台补池，前端 O(1) 瞬间释放 |
-| JINE 聊天 | 🟢 | v2.8: 无状态后端 + 耗时重叠，体感速度翻倍 |
+| F7 戳一戳 | 🟢 | 水位线后台补池，前端 O(1) 瞬间释放 |
+| JINE 聊天 | 🟢 | v3: 微聚合窗口 + 打断重发 + 上下文回复 |
 | 推博 Feed | ✅ | 每存档独立+排序 |
 | 弹幕 | 🟡 | 72px/3轨/12条 |
 | 多存档 | ✅ | 独立 timeline+JINE+stats |
 
-## 架构变更 (v2.8)
+## 架构
 
 ### F7 戳一戳
-- **后端水位线自动补池**：`pop_from_pool()` 释放后检查剩余对，< 2 对时后台线程静默生成
-- **前端 O(1)**：`doRelease()` 只发一个 POST，用本地缓存渲染，消除 `fetchTimeline()` 竞态
-- `feed.py` 新增 `_is_generating` 全局锁 + `_trigger_background_generate()` 后台线程
+- `feed.py`: `_trigger_background_generate()` 后台线程，剩余对 < 2 时自动补池
+- 前端 `doRelease()`: 单 POST，本地缓存渲染，无竞态
 
-### JINE 聊天
-- **统一端点**：`/api/jine/send` + `/api/jine/text` → `/api/jine/chat`
-- **后端无状态**：不再读写 `feed.json` 中的 JINE 数据，完全依赖前端传来的 `history`
-- **耗时重叠**：`remainWait = max(0, expectedTypingTime - apiDuration)`，API 耗时抵消打字延迟
-- **不再 abort**：`_startReplyCycle()` 如果有进行中的请求不取消，标记 `_hasPendingFollowup` 等当前完成后再发起
-- **温度调整**：文字回复从 0.85 → 0.7，更好锁住 Few-Shot 风格
-- `generator.py` 新增 `generate_jine_chat()` 统一函数
+### JINE 聊天回复引擎 (v3)
+
+**核心原则**：像真人微信聊天，不是 AI 问答。
+
+**微聚合窗口**：
+- 用户发消息 → 开始 300-1200ms 随机窗口
+- 持续输入时不断刷新窗口
+- 停止输入后立即收集**所有未回复消息** → 一次 API 请求
+- 回复插入聊天末尾（不是逐条回复）
+
+**打断重发**：
+- API 生成期间用户继续发消息 → abort 当前请求 → 重新开窗 → 合并新旧消息重发
+
+**高频保护**：
+- 短时间大量消息仍然只生成一次回复，不会逐条对应
+
+**前端实现**：
+- `_scheduleReply(isNewMsg)` — 窗口调度
+- `_executeReply()` — 收集所有未回复 → 一次 API → 插入末尾
+- `_pendingController` (AbortController) — 打断机制
+
+### 后端
+- `/api/jine/chat` 统一端点，无状态（不读写 feed.json）
+- `generate_jine_chat(text, sticker, history)` — 接收前端传来的完整 history
+- 文字回复温度 0.7，贴图回复温度 0.85
 
 ## 已知问题
 
 1. 弹幕偶尔消失
-2. 刷新后偶发发不了消息（JINE 状态恢复）
+2. 刷新后偶发发不了消息
 
 ## API 端点
 
