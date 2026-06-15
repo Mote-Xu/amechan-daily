@@ -975,6 +975,12 @@ var _batchTimer = null;          // setTimeout ID for aggregation window
 var _batchStartIdx = -1;         // index of first msg when batch window started
 var _batchWindowMs = 0;          // current window duration (random 300-1200ms)
 var _batchSentIdx = 0;           // last index sent to API (prevents re-processing)
+var _f7Timers = [];              // pending F7 JINE message timers (cleared on save switch)
+
+function _cancelF7Timers() {
+    for (var i = 0; i < _f7Timers.length; i++) clearTimeout(_f7Timers[i]);
+    _f7Timers = [];
+}
 
 // Danmaku pools — 应援 and 吐槽 (color-independent)
 var DANMAKU_OEN = [
@@ -1396,6 +1402,7 @@ function updateSaveIndicator() {
 }
 
 function reloadFromSlot() {
+    _cancelF7Timers();  // kill pending F7 JINE timers from old save
     jineChatMsgs = SaveManager.getJineChat();
     cachedTimeline = SaveManager.getTimeline();  // per-slot timeline
     knownBatches = {};
@@ -1905,12 +1912,17 @@ window.doRelease = function() {
             cachedTimeline = SaveManager.getTimeline();
             renderFromCache();
             btn.textContent = '已发送! ✨';
-            // JINE follow-up messages (staggered)
+            // JINE follow-up messages (staggered) — track timers to cancel on save switch
             var jineMsgs = data.jine_msgs || [];
             if (jineMsgs.length > 0) {
-                setTimeout(function() {
+                // Cancel any pending F7 timers from a previous release
+                _cancelF7Timers();
+                var _f7SlotId = SaveManager.getCurrentSlot().id;  // snapshot
+                var t1 = setTimeout(function() {
                     jineMsgs.forEach(function(msg, i) {
-                        setTimeout(function() {
+                        var t2 = setTimeout(function() {
+                            // Guard: only inject if still in the same save slot
+                            if (SaveManager.getCurrentSlot().id !== _f7SlotId) return;
                             var replyText = (msg.reply && msg.reply !== 'undefined') ? msg.reply : '';
                             var chatMsg = {
                                 time: msg.time || '', reply: replyText,
@@ -1921,8 +1933,10 @@ window.doRelease = function() {
                             SaveManager.addJineMessage(chatMsg);
                             if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
                         }, i * 2000 + 600);
+                        _f7Timers.push(t2);
                     });
                 }, 800);
+                _f7Timers.push(t1);
             }
             setTimeout(function() { btn.textContent = '[ F7 ] 戳一戳 ✨'; }, 2000);
         } else {
