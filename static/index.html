@@ -732,7 +732,7 @@ body {
 @keyframes livePulse { 0%,100%{opacity:1;box-shadow:0 0 4px red} 50%{opacity:0.3;box-shadow:0 0 12px red} }
 .live-text { color:red; font-size:0.75rem; font-weight:bold; }
 .live-viewers { color:#ccc; font-size:0.7rem; }
-.danmaku-bar { height:56px; width:100%; overflow:hidden; position:relative; z-index:10; margin-bottom:1rem; border-bottom:1px solid #333; cursor:default; background:rgba(0,0,0,0.35); border-top:1px solid rgba(255,255,255,0.05); }
+.danmaku-bar { height:72px; width:100%; overflow:hidden; position:relative; z-index:10; margin-bottom:1rem; border-bottom:1px solid #333; cursor:default; background:rgba(0,0,0,0.35); border-top:1px solid rgba(255,255,255,0.05); }
 .danmaku-wrap { position:absolute; white-space:nowrap; display:flex; align-items:center; gap:6px; will-change:left; padding:3px 6px; border-radius:3px; left:100%; animation:scrollR 16s linear infinite; }
 .danmaku-wrap[data-color="white"]:hover { animation-play-state:paused !important; cursor:pointer; }
 .danmaku-wrap[data-color="colored"] { pointer-events:none; }
@@ -969,7 +969,7 @@ var DANMAKU_TUCAO = ['草','www','kusa','？？？','草生える','大草原不
 var DANMAKU_COLORS = ['c-pink','c-cyan','c-green','c-yellow'];
 var danmakuWraps = [];
 var trashCount = 0;
-var DANMAKU_COUNT = 8;
+var DANMAKU_COUNT = 12;
 var _stressFromDanmaku = 0;  // accumulated stress delta from danmaku
 
         // ============================================================
@@ -1494,8 +1494,8 @@ function initDanmaku() {
         trashDanmaku(wrap);
     });
 
-    var TRACKS = 2;
-    var TRACK_H = 28;  // 2 tracks × 28px = 56px bar
+    var TRACKS = 3;
+    var TRACK_H = 24;  // 3 tracks × 24px = 72px bar
     for (var i = 0; i < DANMAKU_COUNT; i++) {
         var wrap = document.createElement('span');
         wrap.className = 'danmaku-wrap';
