@@ -806,7 +806,14 @@ body {
 
 .save-indicator{position:fixed;top:8px;left:10px;z-index:9998;display:flex;align-items:center;gap:0.4rem;font-size:0.6rem;background:rgba(0,0,0,0.55);border:1px solid rgba(255,105,180,0.2);padding:4px 10px;}.save-indicator:hover{border-color:var(--pink);}.save-indicator .save-label{color:#888;}.save-indicator .save-name{color:var(--pink);cursor:pointer;font-size:0.7rem;}.save-indicator .save-slot-count{color:#555;font-size:0.5rem;}.save-manage-btn{background:rgba(255,105,180,0.15);color:var(--pink);border:1px solid rgba(255,105,180,0.3);padding:1px 8px;font-size:0.7rem;font-family:inherit;cursor:pointer;}
 .save-modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:10000;justify-content:center;align-items:center;}.save-modal-overlay.open{display:flex;}.save-modal{background:var(--win-bg);border:2px solid #fff;border-right-color:#888;border-bottom-color:#888;box-shadow:4px 4px 0 #000;width:90%;max-width:420px;max-height:70vh;display:flex;flex-direction:column;}.save-modal-titlebar{background:var(--win-title);color:#fff;padding:0.3rem 0.6rem;display:flex;justify-content:space-between;font-size:0.75rem;}.save-modal-titlebar .close-btn{background:var(--win-bg);color:#000;padding:0 6px;font-size:0.6rem;border:2px solid #fff;border-right-color:#555;border-bottom-color:#555;cursor:pointer;}.save-modal-body{background:var(--bg);padding:0.8rem;overflow-y:auto;flex:1;}.save-slot{display:flex;align-items:center;justify-content:space-between;padding:0.6rem 0.7rem;margin-bottom:0.4rem;background:rgba(0,0,0,0.3);border:2px solid #444;gap:0.5rem;}.save-slot.current{border-color:var(--pink);background:rgba(255,105,180,0.08);}.save-slot .slot-info{flex:1;min-width:0;}.save-slot .slot-name{color:#fff;font-size:0.75rem;}.save-slot.current .slot-name{color:var(--pink);}.save-slot .slot-meta{color:#666;font-size:0.55rem;margin-top:2px;}.save-slot .slot-actions{display:flex;gap:4px;flex-shrink:0;}.save-slot .slot-btn{padding:2px 8px;font-size:0.55rem;font-family:inherit;border:2px solid #555;background:rgba(0,0,0,0.3);color:#aaa;cursor:pointer;white-space:nowrap;}.save-slot .slot-btn:hover{color:#fff;border-color:var(--pink);}.save-slot .slot-btn.danger:hover{border-color:#f44;color:#f44;}.save-new-btn{display:block;width:100%;padding:0.5rem;margin-top:0.4rem;background:rgba(255,105,180,0.1);color:var(--pink);border:2px dashed var(--pink);font-family:inherit;font-size:0.7rem;cursor:pointer;}.save-new-form{display:none;margin-top:0.4rem;}.save-new-form input{width:100%;padding:4px 8px;background:rgba(0,0,0,0.3);color:#fff;border:2px solid #555;font-family:inherit;font-size:0.7rem;outline:none;margin-bottom:4px;}.save-new-form input:focus{border-color:var(--pink);}.save-new-form .form-btns{display:flex;gap:4px;justify-content:flex-end;}.save-new-form .form-btn{padding:3px 10px;font-size:0.6rem;font-family:inherit;border:2px solid #555;background:rgba(0,0,0,0.3);color:#ccc;cursor:pointer;}.save-new-form .form-btn.confirm{color:var(--pink);border-color:var(--pink);}.save-toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--win-title);color:#fff;padding:6px 16px;font-size:0.65rem;font-family:inherit;border:2px solid #fff;z-index:10001;opacity:0;transition:opacity 0.2s;pointer-events:none;}.save-toast.show{opacity:1;}
-.bgm-player{display:flex;align-items:center;justify-content:center;gap:0.4rem;margin-bottom:0.5rem;font-size:0.55rem;color:#888;}.bgm-btn{background:rgba(0,0,0,0.3);color:#aaa;border:1px solid #444;padding:2px 6px;font-family:inherit;font-size:0.55rem;cursor:pointer;white-space:nowrap;}.bgm-btn:hover{color:#fff;border-color:var(--purple);}.bgm-btn.muted{color:#f44;border-color:#f44;}.bgm-track-name{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--purple);}
+.bgm-player{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:0.6rem;}
+.bgm-player-inner{display:flex;align-items:center;gap:6px;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:4px 10px;}
+.bgm-btn{background:none;color:#888;border:none;padding:3px 5px;font-family:inherit;font-size:0.65rem;cursor:pointer;border-radius:3px;transition:all 0.15s;line-height:1;}
+.bgm-btn:hover{color:#fff;background:rgba(255,255,255,0.08);}
+.bgm-btn.muted{color:#f44;}
+.bgm-btn.play-btn{color:var(--pink);font-size:0.75rem;}
+.bgm-track-name{max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#ccc;font-size:0.6rem;padding:0 4px;}
+.bgm-vol{color:#888;font-size:0.55rem;margin-left:2px;}
 
 .webcam-container{position:fixed;left:20px;top:80px;z-index:100;width:480px;pointer-events:none;}
 .webcam-container .webcam-frame,.webcam-container .webcam-titlebar,.webcam-container #webcam-canvas,.webcam-container #webcam-state-menu{pointer-events:auto;}
@@ -833,7 +840,7 @@ body {
 <div class="header">
     <h1>† Poketter †</h1>
     <div class="subtitle"><span class="status-dot"></span> LIVE v2.2</div>
-<div class="bgm-player" id="bgm-player"><button class="bgm-btn" id="bgm-prev" onclick="bgmPrev()"><<</button><button class="bgm-btn" id="bgm-play" onclick="bgmToggle()">></button><button class="bgm-btn" id="bgm-next" onclick="bgmNext()">>></button><button class="bgm-btn" id="bgm-mute" onclick="bgmMute()">M</button><span class="bgm-track-name" id="bgm-track">--</span></div>
+<div class="bgm-player" id="bgm-player"><div class="bgm-player-inner"><button class="bgm-btn" onclick="bgmPrev()" title="上一首">⏮</button><button class="bgm-btn play-btn" id="bgm-play" onclick="bgmToggle()" title="播放/暂停">▶</button><button class="bgm-btn" onclick="bgmNext()" title="下一首">⏭</button><span class="bgm-track-name" id="bgm-track">--</span><button class="bgm-btn" id="bgm-mute" onclick="bgmMute()" title="静音">🔊</button></div></div>
 
 <div class="save-indicator" id="save-indicator"><span class="save-label">存档:</span> <span class="save-name" id="save-name" onclick="openSaveManager()">默认存档</span> <span class="save-slot-count" id="save-slot-info"></span> <button class="save-manage-btn" onclick="openSaveManager()">+</button></div>
 </div>
@@ -1237,8 +1244,8 @@ function bgmPrev() { bgmIndex=(bgmIndex-1+BGM_FILES.length)%BGM_FILES.length; if
 function bgmMute() { if(!bgmAudio)bgmInit(); bgmMuted=!bgmMuted; bgmAudio.volume=bgmMuted?0:0.15; updateBgmDisplay(); }
 function updateBgmDisplay() {
     var t=document.getElementById("bgm-track"); if(t) t.textContent=BGM_TRACKS[bgmIndex]||"--";
-    var p=document.getElementById("bgm-play"); if(p) p.textContent=bgmPlaying?"||":">";
-    var m=document.getElementById("bgm-mute"); if(m){ m.textContent=bgmMuted?"X":"M"; m.classList.toggle("muted",bgmMuted); }
+    var p=document.getElementById("bgm-play"); if(p) p.textContent=bgmPlaying?"⏸":"▶";
+    var m=document.getElementById("bgm-mute"); if(m){ m.textContent=bgmMuted?"🔇":"🔊"; m.classList.toggle("muted",bgmMuted); }
 }
 window.bgmToggle=bgmToggle; window.bgmNext=bgmNext; window.bgmPrev=bgmPrev; window.bgmMute=bgmMute;
 
