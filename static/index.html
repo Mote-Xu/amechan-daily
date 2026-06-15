@@ -1263,7 +1263,7 @@ var SaveManager = {
     _createSlotData: function(name) {
         return {
             name: name, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
-            jineChat: [], releasedEntries: [], feedCursor: 0,
+            jineChat: [], releasedEntries: [], timeline: [], feedCursor: 0,
             stats: { followers: 980, stress: 42, affection: 78, darkness: 55 }, trashCount: 0
         };
     },
@@ -1334,6 +1334,22 @@ var SaveManager = {
     incrementFeedCursor: function() {
         var slot = this.data.slots[this.data.currentSlot]; if (!slot) return;
         slot.feedCursor = (slot.feedCursor || 0) + 1; slot.updatedAt = new Date().toISOString(); this._persist();
+    },
+    getTimeline: function() {
+        var s = this.getCurrentSlot(); return s.data ? (s.data.timeline || []).slice() : [];
+    },
+    mergeTimeline: function(items) {
+        var slot = this.data.slots[this.data.currentSlot]; if (!slot) return 0;
+        if (!slot.timeline) slot.timeline = [];
+        var existing = {};
+        slot.timeline.forEach(function(e) { existing[e.batch_id + '|' + e.time + '|' + e.text] = true; });
+        var added = 0;
+        items.forEach(function(e) {
+            var key = (e.batch_id || '') + '|' + (e.time || '') + '|' + (e.text || '');
+            if (!existing[key]) { slot.timeline.push(e); existing[key] = true; added++; }
+        });
+        if (added > 0) { slot.updatedAt = new Date().toISOString(); this._persist(); }
+        return added;
     }
 };
 
@@ -1348,7 +1364,10 @@ function updateSaveIndicator() {
 
 function reloadFromSlot() {
     jineChatMsgs = SaveManager.getJineChat();
-    _stressFromDanmaku = 0;  // reset accumulated danmaku stress for new slot
+    cachedTimeline = SaveManager.getTimeline();  // per-slot timeline
+    knownBatches = {};
+    cachedTimeline.forEach(function(e) { knownBatches[e.batch_id] = true; });
+    _stressFromDanmaku = 0;
     loadStatsFromSlot(); updateSaveIndicator();
     renderFromCache();
     if (ACTIVE_TAB === "jine") renderJineChatMsgs();
@@ -1737,11 +1756,18 @@ function fetchTimeline() {
     }
     fetch(API + '/api/timeline').then(function(r) { return r.json(); }).then(function(data) {
         console.log('[fetchTimeline] got', data.count, 'items, pool:', data.pool_remaining);
-        cachedTimeline = data.timeline || [];
+        var serverItems = data.timeline || [];
         poolRemaining = data.pool_remaining || 0;
         updatePoolCount();
 
-        // If backend is still generating (empty feed), keep polling — don't consume firstLoad
+        // Merge server items into current save slot
+        if (serverItems.length > 0) {
+            SaveManager.mergeTimeline(serverItems);
+        }
+        // Reload cachedTimeline from slot (includes previous sessions)
+        cachedTimeline = SaveManager.getTimeline();
+
+        // If still empty (server hasn't generated yet), keep polling
         if (cachedTimeline.length === 0) {
             console.log('[fetchTimeline] feed empty, polling in 3s...');
             setTimeout(fetchTimeline, 3000);
@@ -1767,11 +1793,12 @@ function fetchTimeline() {
         fetch('data/feed.json').then(function(r) { return r.json(); }).then(function(data) {
             _fetchRetries = 0;
             isStaticMode = true;
-            cachedTimeline = data.timeline || [];
+            var items = data.timeline || [];
             poolRemaining = 0;
             updatePoolCount();
+            if (items.length > 0) { SaveManager.mergeTimeline(items); }
+            cachedTimeline = SaveManager.getTimeline();
             console.log('[fetchTimeline] static mode, items:', cachedTimeline.length);
-            // Same guard: don't set firstLoad=false on empty
             if (cachedTimeline.length === 0) {
                 setTimeout(fetchTimeline, 5000);
                 return;
