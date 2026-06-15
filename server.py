@@ -197,7 +197,7 @@ def main():
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
     print("=" * 50)
-    print("  + Poketter v2.8 — 水位线补池 + 无状态JINE + 耗时重叠 +")
+    print("  + Poketter v3.3 — Menhera soul + XML prompts + anti-cheap-tsundere +")
     print("=" * 50)
     print(f"  地址: http://{HOST}:{PORT}")
     print(f"  API:  GET  /api/timeline   -> 获取时间线")
