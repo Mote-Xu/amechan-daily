@@ -283,6 +283,7 @@ body {
 }
 .jine-chat-msgs {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
     padding: 4px 0;
 }
@@ -2306,9 +2307,7 @@ function renderJineChatUnified(timelineItems) {
     }
 
     container.innerHTML = html || '<div class="empty-state"><div class="icon"><img src="img/icon_ame.png"></div><p style="font-size:0.7rem;color:rgba(0,0,0,0.4);">糖糖还没发消息...</p></div>';
-    setTimeout(function() { container.scrollTop = container.scrollHeight; }, 50);
-    setTimeout(function() { container.scrollTop = container.scrollHeight; }, 200);
-    setTimeout(function() { container.scrollTop = container.scrollHeight; }, 500);
+    container.scrollTop = container.scrollHeight;
     setTimeout(function() {
         var all = container.querySelectorAll('.jine-read-receipt');
         for (var rj = 0; rj < all.length; rj++) { all[rj].classList.add('show'); }
