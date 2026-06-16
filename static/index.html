@@ -1908,7 +1908,7 @@ function _refillPool(isInitial) {
 function updatePoolCount() {
     var info = SaveManager.poolRemaining();
     var el = document.getElementById('f7-count');
-    if (el) el.textContent = info.pairs > 0 ? '(' + info.total + ' 条待发, ' + info.pairs + ' 对)' : '(空了..)';
+    if (el) el.textContent = info.pairs > 0 ? '(' + info.pairs + ' 次可用)' : '(空了..)';
     poolRemaining = info.pairs;
     // Auto-refill when low
     if (info.pairs < 2 && cachedTimeline.length > 0 && !_isRefilling) {
