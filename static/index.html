@@ -1912,7 +1912,8 @@ function updatePoolCount() {
     poolRemaining = info.pairs;
     // Auto-refill when low
     if (info.pairs < 2 && cachedTimeline.length > 0 && !_isRefilling) {
-        _refillPool(false);
+        // Delay auto-refill to avoid colliding with user's first actions
+        setTimeout(function() { _refillPool(false); }, 3000);
     }
 }
 
@@ -2131,6 +2132,12 @@ function _executeReply() {
         _replyPending = false; _pendingController = null;
         clearTimeout(fetchTimeout);
 
+        if (!data.ok) {
+            _replyPending = false; _pendingController = null;
+            hideAmeTyping(); endAmeResponse();
+            showToast(data.error || '糖糖正在忙，稍等一下哦～');
+            return;
+        }
         var replyText = data.reply || '';
         var apiDuration = Date.now() - cycleStart;
         var expectedTypingTime = 1500 + (replyText.length * 100);
@@ -2163,6 +2170,12 @@ function _executeReply() {
         }
         console.warn('[reply] error:', err.name || err.message);
         _replyPending = false; _pendingController = null;
+        // Show toast for rate limit
+        try {
+            if (err.message && err.message.indexOf('429') >= 0) {
+                showToast('糖糖被消息淹没了...稍等一下再发哦');
+            }
+        } catch(ignore) {}
         var elapsed = Date.now() - cycleStart;
         var remainWait = Math.max(800, 2200 - elapsed);
         setTimeout(function() {
