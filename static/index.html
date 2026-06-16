@@ -284,7 +284,7 @@ body {
 .jine-chat-msgs {
     flex: 1;
     overflow-y: auto;
-    padding: 4px 0 36px;
+    padding: 4px 0;
 }
 .jine-chat-msgs .jine-msg { animation: fadeInUp 0.25s ease-out; }
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
@@ -2308,6 +2308,8 @@ function renderJineChatUnified(timelineItems) {
     container.innerHTML = html || '<div class="empty-state"><div class="icon"><img src="img/icon_ame.png"></div><p style="font-size:0.7rem;color:rgba(0,0,0,0.4);">糖糖还没发消息...</p></div>';
     container.scrollTop = container.scrollHeight;
     container.scrollTop = container.scrollHeight;
+    // Scroll again after layout settles — catches any late-arriving content
+    setTimeout(function() { container.scrollTop = container.scrollHeight; }, 100);
     setTimeout(function() {
         var all = container.querySelectorAll('.jine-read-receipt');
         for (var rj = 0; rj < all.length; rj++) { all[rj].classList.add('show'); }
