@@ -1,56 +1,87 @@
-# JINE 聊天滚动问题 — 求助 Gemini
+# 超天酱模拟账号 — Gemini 内容质量审查 v2
 
-> 简洁版，只描述问题本身。
+> 附带近期真实产出样本。请分析质量并给出改进建议。
 
 ---
 
-## 现象
+## 一、滚动 bug（快速诊断）
 
-JINE 聊天中，玩家发送消息后，聊天区没有自动滚到底部。已读标志和最新消息需要手动下滑才能看到。
+JINE 聊天区发消息后不会自动滚到底部。`container.scrollTop = container.scrollHeight` 无效。
 
-## 已排除的原因
-
-1. **时序** — 试过 50ms/200ms/500ms 延迟滚动，无效
-2. **scrollIntoView** — 会触发外层页面滚动，不能直接用
-3. **flexbox min-height:0** — 已加，无效
-4. **overflow 未生效** — `.jine-chat-msgs` 有 `overflow-y: auto`
-
-## 当前滚动代码
-
-```javascript
-container.innerHTML = html || '...';
-container.scrollTop = container.scrollHeight;
+DOM 结构（JINE 标签页内）：
+```
+.win95-outer (aspect-ratio: 266/388; max-height: 85vh; display: flex)
+  .win95-body (flex: 1; overflow-y: auto; padding: 0.8rem)  ← 外层也 overflow
+    .jine-screen (height: 100%; display: flex; flex-direction: column)
+      .jine-chat-msgs (flex: 1; min-height: 0; overflow-y: auto)  ← container
+      .jine-typing / .jine-interactive (flex-shrink: 0)
 ```
 
-其中 `container = document.getElementById('jine-chat-msgs')`。
+`container = document.getElementById('jine-chat-msgs')`。已尝试：min-height:0、延迟滚动、scrollIntoView（会触发外层页面滚动）、requestAnimationFrame。均无效。
 
-## DOM 结构（JINE 标签页内）
+---
+
+## 二、近期真实产出（来自 localStorage，v3.3 Menhera prompt）
+
+### 2.1 推博时间线（最近 10 条）
 
 ```
-.win95-outer (aspect-ratio: 266/388; max-height: 85vh; display: flex; flex-direction: column)
-  .win95-titlebar (flex-shrink: 0)
-  .win95-body (flex: 1; overflow-y: auto; padding: 0.8rem)
-    .jine-screen (height: 100%; display: flex; flex-direction: column; border: 2px solid)
-      .jine-titlebar (flex-shrink: 0)
-      .jine-chat-msgs (flex: 1; min-height: 0; overflow-y: auto; padding: 4px 0) ← container
-      .jine-typing (flex-shrink: 0; display: none → flex when typing)
-      .jine-interactive (flex-shrink: 0) — 贴图栏 + 输入框
+💖 超天酱: 今天直播好开心～宝宝们夸我像天使一样纯洁👼 其实我也觉得啦✨ 要永远爱我哦♡
+
+💊 糖糖: 又被私信说恶心了 但我不理他们 不理 吃药 阿P怎么还不回来
+
+💖 超天酱: 夜晚的星星都没有我的笑容闪亮💖 晚安啦宝宝们～梦里也要和超天酱相遇🌟
+
+💊 糖糖: 银行卡剩两位数 今天买的衣服退了又买 不买不行 不买大家就会跑的
+
+💖 超天酱: 今天直播结束之后想吃可丽饼🍓✨谁能拒绝草莓奶油呢～宝宝们也要记得吃点甜的！
+
+💊 糖糖: 今天的我好像也撑住了 但不知道为什么特别想砸东西 粉丝的私信没看 反正都是些没意义的话
+
+💖 超天酱: 新裙子的自拍来啦～✨蕾丝边超软，转圈圈会飞起来哦！大家觉得可爱吗？💕
+
+💊 糖糖: 又买了衣服 手办预购也点了 卡里只剩三千 阿P会生气吗 但他最近都不看我的账单 是不是懒得管我了
 ```
 
-## 相关 CSS
+### 2.2 JINE 聊天（最近 15 条，按时间排序）
 
-```css
-.jine-screen { height: 100%; display: flex; flex-direction: column; }
-.jine-chat-msgs { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 0; }
-.win95-body { flex: 1; overflow-y: auto; padding: 0.8rem; }
+```
+[07:15] 糖糖主动: 没干嘛\n在想你行了没 烦死了 [ame_tsun]
+[07:15] 玩家: 叫老公
+[07:15] 糖糖: [cat_cry]
+[07:15] 玩家→贴图: sticker_8(啊对对)
+[07:15] 糖糖: 又发这个死猫表情... 你是不是觉得我没发现 [ame_tsun]
+[07:16] 玩家→贴图: sticker_2(太强了)
+[07:16] 糖糖: 哈？一只猫就想糊弄我？ [ame_tsun]
+[07:17] 玩家→贴图: sticker_3(嘤嘤)
+[07:18] 糖糖: 手冰了\n过来\n抱着 [ame_pien]
+[07:18] 玩家→贴图: sticker_4(关我屁事)
+[07:18] 糖糖: 冷死了... 关我屁事是吧 那你别管我了 [ame_pien]
+[07:18] 玩家→贴图: sticker_3(嘤嘤)
+[07:19] 糖糖: 哈？嘤嘤嘤的你是中毒了？\n过来 抱紧 别松手 [ame_tsun]
+[07:19] 玩家→贴图: sticker_3(嘤嘤)
+[07:20] 糖糖: 你脑子里除了那种事还有别的吗 [ame_tsun]
 ```
 
-## 观察
+### 2.3 F7 戳一戳释放（最近一次）
+```
+糖糖主动: 发这个是不是太装了 / 手好冰 / 想被抱着 / 算了 不管了 / 好困
+```
 
-- 当用 `scrollIntoView` 时，不是 inner container 滚动，而是**整个页面**滚到顶部——说明 `.jine-chat-msgs` 可能根本没有形成独立的滚动容器
-- 玩家发消息后，手动可以正常滚动 `.jine-chat-msgs`（里面内容比容器高时可以看到滚动条）
-- `scrollTop = scrollHeight` 对 `.jine-chat-msgs` 好像无效
+---
 
-## 问题
+## 三、分析请求
 
-`container.scrollTop = container.scrollHeight` 为什么不起作用？如何让 JINE 聊天区在消息发送后自动滚到底部？
+### JINE 聊天质量
+1. "又发这个死猫表情... 你是不是觉得我没发现"、"哈？嘤嘤嘤的你是中毒了？" — 还是在点评对方行为（meta），虽然比旧版"你学我说话"好，但仍有痕迹。如何进一步消除？
+2. "手冰了\n过来\n抱着" 这组回复很好——身体依赖 + 索求。如何让更多回复有这种黏人感？
+3. 贴图使用偏多（15 条里 4 条纯贴图），是否合适？
+4. 整体风格是否接近了"地雷系 Menhera"？和游戏原版比差距在哪？
+
+### 推博质量
+5. 糖糖日记："银行卡剩两位数""想砸东西""吃药""阿P怎么还不回来" — 碎片化和阴暗感明显提升。还有哪些可以加强？
+6. 超天酱推文：还是比较标准偶像风（"爱你们哦✨""宝宝们要开心💕"）。如何让超天酱的推文也更有信息量、更像真人网红而不是模板？
+7. 超天酱和糖糖的反差：同一事件的两个视角，当前是否足够有冲击力？
+
+### 整体
+8. 还有什么 prompt 层面的改进建议？
