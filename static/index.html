@@ -2307,12 +2307,13 @@ function renderJineChatUnified(timelineItems) {
 
     container.innerHTML = html || '<div class="empty-state"><div class="icon"><img src="img/icon_ame.png"></div><p style="font-size:0.7rem;color:rgba(0,0,0,0.4);">糖糖还没发消息...</p></div>';
     container.scrollTop = container.scrollHeight;
-    // Show read receipts + scroll to bottom
-    container.scrollTop = container.scrollHeight;
+    // Scroll to bottom immediately
+    if (container.lastElementChild) container.lastElementChild.scrollIntoView({block: 'end', behavior: 'instant'});
+    // Show read receipts + re-scroll
     setTimeout(function() {
         var all = container.querySelectorAll('.jine-read-receipt');
         for (var rj = 0; rj < all.length; rj++) { all[rj].classList.add('show'); }
-        container.scrollTop = container.scrollHeight;  // scroll after receipts visible
+        if (container.lastElementChild) container.lastElementChild.scrollIntoView({block: 'end', behavior: 'instant'});
     }, 800);
 }
 function fetchJineChat() {
