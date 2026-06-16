@@ -1926,11 +1926,6 @@ function enterStaticMode() {
     // Note: JINE interactive section is skipped by renderFromCache() when isStaticMode is true
 }
 
-function updatePoolCount() {
-    var el = document.getElementById('f7-count');
-    if (el) el.textContent = poolRemaining > 0 ? '(' + poolRemaining + ' 条待发)' : '(空了..)';
-}
-
 // F7 Release — v4: frontend-owned pool, instant display, backend only for JINE msgs
 window.doRelease = function() {
     if (isStaticMode) return;
