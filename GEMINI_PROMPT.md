@@ -1,109 +1,56 @@
-# 项目总结 — 超天酱日常推文小站
+# JINE 聊天滚动问题 — 求助 Gemini
 
-> v3.3 架构稳定，下一步：公共部署。
-> 请 Gemini 帮助评估部署方案和 API 安全策略。
-
----
-
-## 一、项目现状
-
-### 架构
-```
-浏览器 ←→ Python http.server (127.0.0.1:8930) ←→ DeepSeek V4-pro API
-```
-
-- 前端：单个 `index.html`（纯 HTML/CSS/JS，零框架），~2300 行
-- 后端：Python 3.11，`http.server` 模块，5 个 `.py` 文件
-- API：DeepSeek V4-pro，通过 OpenAI SDK 调用
-- 数据：本地 JSON 文件 (`data/feed.json`)
-
-### API 端点
-
-| 方法 | 路径 | 功能 | 是否调用 DeepSeek |
-|------|------|------|:--:|
-| GET | `/api/timeline` | 获取时间线 | ❌ |
-| GET | `/api/jine/chat` | 获取 JINE 记录 | ❌ |
-| GET | `/api/stats` | 获取统计 | ❌ |
-| POST | `/api/generate` | 生成新批次推文 | ✅ 5-15s |
-| POST | `/api/release` | F7 戳一戳 | ✅ ~2s (偶尔触发生成则 15s) |
-| POST | `/api/jine/chat` | JINE 聊天回复 | ✅ 2-8s |
-| POST | `/api/clear` | 清空数据 | ❌ |
-
-所有 POST 端点当前**没有任何鉴权**，任何知道 URL 的人都能调用并消耗 DeepSeek 额度。
-
-### DeepSeek API 调用参数
-```python
-model: "deepseek-v4-pro"
-temperature: 0.85 (聊天) / 0.5 (F7释放) / 0.9 (推博)
-max_tokens: 300 (推博) / ~200 (聊天)
-```
-
-### 当前运行环境
-- Windows 11 + WSL2 (Ubuntu)
-- conda 环境 `deepseek_v4_api`
-- 本地 `127.0.0.1:8930`
+> 简洁版，只描述问题本身。
 
 ---
 
-## 二、部署诉求
+## 现象
 
-将项目部署到公网，任何人都能访问，但：
+JINE 聊天中，玩家发送消息后，聊天区没有自动滚到底部。已读标志和最新消息需要手动下滑才能看到。
 
-1. **API 不能被滥用** — 只有我自己的前端能调用生成端点
-2. **低成本** — 个人项目，不想花大钱
-3. **简单维护** — 不想引入复杂的基础设施
+## 已排除的原因
 
-## 三、具体问题
+1. **时序** — 试过 50ms/200ms/500ms 延迟滚动，无效
+2. **scrollIntoView** — 会触发外层页面滚动，不能直接用
+3. **flexbox min-height:0** — 已加，无效
+4. **overflow 未生效** — `.jine-chat-msgs` 有 `overflow-y: auto`
 
-### 3.1 部署架构
-推荐前端和后端分别放哪里？
+## 当前滚动代码
 
-选项：
-- A) 前端 GitHub Pages / Vercel + 后端放 AutoDL 云服务器（已有 RTX 4090）
-- B) 前端 Vercel + 后端用 Cloudflare Workers 中转
-- C) 全部放一台便宜的云服务器（阿里云/腾讯云轻量）
-- D) 其他方案？
+```javascript
+container.innerHTML = html || '...';
+container.scrollTop = container.scrollHeight;
+```
 
-AutoDL 是按量计费的 GPU 实例，平时关机省钱，但用户访问时需要开机——这会导致冷启动延迟。有没有更好的后端托管方案？
+其中 `container = document.getElementById('jine-chat-msgs')`。
 
-### 3.2 API 保护
-如何防止陌生人调用生成 API？
+## DOM 结构（JINE 标签页内）
 
-当前想的是：
-- 前端页面加载时，后端生成一个临时 token
-- 前端 POST 请求必须带这个 token
-- Token 有过期时间，定期刷新
+```
+.win95-outer (aspect-ratio: 266/388; max-height: 85vh; display: flex; flex-direction: column)
+  .win95-titlebar (flex-shrink: 0)
+  .win95-body (flex: 1; overflow-y: auto; padding: 0.8rem)
+    .jine-screen (height: 100%; display: flex; flex-direction: column; border: 2px solid)
+      .jine-titlebar (flex-shrink: 0)
+      .jine-chat-msgs (flex: 1; min-height: 0; overflow-y: auto; padding: 4px 0) ← container
+      .jine-typing (flex-shrink: 0; display: none → flex when typing)
+      .jine-interactive (flex-shrink: 0) — 贴图栏 + 输入框
+```
 
-问题：
-- 这个方案够不够？如果攻击者先加载页面拿到 token，再滥用呢？
-- 有没有更简单的方案？（比如 Cloudflare Tunnel + Access？）
-- 频率限制怎么做？Python 内存记录 IP 计数？还是接入外部服务？
+## 相关 CSS
 
-### 3.3 DeepSeek API 中转
-前端请求 → 后端 → DeepSeek，这个链路中后端需要加什么保护？
+```css
+.jine-screen { height: 100%; display: flex; flex-direction: column; }
+.jine-chat-msgs { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 0; }
+.win95-body { flex: 1; overflow-y: auto; padding: 0.8rem; }
+```
 
-- 是否需要请求队列？并发会不会导致 API 额度超限？
-- 是否需要缓存？同样的请求在短时间内多次调用？
-- DeepSeek 有没有并发限制？
+## 观察
 
-### 3.4 静态资源
-图片（游戏素材、webcam 帧）大概 200+ 个文件，总共 ~20MB。
-- 放 GitHub Pages / Vercel 够不够？
-- 还是需要对象存储（OSS/S3）？
+- 当用 `scrollIntoView` 时，不是 inner container 滚动，而是**整个页面**滚到顶部——说明 `.jine-chat-msgs` 可能根本没有形成独立的滚动容器
+- 玩家发消息后，手动可以正常滚动 `.jine-chat-msgs`（里面内容比容器高时可以看到滚动条）
+- `scrollTop = scrollHeight` 对 `.jine-chat-msgs` 好像无效
 
-### 3.5 HTTPS
-- AutoDL / 云服务器上怎么配 HTTPS？
-- 如果前端放 Vercel（自带 HTTPS），后端放云服务器（HTTP），会被浏览器阻止 mixed content 吗？
+## 问题
 
-### 3.6 其他风险
-- `data/feed.json` 包含生成的推文和 JINE 记录，需要备份吗？
-- 部署到公网还有哪些我没意识到的安全问题？
-
----
-
-## 四、约束
-
-- 个人项目，成本敏感
-- 不想引入数据库（目前 JSON 文件够用）
-- 不想引入前端框架
-- 维护越简单越好
+`container.scrollTop = container.scrollHeight` 为什么不起作用？如何让 JINE 聊天区在消息发送后自动滚到底部？
