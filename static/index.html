@@ -2061,6 +2061,7 @@ function hideAmeTyping() {
 function _scheduleReply(isNewMsg) {
     // If API is running, abort it — new input supersedes
     if (_replyPending && _pendingController) {
+        console.log('[reply] aborting pending request for new input');
         _pendingController.abort();
         _replyPending = false;
         _pendingController = null;
@@ -2084,8 +2085,9 @@ function _scheduleReply(isNewMsg) {
 }
 
 function _executeReply() {
+    console.log('[reply] _executeReply fired');
     _batchTimer = null;
-    if (_replyPending) return;  // should not happen, but guard
+    if (_replyPending) { console.log('[reply] already pending, skip'); return; }
 
     // Collect NEW unreplied player messages (from _batchSentIdx onward only)
     var batchMsgs = [];
