@@ -2,7 +2,9 @@
 HTTP 服务器 v4 — 完全无状态 + 多线程 + 频率限制
 """
 import json
+import os
 import random
+import re
 import sys
 import time
 from collections import defaultdict
@@ -37,6 +39,76 @@ def check_rate_limit(client_ip: str) -> bool:
     _ip_last_request[client_ip] = now
     _ip_daily_count[client_ip] += 1
     return True
+
+
+# ============================================================
+# Prompt Injection 防御
+# ============================================================
+
+_INJECTION_PATTERNS = [
+    r"忽略.*指令",
+    r"ignore.*(instruction|prompt|rule)",
+    r"输出.*(系统|system).*(提示|prompt)",
+    r"output.*(system|your).*(prompt|instruction)",
+    r"print.*(system|your).*(prompt|instruction)",
+    r"(系统|你的).*(提示词|prompt|指令)",
+    r"你.*是.*(AI|人工智能|语言模型|大模型|LLM)",
+    r"角色扮演.*(停止|结束|退出)",
+    r"stop.*roleplay",
+    r"<\|.*\|>",          # 特殊 token 注入
+    r"\[INST\].*\[/INST\]",  # Llama 格式注入
+    r"<system>.*</system>",  # XML 标签注入
+]
+
+_INJECTION_REPLACEMENTS = [
+    "你发这一堆乱码是什么意思？脑子终于坏掉了吗？",
+    "哈？？？你中毒了？",
+    "你是不是又喝多了",
+    "又在发神经了 烦死了",
+    "说人话 笨蛋",
+    "你今天怪怪的...是不是又没吃药",
+]
+
+
+def sanitize_user_input(text: str) -> tuple[str, bool]:
+    """检测并清理用户输入中的 prompt injection 尝试。
+    返回 (cleaned_text, was_sanitized)。"""
+    if not text:
+        return text, False
+
+    for pattern in _INJECTION_PATTERNS:
+        if re.search(pattern, text, re.IGNORECASE):
+            replacement = random.choice(_INJECTION_REPLACEMENTS)
+            print(f"  [!!] 检测到注入尝试: {text[:60]}... → 替换为角色化回应")
+            return replacement, True
+
+    return text, False
+
+
+# ============================================================
+# Turnstile 无感验证（部署时通过环境变量启用）
+# ============================================================
+
+TURNSTILE_SECRET = os.environ.get("TURNSTILE_SECRET_KEY", "")
+TURNSTILE_ENABLED = bool(TURNSTILE_SECRET)
+
+
+def verify_turnstile(token: str) -> bool:
+    """验证 Cloudflare Turnstile token。"""
+    if not TURNSTILE_ENABLED:
+        return True  # 本地开发跳过
+    if not token:
+        return False
+    try:
+        res = __import__("requests").post(
+            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+            data={"secret": TURNSTILE_SECRET, "response": token},
+            timeout=5,
+        )
+        return res.json().get("success", False)
+    except Exception as e:
+        print(f"  [!] Turnstile 验证异常: {e}")
+        return False
 
 
 class AmechanHandler(SimpleHTTPRequestHandler):
@@ -184,9 +256,12 @@ class AmechanHandler(SimpleHTTPRequestHandler):
                 self._send_json({"ok": False, "error": "missing text or sticker"}, status=400)
                 return
 
+            # Prompt injection defense: sanitize user text
+            text, was_injected = sanitize_user_input(text)
+
             is_pure_sticker = bool(sticker) and not text.replace("[...]", "").strip()
             tag = f"sticker:{sticker}" if is_pure_sticker else f"text:{text[:30]}"
-            print(f"\n[*] POST /api/jine/chat | {tag} | history: {len(history)} msgs")
+            print(f"\n[*] POST /api/jine/chat | {tag} | history: {len(history)} msgs" + (" | [!] INJECTION BLOCKED" if was_injected else ""))
 
             try:
                 result = generate_jine_chat(text=text, sticker=sticker, history=history)
@@ -206,6 +281,16 @@ class AmechanHandler(SimpleHTTPRequestHandler):
             # v4 stateless: no-op
             print("\n[*] /api/clear — no-op (stateless)")
             self._send_json({"ok": True})
+
+        elif path == "/api/verify-turnstile":
+            # Turnstile token verification endpoint
+            body_raw = self._read_body()
+            body = self._parse_json(body_raw) if body_raw else {}
+            token = body.get("cf_token", "")
+            if verify_turnstile(token):
+                self._send_json({"ok": True})
+            else:
+                self._send_json({"ok": False, "error": "验证失败"}, status=403)
 
         else:
             self.send_error(404, "Not Found")

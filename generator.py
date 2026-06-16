@@ -16,7 +16,7 @@ from openai import OpenAI
 
 from config import API_KEY, BASE_URL, MODEL, MAX_TOKENS, MAX_RETRIES
 from prompts import get_timeline_prompt, get_kangel_user_prompt, get_ame_user_prompt, get_jine_reply_prompt, get_jine_text_prompt, get_jine_release_prompt
-from prompts import KANGEL_SYSTEM_PROMPT, AME_SYSTEM_PROMPT, JINE_REPLY_SYSTEM, JINE_TEXT_REPLY_SYSTEM, JINE_RELEASE_SYSTEM, AME_STAMP_POOL
+from prompts import KANGEL_SYSTEM_PROMPT, AME_SYSTEM_PROMPT, JINE_REPLY_SYSTEM, JINE_TEXT_REPLY_SYSTEM, JINE_RELEASE_SYSTEM, AME_STAMP_POOL, STICKER_ACTION
 from feed import get_jine_chat  # stub: returns [] in stateless mode
 
 client = OpenAI(api_key=API_KEY, base_url=BASE_URL)
@@ -284,19 +284,19 @@ def generate_jine_chat(text: str = "", sticker: str = "", history: list[dict] | 
                 "sticker_7": ["你心里一定不是这么想的对吧", "不跟你过了！我有阿宅们宠，我要去找阿宅了再见……算了还是阿P好"],
                 "sticker_8": ["我是不会原谅你的 绝对不会", "再不肯好好听我说话咱们就分手 没有啦……我不想分手"],
             }
-            _ai_fallbacks = ["嗯", "哼", "笨蛋", "揍你哦!", "知道了", "算了", "...", "哦", "好哦"]
+            _ai_fallbacks = ["嗯", "烦死了", "算了", "...", "哦", "好哦", "知道了", "然后呢"]
             if sticker in _sticker_fallbacks and random.random() < 0.4:
                 text = random.choice(_sticker_fallbacks[sticker])
             else:
                 text = random.choice(_ai_fallbacks)
         else:
             _game_lines = [
-                "嘿嘿！就是这样", "揍你哦！", "你就这张嘴甜", "一丁点诚意都感受不到",
+                "嘿嘿！就是这样", "你就这张嘴甜", "一丁点诚意都感受不到",
                 "讨厌你的回答！", "看到你这张脸我就来气！", "要不……就原谅你吧",
                 "我是不会原谅你的 绝对不会", "你懂就好", "一脸发自内心的冷漠啊你",
                 "下次再这样，我就拉黑你。",
             ]
-            _ai_lines = ["嗯", "知道了", "然后呢", "哼", "哦", "说完了？", "...", "好哦", "笨蛋"]
+            _ai_lines = ["嗯", "知道了", "然后呢", "烦死了", "哦", "说完了？", "...", "好哦", "算了"]
             if random.random() < 0.35:
                 text = random.choice(_game_lines)
             else:
@@ -345,7 +345,7 @@ def generate_jine_reply(sticker_id: str) -> tuple[str, str | None]:
             "sticker_7": ["你心里一定不是这么想的对吧", "不跟你过了！我有阿宅们宠，我要去找阿宅了再见……算了还是阿P好"],
             "sticker_8": ["我是不会原谅你的 绝对不会", "再不肯好好听我说话咱们就分手 没有啦……我不想分手"],
         }
-        _ai_fallbacks = ["嗯", "哼", "笨蛋", "揍你哦!", "知道了", "算了", "...", "哦", "好哦"]
+        _ai_fallbacks = ["嗯", "烦死了", "算了", "...", "哦", "好哦", "知道了", "然后呢"]
         if sticker_id in _sticker_fallbacks and random.random() < 0.4:
             text = random.choice(_sticker_fallbacks[sticker_id])
         else:
@@ -380,12 +380,12 @@ def generate_jine_text_reply(player_text: str) -> tuple[str, str | None]:
     except Exception as e:
         print(f"  [X] JINE 文字回复生成失败: {e}")
         _game_lines = [
-            "嘿嘿！就是这样", "揍你哦！", "你就这张嘴甜", "一丁点诚意都感受不到",
+            "嘿嘿！就是这样", "你就这张嘴甜", "一丁点诚意都感受不到",
             "讨厌你的回答！", "看到你这张脸我就来气！", "要不……就原谅你吧",
             "我是不会原谅你的 绝对不会", "你懂就好", "一脸发自内心的冷漠啊你",
             "下次再这样，我就拉黑你。",
         ]
-        _ai_lines = ["嗯", "知道了", "然后呢", "哼", "哦", "说完了？", "...", "好哦", "笨蛋"]
+        _ai_lines = ["嗯", "知道了", "然后呢", "烦死了", "哦", "说完了？", "...", "好哦", "算了"]
         if random.random() < 0.35:
             text = random.choice(_game_lines)
         else:
