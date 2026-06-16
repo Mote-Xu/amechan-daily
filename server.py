@@ -24,8 +24,8 @@ from generator import generate_timeline, generate_jine_chat, generate_jine_relea
 # ============================================================
 _ip_last_request: dict[str, float] = defaultdict(float)
 _ip_daily_count: dict[str, int] = defaultdict(int)
-RATE_INTERVAL = 5       # 同一 IP 两次请求最小间隔（秒）
-RATE_DAILY_CAP = 100    # 同一 IP 每天最大 POST 次数
+RATE_INTERVAL = 2       # 同一 IP 两次请求最小间隔（秒）
+RATE_DAILY_CAP = 200    # 同一 IP 每天最大 POST 次数
 
 
 def check_rate_limit(client_ip: str) -> bool:
