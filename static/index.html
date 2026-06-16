@@ -978,7 +978,6 @@ var _batchSentIdx = 0;           // last index sent to API (prevents re-processi
 var _f7Timers = [];              // pending F7 JINE message timers (cleared on save switch)
 
 function _cancelF7Timers() {
-    console.log('[F7] cancelF7Timers: clearing', _f7Timers.length, 'timers');
     for (var i = 0; i < _f7Timers.length; i++) clearTimeout(_f7Timers[i]);
     _f7Timers = [];
 }
@@ -2061,7 +2060,6 @@ function hideAmeTyping() {
 function _scheduleReply(isNewMsg) {
     // If API is running, abort it — new input supersedes
     if (_replyPending && _pendingController) {
-        console.log('[reply] aborting pending request for new input');
         _pendingController.abort();
         _replyPending = false;
         _pendingController = null;
@@ -2085,9 +2083,8 @@ function _scheduleReply(isNewMsg) {
 }
 
 function _executeReply() {
-    console.log('[reply] _executeReply fired');
     _batchTimer = null;
-    if (_replyPending) { console.log('[reply] already pending, skip'); return; }
+    if (_replyPending) return;
 
     // Collect NEW unreplied player messages (from _batchSentIdx onward only)
     var batchMsgs = [];
