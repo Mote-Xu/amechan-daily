@@ -40,14 +40,16 @@
 | JINE meta点评("死猫表情") | sticker→动作翻译 |
 | Pool太小 | 5→10条，静默补货 |
 | 已读标志闪烁 | 状态追踪 |
+| 已读延迟 | 从API回复后→batch窗口开始时标记_replied |
 
 ### 残余问题
-1. JINE 上下文割裂：糖糖不知道自己发过的 timeline 内容（如发了"芥末冰激凌"推文但聊天中毫不知情），需前端传最近 timeline 进 prompt
-2. Turnstile 前端集成（后端框架已就绪）
-3. 频率限制未启用
-4. 弹幕 CSS 偶尔消失
-5. 老电脑 cloudflared 待改为服务自启（当前手动窗口）
-6. 重启自恢复全链路未验证
+1. **公网 JINE 故障**：本地 localhost:8930 JINE 正常，但通过 amechan.mote-pal.xyz 发消息无响应或 502。可能 cloudflared 用 IPv6 `[::1]` 连 server 失败——config.yml 已改 `127.0.0.1` 待验证
+2. **JINE 上下文割裂**：糖糖不知自己 timeline 发过的内容（发了"芥末冰激凌"推后在聊天中毫不知情），需前端传最近 timeline 进 prompt
+3. **老电脑网络不稳定**：tunnel 断连频繁，cloudflared 非服务自启
+4. Turnstile 前端集成（后端框架已就绪）
+5. 频率限制未启用
+6. 弹幕 CSS 偶尔消失
+7. 重启自恢复全链路未验证
 
 ### 老电脑运维
 - NSSM 管理 server.py（自启 + 崩溃自动重启）
