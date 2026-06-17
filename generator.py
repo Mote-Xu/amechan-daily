@@ -191,6 +191,25 @@ def _calc_stress_from_history(history: list[dict]) -> int:
     return max(0, min(100, int(stress)))
 
 
+# 冷感表达的替换池（避免"手冰"模板化）
+_COLD_ALTERNATIVES = [
+    "好冷", "冷死了", "被窝里全是冷的", "一个人冷得发抖",
+    "脚也好冷", "全身都在发抖", "冷到骨头里了",
+    "没有你的被窝好冷", "空调开太大了...冷",
+    "冷得睡不着", "越来越冷了",
+]
+
+
+def _sanitize_template_phrases(text: str) -> str:
+    """后处理：替换模型顽固输出的模板化短语。"""
+    if not text:
+        return text
+    import re as _re
+    # 替换"手冰了/手好冰/手还冰着"等变体
+    text = _re.sub(r'手[还也]?[好]?冰[着了呢]?', lambda m: random.choice(_COLD_ALTERNATIVES), text)
+    return text
+
+
 def _parse_stamp_reply(raw: str) -> tuple[str, str | None]:
     """从 AI 回复中解析 [stamp: xxx] 标记。
     返回 (text_reply, stamp_id | None)。
@@ -260,6 +279,7 @@ def generate_jine_chat(text: str = "", sticker: str = "", history: list[dict] | 
         raw = raw.strip().strip('"').strip("'").strip('"').strip('「').strip('」')
 
         reply_text, ame_sticker = _parse_stamp_reply(raw)
+        reply_text = _sanitize_template_phrases(reply_text)
 
         max_len = 60 if is_pure_sticker else 80
         if reply_text and len(reply_text) > max_len:
@@ -429,6 +449,7 @@ def generate_jine_release_msgs(poke_text: str, diary_text: str = "", count: int 
             for item in data:
                 if isinstance(item, str) and item.strip():
                     text = item.strip().strip('"').strip("'").strip('「').strip('」')
+                    text = _sanitize_template_phrases(text)
                     if len(text) > 60:
                         text = text[:60] + "..."
                     msgs.append({"reply": text, "ame_sticker": None})

@@ -76,6 +76,21 @@ body {
 /* TWEET CARDS */
 .tweet-pair { margin-bottom:1rem; }
 .tweet-pair:last-child { margin-bottom:0; }
+
+/* F7 发布动画 */
+.posting-indicator {
+    text-align: center; padding: 0.5rem; color: var(--pink);
+    font-size: 0.7rem; animation: postingPulse 0.6s ease-in-out infinite;
+    border: 1px dashed var(--pink); margin-bottom: 0.5rem; opacity: 0.8;
+}
+@keyframes postingPulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
+.tweet-pair.fresh {
+    animation: slideInPost 0.5s ease-out;
+}
+@keyframes slideInPost {
+    from { opacity: 0; transform: translateY(-20px); max-height: 0; margin-bottom: 0; }
+    to   { opacity: 1; transform: translateY(0); }
+}
 .batch-divider { text-align:center; color:var(--purple); font-size:0.6rem; margin:0.8rem 0 0.5rem; opacity:0.6; }
 .batch-divider span { background:rgba(155,89,182,0.15); padding:2px 10px; border:1px dashed var(--purple); }
 .tweet-topic { text-align:center; color:var(--purple); font-size:0.6rem; margin-bottom:0.3rem; opacity:0.6; }
@@ -218,8 +233,10 @@ body {
     color: #FFFFFF;
     padding: 0 4px 6px 0;
     text-shadow: 0 1px 0 rgba(0,0,0,0.15);
-    opacity: 0.85;
+    opacity: 0;
+    transition: opacity 0.5s ease;
 }
+.jine-read-receipt.show { opacity: 0.85; }
 
 /* 日期分隔条 */
 .jine-date-divider {
@@ -833,7 +850,6 @@ body {
 .webcam-state-menu .state-opt.current{color:var(--pink);font-weight:bold;}
 .webcam-state-menu .state-opt.current::before{content:"● ";color:#00ff88;}
 .pixel-cat,.ame-pixel{display:none;}.sticker-png.error~.pixel-cat,.sticker-png.error~.ame-pixel{display:block;}
-.jine-read-receipt{text-align:right;font-size:10px;color:#FFFFFF;padding:0 4px 6px 0;text-shadow:0 1px 0 rgba(0,0,0,0.15);opacity:0;transition:opacity 0.5s ease;}.jine-read-receipt.show{opacity:0.85;}
 </style>
 </head>
 <body class="crt">
@@ -978,6 +994,7 @@ var _batchStartIdx = -1;         // index of first msg when batch window started
 var _batchWindowMs = 0;          // current window duration (random 300-1200ms)
 var _batchSentIdx = 0;           // last index sent to API (prevents re-processing)
 var _f7Timers = [];              // pending F7 JINE message timers (cleared on save switch)
+var _shownReceipts = {};          // tracks which messages already showed "已读"
 
 function _cancelF7Timers() {
     for (var i = 0; i < _f7Timers.length; i++) clearTimeout(_f7Timers[i]);
@@ -1911,10 +1928,9 @@ function updatePoolCount() {
     var el = document.getElementById('f7-count');
     if (el) el.textContent = info.pairs > 0 ? '(' + info.pairs + ' 次可用)' : '(空了..)';
     poolRemaining = info.pairs;
-    // Auto-refill when low
-    if (info.pairs < 2 && cachedTimeline.length > 0 && !_isRefilling) {
-        // Delay auto-refill to avoid colliding with user's first actions
-        setTimeout(function() { _refillPool(false); }, 3000);
+    // Auto-refill proactively — refill when ≤2 pairs left (4→2→refill→4)
+    if (info.pairs <= 2 && !_isRefilling) {
+        _refillPool(false);
     }
 }
 
@@ -1943,17 +1959,40 @@ window.doRelease = function() {
         btn.classList.remove('shaking');
         btn.disabled = false;
         btn.textContent = '[ F7 ] 戳一戳 ✨';
-        alert('超天酱正在构思推文，请稍等几秒再戳哦！');
-        _refillPool(false);
+        // Silent refill — no alert, just refill in background
+        if (!_isRefilling) _refillPool(false);
         updatePoolCount();
         return;
     }
     console.log('[doRelease] released from localStorage:', entries.map(function(e){return e.layer;}));
 
-    // Render immediately from local data
+    // Show posting indicator with dynamic feel
+    var oldLen = cachedTimeline.length;
     updateSaveIndicator();
     cachedTimeline = SaveManager.getTimeline();
-    renderFromCache();
+    var newLen = cachedTimeline.length;
+
+    // Posting indicator at top of feed
+    if (ACTIVE_TAB !== 'jine') {
+        var postingDiv = document.createElement('div');
+        postingDiv.className = 'posting-indicator';
+        postingDiv.textContent = '📡 发布中...';
+        CONTAINER.insertBefore(postingDiv, CONTAINER.firstChild);
+    }
+
+    // Delay render for dynamic posting feel, then slide in new items
+    setTimeout(function() {
+        renderFromCache();
+        // Mark new items with fresh animation
+        if (ACTIVE_TAB !== 'jine') {
+            var pairs = CONTAINER.querySelectorAll('.tweet-pair');
+            var freshCount = Math.min(newLen - oldLen, pairs.length);
+            for (var fi = 0; fi < freshCount; fi++) {
+                pairs[fi].classList.add('fresh');
+            }
+        }
+    }, 600);
+
     btn.textContent = '已发送! ✨';
     btn.classList.remove('shaking');
     btn.disabled = false;
@@ -2265,6 +2304,7 @@ function renderJineChatUnified(timelineItems) {
 
     var html = '';
     var lastMins = -99;
+    var newReceiptKeys = [];  // collect keys for receipts that need staggered animation
     for (var i = 0; i < all.length; i++) {
         var m = all[i];
         var mins = toMins(m.time);
@@ -2295,11 +2335,23 @@ function renderJineChatUnified(timelineItems) {
             break;
         case 'p-sticker':
             html += '<div class="jine-msg p"><div class="sticker-content">' + stickerHTML(m.sticker) + '</div></div>';
-            html += '<div class="jine-read-receipt">已读</div>';
+            var keyS = m.time + '|s|' + (m.sticker || '');
+            if (_shownReceipts[keyS]) {
+                html += '<div class="jine-read-receipt show" style="opacity:0.85">已读</div>';
+            } else {
+                html += '<div class="jine-read-receipt" data-rkey="' + keyS + '">已读</div>';
+                newReceiptKeys.push(keyS);
+            }
             break;
         case 'p-text':
             html += '<div class="jine-msg p-text"><div class="bubble player-text-bubble">' + esc(m.text) + '</div></div>';
-            html += '<div class="jine-read-receipt">已读</div>';
+            var keyT = m.time + '|t|' + (m.text || '').slice(0, 15);
+            if (_shownReceipts[keyT]) {
+                html += '<div class="jine-read-receipt show" style="opacity:0.85">已读</div>';
+            } else {
+                html += '<div class="jine-read-receipt" data-rkey="' + keyT + '">已读</div>';
+                newReceiptKeys.push(keyT);
+            }
             break;
         case 'ame-sticker':
             html += '<div class="jine-msg ame-sticker"><div class="jine-avatar"><img src="img/icon_ame.png"></div><div><div class="jine-bubble stamp-msg">' + stickerHTML(m.sticker) + '</div></div></div>';
@@ -2311,10 +2363,20 @@ function renderJineChatUnified(timelineItems) {
     setTimeout(function() {
         container.scrollTop = container.scrollHeight;
     }, 50);
-    setTimeout(function() {
-        var all = container.querySelectorAll('.jine-read-receipt');
-        for (var rj = 0; rj < all.length; rj++) { all[rj].classList.add('show'); }
-    }, 800);
+    // Stagger "已读" only for new receipts
+    if (newReceiptKeys.length > 0) {
+        setTimeout(function() {
+            for (var rj = 0; rj < newReceiptKeys.length; rj++) {
+                (function(key, delay) {
+                    setTimeout(function() {
+                        var el = container.querySelector('.jine-read-receipt[data-rkey="' + key + '"]');
+                        if (el) { el.classList.add('show'); }
+                        _shownReceipts[key] = true;
+                    }, delay);
+                })(newReceiptKeys[rj], rj * 400);
+            }
+        }, 800);
+    }
 }
 function fetchJineChat() {
     jineChatMsgs = SaveManager.getJineChat();
