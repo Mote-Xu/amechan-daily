@@ -252,6 +252,7 @@ class AmechanHandler(SimpleHTTPRequestHandler):
             text = body.get("text", "")
             sticker = body.get("sticker", "")
             history = body.get("history", [])
+            recent_posts = body.get("recent_posts", [])
 
             if not text and not sticker:
                 self._send_json({"ok": False, "error": "missing text or sticker"}, status=400)
@@ -262,10 +263,11 @@ class AmechanHandler(SimpleHTTPRequestHandler):
 
             is_pure_sticker = bool(sticker) and not text.replace("[...]", "").strip()
             tag = f"sticker:{sticker}" if is_pure_sticker else f"text:{text[:30]}"
-            print(f"\n[*] POST /api/jine/chat | {tag} | history: {len(history)} msgs" + (" | [!] INJECTION BLOCKED" if was_injected else ""))
+            print(f"\n[*] POST /api/jine/chat | {tag} | history: {len(history)} msgs | posts: {len(recent_posts)}" + (" | [!] INJECTION BLOCKED" if was_injected else ""))
 
             try:
-                result = generate_jine_chat(text=text, sticker=sticker, history=history)
+                result = generate_jine_chat(text=text, sticker=sticker, history=history,
+                                            recent_posts=recent_posts)
                 resp = {
                     "ok": True,
                     "reply": result.get("reply", ""),

@@ -244,7 +244,26 @@ def _format_history_for_prompt(history: list[dict]) -> list[str]:
     return lines
 
 
-def generate_jine_chat(text: str = "", sticker: str = "", history: list[dict] | None = None) -> dict:
+def _make_timeline_context(recent_posts: list[dict]) -> str:
+    """将最近的 timeline 条目格式化为 prompt 可用的上下文数据。
+    放在 user prompt 开头，让 AI 知道自己发过什么，不修改 prompts.py 的人设。"""
+    if not recent_posts:
+        return ""
+    lines = []
+    for p in recent_posts[:15]:
+        layer = p.get("layer", "?")
+        text = p.get("text", "")[:80]
+        if layer == "poketter":
+            lines.append(f"* [超天酱推文] {text}")
+        elif layer == "diary":
+            lines.append(f"* [糖糖日记] {text}")
+    if not lines:
+        return ""
+    return "\n[系统数据：你最近在 Poketter 上发布的内容]\n（以下是你自己刚发的，聊天时保持记忆，不要假装不知道）\n" + "\n".join(lines) + "\n[/系统数据]\n"
+
+
+def generate_jine_chat(text: str = "", sticker: str = "", history: list[dict] | None = None,
+                       recent_posts: list[dict] | None = None) -> dict:
     """
     v3.3 统一入口：根据玩家消息生成糖糖的 JINE 回复。
     - 纯贴图 → Few-Shot 贴图 prompt，温度 0.85，~50% 概率回贴图
@@ -256,6 +275,8 @@ def generate_jine_chat(text: str = "", sticker: str = "", history: list[dict] | 
     """
     if history is None:
         history = []
+    if recent_posts is None:
+        recent_posts = []
 
     is_pure_sticker = bool(sticker) and not text.replace("[...]", "").strip()
     stress = _calc_stress_from_history(history)
@@ -265,13 +286,18 @@ def generate_jine_chat(text: str = "", sticker: str = "", history: list[dict] | 
         # Pure sticker → Few-Shot prompt. AI decides text/sticker/both (~50% sticker)
         prompt = get_jine_reply_prompt(sticker, recent, stress)
         temperature = 0.85
-        print(f"[*] JINE 贴图回复 | sticker: {sticker} | stress: {stress}")
+        print(f"[*] JINE 贴图回复 | sticker: {sticker} | stress: {stress} | posts: {len(recent_posts)}")
     else:
         # Text or mixed → text prompt. v3.3: raised for richer vocabulary
         effective_text = text if text else f"[{sticker}]"
         prompt = get_jine_text_prompt(effective_text, recent, stress)
         temperature = 0.85  # v3.3: raised from 0.7 to avoid mode collapse
-        print(f"[*] JINE 文字回复 | text: {effective_text[:30]}... | stress: {stress} | temp: {temperature}")
+        print(f"[*] JINE 文字回复 | text: {effective_text[:30]}... | stress: {stress} | temp: {temperature} | posts: {len(recent_posts)}")
+
+    # v4.3: 注入 timeline 上下文到 prompt 开头（不修改 prompts.py）
+    timeline_ctx = _make_timeline_context(recent_posts)
+    if timeline_ctx:
+        prompt = timeline_ctx + "\n" + prompt
 
     try:
         system = JINE_REPLY_SYSTEM if is_pure_sticker else JINE_TEXT_REPLY_SYSTEM

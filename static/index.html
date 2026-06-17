@@ -752,8 +752,8 @@ body {
 @keyframes livePulse { 0%,100%{opacity:1;box-shadow:0 0 4px red} 50%{opacity:0.3;box-shadow:0 0 12px red} }
 .live-text { color:red; font-size:0.75rem; font-weight:bold; }
 .live-viewers { color:#ccc; font-size:0.7rem; }
-.danmaku-bar { height:72px; width:100%; overflow:hidden; position:relative; z-index:10; margin-bottom:1rem; border-bottom:1px solid #333; cursor:default; background:rgba(0,0,0,0.35); border-top:1px solid rgba(255,255,255,0.05); }
-.danmaku-wrap { position:absolute; white-space:nowrap; display:flex; align-items:center; gap:6px; will-change:left; padding:3px 6px; border-radius:3px; left:100%; animation:scrollR 16s linear infinite; }
+.danmaku-bar { height:72px; width:100%; overflow:hidden; position:relative; z-index:10; margin-bottom:1rem; border-bottom:1px solid #333; cursor:default; background:rgba(0,0,0,0.35); border-top:1px solid rgba(255,255,255,0.05); contain:layout style paint; }
+.danmaku-wrap { position:absolute; white-space:nowrap; display:flex; align-items:center; gap:6px; padding:3px 6px; border-radius:3px; left:0; transform:translateX(100vw); animation:scrollR 16s linear infinite; }
 .danmaku-wrap[data-color="white"]:hover { animation-play-state:paused !important; cursor:pointer; }
 .danmaku-wrap[data-color="colored"] { pointer-events:none; }
 .danmaku-text { font-size:0.8rem; line-height:1.4; pointer-events:none; }
@@ -765,7 +765,7 @@ body {
 .danmaku-trash { display:none; width:18px; height:20px; cursor:pointer; opacity:0.7; flex-shrink:0; pointer-events:auto; }
 .danmaku-wrap[data-color="white"] .danmaku-trash { display:inline-block; }
 .danmaku-trash:hover { opacity:1; transform:scale(1.2); }
-@keyframes scrollR { from { left:100%; } to { left:-300px; } }
+@keyframes scrollR { from { transform:translateX(100vw); } to { transform:translateX(-100%); } }
 /* pixel trash can drawn with CSS */
 .pixel-trash { display:inline-block; width:16px; height:18px; image-rendering:pixelated; position:relative; }
 .pixel-trash::before { content:''; position:absolute; top:0;left:2px;width:12px;height:3px;background:#999;
@@ -835,7 +835,7 @@ body {
 .bgm-track-name{max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#ccc;font-size:0.6rem;padding:0 4px;}
 .bgm-vol{color:#888;font-size:0.55rem;margin-left:2px;}
 
-.webcam-container{position:fixed;left:20px;top:80px;z-index:100;width:480px;pointer-events:none;}
+.webcam-container{position:fixed;left:20px;top:80px;z-index:100;width:430px;pointer-events:none;}
 .webcam-container .webcam-frame,.webcam-container .webcam-titlebar,.webcam-container #webcam-canvas,.webcam-container #webcam-state-menu{pointer-events:auto;}
 .webcam-frame{width:100%;position:relative;border:2px solid #fff;border-right-color:#888;border-bottom-color:#888;box-shadow:2px 2px 0 #000;}
 .webcam-frame .window-chrome{width:100%;display:block;}
@@ -1878,7 +1878,7 @@ function fetchTimeline() {
 
     if (cachedTimeline.length === 0) {
         console.log('[fetchTimeline] feed empty — triggering initial generation...');
-        if (firstLoad) {
+        if (firstLoad && ACTIVE_TAB !== 'jine') {
             CONTAINER.innerHTML = '<div class="empty-state"><div class="icon"><img src="img/icon_cho.png"></div><p>超天酱正在准备第一条推文...<br><span style="font-size:0.55rem;color:#555;">请稍等~</span></p></div>';
         }
         _refillPool(true);
@@ -2170,10 +2170,23 @@ function _executeReply() {
     _pendingController = new AbortController();
     var fetchTimeout = setTimeout(function() { if (_pendingController) _pendingController.abort(); }, 20000);
 
+    // v4.3: 收集最近 timeline 条目，让糖糖知道自己发过什么
+    var recentPosts = [];
+    if (cachedTimeline && cachedTimeline.length > 0) {
+        var seen = {};
+        for (var rp = 0; rp < Math.min(cachedTimeline.length, 15); rp++) {
+            var e = cachedTimeline[rp];
+            if (!e.text || seen[e.text]) continue;
+            seen[e.text] = true;
+            recentPosts.push({layer: e.layer, text: e.text, time: e.time || ''});
+        }
+    }
+
     var requestBody = {
         text: lastTexts.join(' | '),
         sticker: lastSticker || '',
-        history: recentMsgs
+        history: recentMsgs,
+        recent_posts: recentPosts
     };
 
     fetch(API + '/api/jine/chat', {
@@ -2305,8 +2318,8 @@ function renderJineChatUnified(timelineItems) {
     var chatMsgs = jineChatMsgs;
     chatMsgs.forEach(function(msg) {
         var t = msg.time || '';
-        if (msg.sticker)     all.push({ type: 'p-sticker', time: t, sticker: msg.sticker, _replied: msg._replied });
-        if (msg.player_text) all.push({ type: 'p-text',    time: t, text: msg.player_text, _replied: msg._replied });
+        if (msg.sticker)     all.push({ type: 'p-sticker', time: t, sticker: msg.sticker, _read: msg._read || msg._replied });
+        if (msg.player_text) all.push({ type: 'p-text',    time: t, text: msg.player_text, _read: msg._read || msg._replied });
         if (msg.recall)      all.push({ type: 'recall',    time: t });
         if (msg.ame_sticker) all.push({ type: 'ame-sticker', time: t, sticker: msg.ame_sticker });
         if (msg.reply)       all.push({ type: 'ame-text',  time: t, text: msg.reply });
@@ -2348,7 +2361,7 @@ function renderJineChatUnified(timelineItems) {
             break;
         case 'p-sticker':
             html += '<div class="jine-msg p"><div class="sticker-content">' + stickerHTML(m.sticker) + '</div></div>';
-            if (m._replied) {
+            if (m._read) {
                 var keyS = m.time + '|s|' + (m.sticker || '');
                 if (_shownReceipts[keyS]) {
                     html += '<div class="jine-read-receipt show" style="opacity:0.85">已读</div>';
@@ -2360,7 +2373,7 @@ function renderJineChatUnified(timelineItems) {
             break;
         case 'p-text':
             html += '<div class="jine-msg p-text"><div class="bubble player-text-bubble">' + esc(m.text) + '</div></div>';
-            if (m._replied) {
+            if (m._read) {
                 var keyT = m.time + '|t|' + (m.text || '').slice(0, 15);
                 if (_shownReceipts[keyT]) {
                     html += '<div class="jine-read-receipt show" style="opacity:0.85">已读</div>';
@@ -2413,7 +2426,7 @@ window.sendText = function() {
     var now = new Date();
     var timeStr = ('0'+now.getHours()).slice(-2) + ':' + ('0'+now.getMinutes()).slice(-2);
 
-    var playerMsg = { time: timeStr, player_text: text, reply: '', recall: false };
+    var playerMsg = { time: timeStr, player_text: text, reply: '', recall: false, _read: true };
     jineChatMsgs.push(playerMsg);
     SaveManager.addJineMessage(playerMsg);
     if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
@@ -2438,7 +2451,7 @@ function sendSticker(stickerId) {
 
     var now = new Date();
     var timeStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
-    var stickerMsg = { time: timeStr, sticker: stickerId, reply: '', recall: false };
+    var stickerMsg = { time: timeStr, sticker: stickerId, reply: '', recall: false, _read: true };
     jineChatMsgs.push(stickerMsg);
     SaveManager.addJineMessage(stickerMsg);
     if (ACTIVE_TAB === 'jine') renderJineChatMsgs();

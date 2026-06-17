@@ -77,5 +77,5 @@ STATIC_DIR = ROOT_DIR / "static"
 MAX_FEED_ITEMS = 50
 
 # --- 服务器配置 ---
-HOST = "127.0.0.1"
+HOST = "0.0.0.0"
 PORT = 8930
