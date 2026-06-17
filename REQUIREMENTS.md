@@ -97,4 +97,5 @@
 
 1. 弹幕 CSS 偶尔消失
 2. webcam 部分帧缺失 (handspinner_004, tv_005, voice_training_007)
-3. 部署：Turnstile前端集成 + 限频启用 + 老电脑迁移
+3. 部署：Turnstile前端集成 + 限频启用 + 老电脑重启验证
+4. JINE 上下文割裂：糖糖不知道自己发过的 timeline 内容（如发了"芥末冰激凌"推但聊天中毫不知情），需前端传最近 timeline 给后端拼进 prompt
