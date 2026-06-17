@@ -19,7 +19,7 @@
 | C2 | 推博 Feed | 🟢 | 超天酱禁止空洞模板(必须含具体微小事件)；糖糖日记强制无逻辑重复+核心词汇；timeline三层表里反差要求；hidden_pool扩至10条 |
 | C3 | 弹幕 | 🟢 | 应援 30+吐槽 39 |
 
-## P2：公网部署 🟡 进行中
+## P2：公网部署 🟢 已上线（2026-06-17）
 
 | ID | 需求 | 状态 |
 |----|------|:--:|
@@ -30,25 +30,39 @@
 | S5 | HTTPS | ✅ Cloudflare Tunnel 免费提供 |
 | S6 | API Key 保护 | ✅ 后端→DeepSeek直连，前端不可见 |
 | S7 | 固定域名 | ✅ `amechan.mote-pal.xyz` (NameSilo $3/年 + Cloudflare Named Tunnel) |
-| S8 | 7×24 服务器 | 🟡 当前本机，待迁移老家 i5-6500 8GB |
+| S8 | 7×24 服务器 | ✅ 老家 i5-6500 8GB Win10 · server.py(NSSM) + cloudflared(手动+TaskScheduler) |
+| S9 | 远程运维 | ✅ AnyDesk 无人值守 |
 
 ### 当前部署架构
 
 ```
-用户 → https://amechan.mote-pal.xyz → Cloudflare → Named Tunnel → :8930
-                                                                ↑
-                                                当前：本机（关机=断）
-                                                计划：老家老电脑（7×24）
+用户 → https://amechan.mote-pal.xyz → Cloudflare → Named Tunnel → 老家电脑:8930
+                                                                   i5-6500 8GB Win10
+                                                                   server.py (NSSM 服务)
+                                                                   cloudflared (手动 + Task Scheduler)
 ```
 
 部署方案：Cloudflare Named Tunnel（固定域名 + 免费 HTTPS + 不需要公网 IP）。
 
-### 老电脑迁移待办
+### 老电脑运维
 
-- [ ] 装 Python 3 + openai + python-dotenv
-- [ ] 传项目文件
-- [ ] 复制 Tunnel 凭证（51cc70a8-*.json + config.yml）
-- [ ] 设开机自启 + 禁止休眠 + 禁止自动更新
+| 操作 | 命令 |
+|------|------|
+| server 状态 | `nssm.exe status amechan-server` |
+| 重启 server | `nssm.exe restart amechan-server` |
+| 启动 tunnel | `cloudflared.exe tunnel run amechan` |
+| 更新代码 | AnyDesk 传文件 或 `git pull` + 重启 server |
+
+### 残余问题
+
+- cloudflared NSSM 服务僵尸化（SERVICE_PAUSED），暂用手动+Task Scheduler
+- 需重启验证全链路自恢复
+- 暑假换 Ubuntu Server → systemd 替代 NSSM
+- [x] 装 Python 3 + openai + python-dotenv
+- [x] 传项目文件
+- [x] 复制 Tunnel 凭证
+- [x] 设开机自启 (server: NSSM, tunnel: Task Scheduler)
+- [x] 禁止休眠 + 自动登录
 - [ ] 重启测试全链路
 
 ### 部署后待办

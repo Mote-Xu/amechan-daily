@@ -86,13 +86,14 @@ XML 标签结构，地雷系 (Menhera) 人设，temp 0.85：
 
 ## 部署
 
-### 线上
+### 线上（2026-06-17 已上线）
 
 ```
-用户 → https://amechan.mote-pal.xyz → Cloudflare → Tunnel → :8930
+用户 → https://amechan.mote-pal.xyz → Cloudflare → Tunnel → 老家电脑:8930
                                                           ↑
-                                         当前：本机（关机=断）
-                                         计划：老家 i5-6500 8GB 7×24
+                                                   i5-6500 8GB Win10
+                                                   server.py (NSSM 服务)
+                                                   cloudflared (手动窗口/Task Scheduler)
 ```
 
 | 项目 | 状态 |
@@ -100,18 +101,33 @@ XML 标签结构，地雷系 (Menhera) 人设，temp 0.85：
 | 域名 | ✅ `mote-pal.xyz` (NameSilo $3/年) |
 | DNS | ✅ Cloudflare 托管 |
 | HTTPS | ✅ Cloudflare 免费提供 |
-| Tunnel | ✅ Named Tunnel `amechan` (UUID: 51cc70a8...) |
-| 服务器 | ⏳ 当前本机，待迁移老电脑 |
+| Tunnel | ✅ Named Tunnel `amechan` |
+| 服务器 | ✅ 老家 i5-6500 8GB，AnyDesk 远程管理 |
+| server.py 自启 | ✅ NSSM 服务 (崩溃自动重启) |
+| cloudflared 自启 | ⚠️ 当前手动窗口 + Task Scheduler 兜底 |
+| 自动登录 | ✅ netplwiz |
+| 禁止休眠 | ✅ powercfg |
 
-### Tunnel 凭证（复制到老电脑即可接管）
+### 老电脑运维
 
-| 文件 | 路径 |
+| 操作 | 命令 |
 |------|------|
-| 凭证 | `C:\Users\Haoze\.cloudflared\51cc70a8-*.json` |
-| 配置 | `C:\Users\Haoze\.cloudflared\config.yml` |
+| 查 server 状态 | `E:\amechan-daily\nssm.exe status amechan-server` |
+| 重启 server | `E:\amechan-daily\nssm.exe restart amechan-server` |
+| 启动 tunnel | `E:\amechan-daily\cloudflared.exe tunnel run amechan` |
+| 更新代码 | AnyDesk 传单文件 或 `git pull` + 重启 server |
+| 远程管理 | AnyDesk（无人值守密码） |
 
-### 部署待办
+### 已知限制
+
+- cloudflared 窗口关了会断（Task Scheduler 待重启验证）
+- git 首次 fetch 太慢，暂用 AnyDesk 传文件更新
+- NSSM tunnel 服务僵尸化（SERVICE_PAUSED），等下次重启自动清除
+- 老电脑依赖独立联网（不能经另一台电脑共享网络）
+
+### 待办
 
 - 频率限制 ⏳ 代码已有，本地关闭
 - Turnstile ⏳ 框架已搭建（缺 Site Key）
-- 老电脑迁移 ⏳ 进行中
+- 重启验证全链路（等网络稳定后）
+- 暑假换 Ubuntu Server（systemd 替代 NSSM + Task Scheduler）
