@@ -77,7 +77,16 @@
 | 问题 | 修复方式 | 文件 |
 |------|---------|------|
 | AI自造玩家名字("混音") | negative_rules第0条硬禁非阿P称呼；后端正则替换混音/阿音/小音 → 阿P | prompts.py + generator.py |
+| 已读标记延迟出现 | 已读在API回复后才显示→提前到batch窗口开始时标记_replied | static/index.html |
 | 无法链接公网 | 迁移到 cloudflared + Cloudflare Named Tunnel | — |
+
+## v4.2 已知问题（未修复）
+
+| 问题 | 现象 | 可能原因 |
+|------|------|------|
+| 公网访问时 JINE 无法工作 | 本地 localhost:8930 JINE 正常；通过 amechan.mote-pal.xyz 发消息无响应或502 | cloudflared 用 IPv6 [::1] 连 server 但 server 绑 127.0.0.1；config.yml 已改 127.0.0.1 但待验证 |
+| JINE 上下文割裂 | 糖糖不知自己 timeline 发过的内容（如"芥末冰激凌"推文后在聊天中失忆） | JINE API 请求未传 timeline，AI 无上下文 |
+| 老电脑网络不稳定 | tunnel 断连频繁，需手动重启 | 家庭网络波动；cloudflared 非服务自启 |
 
 ## v4.1 问题修复记录
 
