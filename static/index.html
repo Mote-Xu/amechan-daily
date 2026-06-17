@@ -1343,13 +1343,15 @@ var SaveManager = {
         if (pokeIdx < 0 || diaryIdx < 0) return [];
         var poke = pool.splice(pokeIdx, 1)[0];
         var diary = pool.splice(diaryIdx < pokeIdx ? diaryIdx : diaryIdx - 1, 1)[0];
+        var ts = Date.now(); var now = new Date(ts);
+        var hh = ('0'+now.getHours()).slice(-2); var mm = ('0'+now.getMinutes()).slice(-2);
         var entries = [
-            { batch_id: 'released_' + Date.now(), event: '随手一发', layer: 'poketter',
-              time: ('0'+new Date().getHours()).slice(-2)+':'+('0'+new Date().getMinutes()).slice(-2),
-              text: poke.text, selfie_mood: poke.selfie_mood || 'angel', timestamp: Date.now()/1000, date: new Date().toISOString() },
-            { batch_id: 'released_' + Date.now(), event: '随手一发', layer: 'diary',
-              time: ('0'+new Date().getHours()).slice(-2)+':'+('0'+new Date().getMinutes()).slice(-2),
-              text: diary.text, selfie_mood: diary.selfie_mood || 'angel', timestamp: Date.now()/1000, date: new Date().toISOString() }
+            { batch_id: 'released_' + ts, event: '随手一发', layer: 'poketter', _order: 1,
+              time: hh+':'+mm,
+              text: poke.text, selfie_mood: poke.selfie_mood || 'angel', timestamp: ts/1000, date: now.toISOString() },
+            { batch_id: 'released_' + ts, event: '随手一发', layer: 'diary', _order: 0,
+              time: hh+':'+mm,
+              text: diary.text, selfie_mood: diary.selfie_mood || 'angel', timestamp: ts/1000, date: now.toISOString() }
         ];
         slot.hiddenPool = pool;
         for (var n = 0; n < entries.length; n++) {
@@ -1746,11 +1748,15 @@ document.querySelectorAll('.desktop-icon').forEach(function(i) {
 var cachedTimeline = [];
 
 function renderFromCache() {
-    // Sort newest-first by batch_id+time (server may return unsorted after merge)
+    // Sort newest-first: batch_id desc → time desc → layer desc
+    //   poketter posts first, diary reacts later → diary has later time → diary on top
+    //   Layer tiebreaker (diary > poketter) covers same-time edge cases
     cachedTimeline.sort(function(a, b) {
         var ba = (a.batch_id || '').localeCompare(b.batch_id || '');
-        if (ba !== 0) return -ba;  // reverse: newer batch first
-        return -(a.time || '').localeCompare(b.time || '');
+        if (ba !== 0) return -ba;  // newer batch first
+        var ta = -(a.time || '').localeCompare(b.time || '');
+        if (ta !== 0) return ta;   // later time first
+        return (a._order || 0) - (b._order || 0);
     });
     var filtered = cachedTimeline;
     if (ACTIVE_TAB === 'diary') {
@@ -1764,6 +1770,7 @@ function renderFromCache() {
 
 // Render
 function renderFeed(items) {
+    var body = document.querySelector('.win95-body'); if (body) body.style.overflowY = (ACTIVE_TAB === 'jine') ? 'hidden' : 'auto';
     // JINE tab always renders the chat screen (even without timeline items)
     if (ACTIVE_TAB === 'jine') {
         items = items || [];
@@ -2001,6 +2008,7 @@ window.doRelease = function() {
     // Call backend ONLY for JINE release messages (stateless)
     var pokeEntry = entries.find(function(e){return e.layer==='poketter';});
     var diaryEntry = entries.find(function(e){return e.layer==='diary';});
+    showAmeTyping();
     fetch(API + '/api/release', {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
@@ -2014,11 +2022,13 @@ window.doRelease = function() {
             if (jineMsgs.length > 0) {
                 _cancelF7Timers();
                 var _f7SlotId = SaveManager.getCurrentSlot().id;
+                var _f7SlotCreatedAt = SaveManager.data.slots[_f7SlotId] ? SaveManager.data.slots[_f7SlotId].createdAt : null;
                 var t1 = setTimeout(function(){
                     jineMsgs.forEach(function(msg,i){
                         var t2 = setTimeout(function(){
                             var slot = SaveManager.data.slots[_f7SlotId];
                             if (!slot) return;
+                            if (slot.createdAt !== _f7SlotCreatedAt) return;
                             var chatMsg = {
                                 time: msg.time||'', reply: msg.reply||'',
                                 ame_sticker: msg.ame_sticker||null, player_text:'', sticker:''
@@ -2031,15 +2041,17 @@ window.doRelease = function() {
                                 jineChatMsgs.push(chatMsg);
                                 if (ACTIVE_TAB==='jine') renderJineChatMsgs();
                             }
-                        }, i*2000+600);
+                        }, i*1000+300);
                         _f7Timers.push(t2);
                     });
-                }, 800);
+                }, 300);
                 _f7Timers.push(t1);
             }
         }
+        hideAmeTyping();
         setTimeout(function(){ btn.textContent = '[ F7 ] 戳一戳 ✨'; }, 2000);
     }).catch(function(err){
+        hideAmeTyping();
         console.error('[doRelease] JINE error:', err);
         setTimeout(function(){ btn.textContent = '[ F7 ] 戳一戳 ✨'; }, 2000);
     });
@@ -2113,7 +2125,7 @@ function _scheduleReply(isNewMsg) {
         _batchStartIdx = -1;
         for (var i = 0; i < jineChatMsgs.length; i++) {
             var m = jineChatMsgs[i];
-            if (m.reply || m.ame_sticker) continue;
+            if (m.reply || m.ame_sticker || m._replied) continue;
             if (m.player_text || m.sticker) { _batchStartIdx = i; break; }
         }
     }
@@ -2133,7 +2145,7 @@ function _executeReply() {
     var lastSticker = null;
     for (var i = _batchSentIdx; i < jineChatMsgs.length; i++) {
         var m = jineChatMsgs[i];
-        if (m.reply || m.ame_sticker) continue;
+        if (m.reply || m.ame_sticker || m._replied) continue;
         if (m.player_text) { batchMsgs.push(m); lastTexts.push(m.player_text); }
         if (m.sticker)     { batchMsgs.push(m); lastSticker = m.sticker; var s=findSticker(m.sticker); lastTexts.push('[' + (s?s.label:'贴图') + ']'); }
     }
@@ -2194,6 +2206,7 @@ function _executeReply() {
             };
             jineChatMsgs.push(replyMsg);
             _batchSentIdx = jineChatMsgs.length;  // advance past this reply
+            for (var bi = 0; bi < batchMsgs.length; bi++) { batchMsgs[bi]._replied = true; }
             SaveManager.addJineMessage(replyMsg);
             if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
             // Check if new messages arrived during API — if so, start fresh window
@@ -2235,7 +2248,7 @@ function _executeReply() {
 function _checkUnreplied() {
     for (var i = _batchSentIdx; i < jineChatMsgs.length; i++) {
         var m = jineChatMsgs[i];
-        if (m.reply || m.ame_sticker) continue;
+        if (m.reply || m.ame_sticker || m._replied) continue;
         if (m.player_text || m.sticker) return true;
     }
     return false;
@@ -2292,8 +2305,8 @@ function renderJineChatUnified(timelineItems) {
     var chatMsgs = jineChatMsgs;
     chatMsgs.forEach(function(msg) {
         var t = msg.time || '';
-        if (msg.sticker)     all.push({ type: 'p-sticker', time: t, sticker: msg.sticker });
-        if (msg.player_text) all.push({ type: 'p-text',    time: t, text: msg.player_text });
+        if (msg.sticker)     all.push({ type: 'p-sticker', time: t, sticker: msg.sticker, _replied: msg._replied });
+        if (msg.player_text) all.push({ type: 'p-text',    time: t, text: msg.player_text, _replied: msg._replied });
         if (msg.recall)      all.push({ type: 'recall',    time: t });
         if (msg.ame_sticker) all.push({ type: 'ame-sticker', time: t, sticker: msg.ame_sticker });
         if (msg.reply)       all.push({ type: 'ame-text',  time: t, text: msg.reply });
@@ -2335,22 +2348,26 @@ function renderJineChatUnified(timelineItems) {
             break;
         case 'p-sticker':
             html += '<div class="jine-msg p"><div class="sticker-content">' + stickerHTML(m.sticker) + '</div></div>';
-            var keyS = m.time + '|s|' + (m.sticker || '');
-            if (_shownReceipts[keyS]) {
-                html += '<div class="jine-read-receipt show" style="opacity:0.85">已读</div>';
-            } else {
-                html += '<div class="jine-read-receipt" data-rkey="' + keyS + '">已读</div>';
-                newReceiptKeys.push(keyS);
+            if (m._replied) {
+                var keyS = m.time + '|s|' + (m.sticker || '');
+                if (_shownReceipts[keyS]) {
+                    html += '<div class="jine-read-receipt show" style="opacity:0.85">已读</div>';
+                } else {
+                    html += '<div class="jine-read-receipt" data-rkey="' + keyS + '">已读</div>';
+                    newReceiptKeys.push(keyS);
+                }
             }
             break;
         case 'p-text':
             html += '<div class="jine-msg p-text"><div class="bubble player-text-bubble">' + esc(m.text) + '</div></div>';
-            var keyT = m.time + '|t|' + (m.text || '').slice(0, 15);
-            if (_shownReceipts[keyT]) {
-                html += '<div class="jine-read-receipt show" style="opacity:0.85">已读</div>';
-            } else {
-                html += '<div class="jine-read-receipt" data-rkey="' + keyT + '">已读</div>';
-                newReceiptKeys.push(keyT);
+            if (m._replied) {
+                var keyT = m.time + '|t|' + (m.text || '').slice(0, 15);
+                if (_shownReceipts[keyT]) {
+                    html += '<div class="jine-read-receipt show" style="opacity:0.85">已读</div>';
+                } else {
+                    html += '<div class="jine-read-receipt" data-rkey="' + keyT + '">已读</div>';
+                    newReceiptKeys.push(keyT);
+                }
             }
             break;
         case 'ame-sticker':

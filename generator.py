@@ -196,7 +196,7 @@ _COLD_ALTERNATIVES = [
     "好冷", "冷死了", "被窝里全是冷的", "一个人冷得发抖",
     "脚也好冷", "全身都在发抖", "冷到骨头里了",
     "没有你的被窝好冷", "空调开太大了...冷",
-    "冷得睡不着", "越来越冷了",
+    "冷得睡不着", "越来越冷了", "冷得不行了",
 ]
 
 
@@ -206,7 +206,7 @@ def _sanitize_template_phrases(text: str) -> str:
         return text
     import re as _re
     # 替换"手冰了/手好冰/手还冰着"等变体
-    text = _re.sub(r'手[还也]?[好]?冰[着了呢]?', lambda m: random.choice(_COLD_ALTERNATIVES), text)
+    text = _re.sub(r'手[还也]?[好]?(?:冰|冷)[着了呢的]?', lambda m: random.choice(_COLD_ALTERNATIVES), text)
     return text
 
 
@@ -296,7 +296,7 @@ def generate_jine_chat(text: str = "", sticker: str = "", history: list[dict] | 
         if is_pure_sticker:
             _sticker_fallbacks = {
                 "sticker_1": ["嘿嘿！就是这样", "你就这张嘴甜", "你懂就好"],
-                "sticker_2": ["你就这张嘴甜", "一丁点诚意都感受不到", "讨厌你的回答！"],
+                "sticker_2": ["哼……算你识相", "突然夸人干嘛…烦死了", "我又没做什么值得夸的事……"],
                 "sticker_3": ["我才是该哭的那个吧！", "烦！！！！死！！！！啦！！！！！！！！！！！！"],
                 "sticker_4": ["再也不看你的JINE了", "看到你这张脸我就来气！", "一脸发自内心的冷漠啊你"],
                 "sticker_5": ["好吧，原谅……个屁啦！", "要不……就原谅你吧", "下次再这样，我就拉黑你。"],
@@ -357,7 +357,7 @@ def generate_jine_reply(sticker_id: str) -> tuple[str, str | None]:
         print(f"  [X] JINE 回复生成失败: {e}")
         _sticker_fallbacks = {
             "sticker_1": ["嘿嘿！就是这样", "你就这张嘴甜", "你懂就好"],
-            "sticker_2": ["你就这张嘴甜", "一丁点诚意都感受不到", "讨厌你的回答！"],
+            "sticker_2": ["哼……算你识相", "突然夸人干嘛…烦死了", "我又没做什么值得夸的事……"],
             "sticker_3": ["我才是该哭的那个吧！", "烦！！！！死！！！！啦！！！！！！！！！！！！"],
             "sticker_4": ["再也不看你的JINE了", "看到你这张脸我就来气！", "一脸发自内心的冷漠啊你"],
             "sticker_5": ["好吧，原谅……个屁啦！", "要不……就原谅你吧", "下次再这样，我就拉黑你。"],

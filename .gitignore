@@ -1,5 +1,6 @@
 # API Key
 .env
+PRIVATE.md
 
 # Generated data (but track feed.json for GitHub Actions)
 data/*

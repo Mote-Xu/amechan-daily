@@ -117,7 +117,8 @@ class AmechanHandler(SimpleHTTPRequestHandler):
         super().__init__(*args, directory=str(STATIC_DIR), **kwargs)
 
     def _set_cors(self):
-        self.send_header("Access-Control-Allow-Origin", "*")
+        origin = os.environ.get("CORS_ORIGIN", "*")
+        self.send_header("Access-Control-Allow-Origin", origin)
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
 
@@ -185,11 +186,11 @@ class AmechanHandler(SimpleHTTPRequestHandler):
         parsed = urlparse(self.path)
         path = parsed.path
 
-        # Rate limit disabled for local dev — enable before public deploy
-        # client_ip = self._get_client_ip()
-        # if not check_rate_limit(client_ip):
-        #     self._send_json({"ok": False, "error": "超天酱正在休息，请稍后再来～"}, status=429)
-        #     return
+        # Rate limit enabled for public deploy
+        client_ip = self._get_client_ip()
+        if not check_rate_limit(client_ip):
+            self._send_json({"ok": False, "error": "超天酱正在休息，请稍后再来～"}, status=429)
+            return
 
         if path == "/api/generate":
             body_raw = self._read_body()
