@@ -2691,7 +2691,7 @@ initDanmaku();
 jiggleLive();
 jiggleStats();
 
-// v4.5: 自动戳一戳 — 页面可见时每 15~30 分钟自动 F7，关标签页停
+// v4.5: 自动戳一戳 — 每15~30分自动F7，关标签页停，刷新不打断
 (function() {
     var AUTO_POKE_MIN = 15, AUTO_POKE_MAX = 30;
     var _autoPokeTimer = null;
@@ -2701,10 +2701,18 @@ jiggleStats();
         _autoPokeTimer = setTimeout(function() {
             if (isStaticMode) return;
             doRelease();
+            localStorage.setItem('ame_last_auto_poke', Date.now());
             _scheduleAutoPoke();
         }, delay);
     }
-    if (!isStaticMode) _scheduleAutoPoke();
+    // 刷新后检查：上次戳距今超过最小间隔，立刻补（首次访问不走补发）
+    var _lastPokeRaw = localStorage.getItem('ame_last_auto_poke');
+    var _shouldCatchUp = _lastPokeRaw && (Date.now() - parseInt(_lastPokeRaw)) > AUTO_POKE_MIN * 60000;
+    if (!isStaticMode && _shouldCatchUp) {
+        setTimeout(function() { doRelease(); _scheduleAutoPoke(); }, 3000);  // 等池子加载完
+    } else {
+        _scheduleAutoPoke();
+    }
 })();
 setInterval(jiggleStats, 15000);
 initTurnstile();
