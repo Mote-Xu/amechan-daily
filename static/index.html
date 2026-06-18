@@ -2702,14 +2702,11 @@ jiggleStats();
         if (_autoPokeTimer) clearTimeout(_autoPokeTimer);
         var delay = (AUTO_POKE_MIN + Math.random() * (AUTO_POKE_MAX - AUTO_POKE_MIN)) * 60000;
         _autoPokeTimer = setTimeout(function() {
-            if (document.hidden || isStaticMode) { _scheduleAutoPoke(); return; }
+            if (isStaticMode) return;
             doRelease();
             _scheduleAutoPoke();
         }, delay);
     }
-    document.addEventListener('visibilitychange', function() {
-        if (!document.hidden && !_autoPokeTimer) _scheduleAutoPoke();
-    });
     if (!isStaticMode) _scheduleAutoPoke();
 })();
 setInterval(jiggleStats, 15000);
