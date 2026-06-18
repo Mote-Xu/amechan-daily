@@ -23,6 +23,7 @@ python server.py  # → http://0.0.0.0:8930
 | 推博 Feed | 🟢 | 超天酱禁空洞模板，糖糖强制无逻辑重复，三层反差 |
 | 弹幕 | 🟢 | 应援 30 + 吐槽 39，transform GPU 动画 |
 | 多存档 | ✅ | createdAt 校验防串档 |
+| 自动戳一戳 | 🟢 | 每15~30分自动F7，关标签页停 |
 | 双机容灾 | 🟢 | 共享 Tunnel，Cloudflare 自动轮询 |
 | Turso 云端存档 | 🟢 | 匿名 UUID，3s debounce 自动上传，启动时云恢复 |
 
@@ -51,6 +52,7 @@ Python ThreadingHTTPServer
 |------|------|------|
 | Turso 云端存档 | server.py + index.html | `POST /api/save`, `GET /api/load`, `DELETE /api/save/delete`；匿名 UUID；3s debounce 上传；启动云恢复 |
 | 双机共享 Tunnel | 老电脑 cloudflared | 主备共用 `87fc0324`，Cloudflare 自动轮询，不搞独立域名 |
+| 自动戳一戳 | index.html | 每15~30分随机自动F7，开窗口即生效，关标签页停 |
 | 切存档修复 | index.html | `reloadFromSlot` 重置 reply 引擎状态 |
 | Webcam 轮换竞态 | index.html | `_autoCycleTimer` 存引用防手动选状态被抢 |
 

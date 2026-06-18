@@ -42,6 +42,7 @@
 |------|------|------|
 | 数据丢/不能跨设备 | Turso HTTP API 云端存档 + 匿名UUID + 启动恢复 | server.py + index.html |
 | 切存档已读不回 | reloadFromSlot 重置 reply 引擎 | index.html |
+| 自动戳一戳 | 每15~30分自动F7，关标签页停，不走隐藏检查 | index.html |
 | Webcam 手动选状态被抢 | _autoCycleTimer 存引用 | index.html |
 | 双机备站不通 | 共享 Tunnel 87fc0324，放弃独立 bak 域名 | 老电脑 cloudflared |
 
