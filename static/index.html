@@ -2693,6 +2693,25 @@ bgmInit();
 initDanmaku();
 jiggleLive();
 jiggleStats();
+
+// v4.5: 自动戳一戳 — 页面可见时每 15~30 分钟自动 F7，关标签页停
+(function() {
+    var AUTO_POKE_MIN = 15, AUTO_POKE_MAX = 30;
+    var _autoPokeTimer = null;
+    function _scheduleAutoPoke() {
+        if (_autoPokeTimer) clearTimeout(_autoPokeTimer);
+        var delay = (AUTO_POKE_MIN + Math.random() * (AUTO_POKE_MAX - AUTO_POKE_MIN)) * 60000;
+        _autoPokeTimer = setTimeout(function() {
+            if (document.hidden || isStaticMode) { _scheduleAutoPoke(); return; }
+            doRelease();
+            _scheduleAutoPoke();
+        }, delay);
+    }
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden && !_autoPokeTimer) _scheduleAutoPoke();
+    });
+    if (!isStaticMode) _scheduleAutoPoke();
+})();
 setInterval(jiggleStats, 15000);
 initTurnstile();
 fetchTimeline();
