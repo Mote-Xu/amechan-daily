@@ -104,3 +104,4 @@ Cloudflared 使用 **Locally-Managed** 模式（`config.yml` + `route dns`），
 | IP 限频 | 🟡 默认关闭，部署设 `RATE_LIMIT_ENABLED=1` |
 | Turnstile | 🟡 前端已集成，部署时填 `TURNSTILE_SITE_KEY` |
 | 全链路重启验证 | ⏳ |
+| localStorage → SQLite | 🔷 计划中，待 Gemini 评审 |

@@ -73,3 +73,4 @@
 2. webcam 缺帧 handspinner_004 (无源资产)，tv_005 和 voice_training_007 (v4.4 已调整 count)
 3. Turnstile 部署：填 `TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY`
 4. 双机切换全链路测试
+5. **localStorage → SQLite 迁移** — 待 Gemini 评审架构方案
