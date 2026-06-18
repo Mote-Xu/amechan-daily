@@ -938,7 +938,7 @@ body {
 (function() {
 // v4.3: 双机 fallback — 本地直连，公网主服务器优先，挂了自动降级老家
 var API_PRIMARY = 'https://amechan.mote-pal.xyz';
-var API_BACKUP  = 'https://bak.mote-pal.xyz';
+var API_BACKUP  = 'https://backup.amechan.mote-pal.xyz';
 var API_LOCAL = window.location.origin;
 // v4.5: 匿名身份令牌
 function getDeviceUUID() {
@@ -1193,10 +1193,7 @@ var _stressFromDanmaku = 0;  // accumulated stress delta from danmaku
                     if (img && img.complete && (img.naturalWidth || img.width) > 0) break;
                     img = null;
                     this.frameIdx = (this.frameIdx + 1) % this.frames.length;
-                    if (this.frameIdx === 0) {
-                        this.loopCount++;
-                        if (this.loopCount >= 2 && !this.smileTimer) this._autoCycleState();
-                    }
+                    // 帧未加载时不计数，避免首次渲染触发误轮换
                 } while (this.frameIdx !== startIdx);
                 if (!img) { this._tick(); return; }  // no frame loaded yet — keep last frame, don't clear
                 // Advance to next frame for the next tick
