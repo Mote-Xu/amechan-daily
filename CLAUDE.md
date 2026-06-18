@@ -24,11 +24,11 @@ python server.py  # → http://0.0.0.0:8930
 | 功能 | 状态 | 备注 |
 |------|:--:|------|
 | F7 戳一戳 | 🟢 | pool 10条(4次)，600ms 发布动画；v4.3: 空池补货中反馈 + F7 stagger 期间缓存聊天回复 |
-| JINE 聊天 | 🟢 | v4.3: timeline 上下文感知 + prompts.py 人格校准（底层关系/sticker_7/硬禁词库） |
+| JINE 聊天 | 🟢 | v4.3: timeline 上下文感知 + prompts.py 人格校准；v4.4: 同居设定强化 |
 | 推博 Feed | 🟢 | 超天酱禁空洞模板，糖糖强制无逻辑重复，三层反差 |
 | 弹幕 | 🟢 | 应援 30 + 吐槽 39，transform GPU 动画 |
 | 多存档 | ✅ | createdAt 校验防串档 |
-| 双机 fallback | 🟢 | v4.4: Locally-Managed Tunnel 绕过 Zero Trust，主备 DNS 已路由，浏览器验证通过 |
+| 双机 fallback | 🟢 | v4.4: Locally-Managed Tunnel 绕过 Zero Trust，主备 DNS 均已生效 |
 | Turnstile | 🟡 | 前端 widget + token 注入已就绪，部署时填 `TURNSTILE_SITE_KEY` |
 
 ## 架构 (v4.4)
@@ -59,12 +59,13 @@ Cloudflared 使用 **Locally-Managed** 模式（`config.yml` + `route dns`），
 
 | 修改 | 文件 | 说明 |
 |------|------|------|
-| Cloudflared 本地管理 | .cloudflared/*.yml, deploy/ | 切到 Locally-Managed 绕过 Zero Trust 绑卡；双机 ingress 分离；`route dns -f` 切主域名到本地 |
-| 双机 fallback 上线 | — | 主 `amechan.mote-pal.xyz`→本地，备 `bak.mote-pal.xyz`→老电脑；浏览器验证通过 |
+| Cloudflared 本地管理 | .cloudflared/*.yml, deploy/ | 切到 Locally-Managed 绕过 Zero Trust 绑卡；双机 ingress 分离；`route dns -f` 主备域名均已路由 |
+| 双机 fallback 上线 | — | 主 `amechan.mote-pal.xyz`→本地，备 `bak.mote-pal.xyz`→老电脑；两端已验证 |
+| 同居设定强化 | prompts.py | 人物介绍 + 核心行为两处加固：同床共枕、禁止「你家/我家」分离 |
+| 已读标记修复 | index.html | `_shownReceipts[key]` 提前到首次渲染时标记，防止 innerHTML 重写丢状态 |
 | 部署脚本包 | deploy/ | daemon_server.vbs + daemon_cloudflared.vbs + Task Scheduler 指南 + README |
 | Turnstile 前端 | index.html | widget 容器 + token 管理 + apiFetch 注入 cf_token；每 240s 自动刷新 |
 | Webcam 帧计数 | index.html | tv 7→8 (加载 007), voice_training 8→9 (加载 008), handspinner 保持 12 |
-| cloudflared.exe | 项目根 | v2026.6.0 完整版 (54MB)，配合 `gitignore` 排除 |
 
 ## v4.3 修改记录
 
@@ -87,20 +88,19 @@ Cloudflared 使用 **Locally-Managed** 模式（`config.yml` + `route dns`），
 ## 已知问题
 
 1. **JINE 聊天偶发傲娇反射**：prompts.py 校准后大幅改善，LLM 仍偶尔滑回。在可接受范围。
-2. **`bak.mote-pal.xyz` DNS 等待传播**：老电脑 `route dns` 已成功，新域名全球生效需等待。
-3. **Git Bash curl 无法访问 Cloudflare**：浏览器正常，不影响使用。
-4. **弹幕 CSS 偶尔消失** — transform 加速后待观察。
-5. **webcam 缺帧**：handspinner_004 (无源资产)，tv_005 和 voice_training_007 (v4.4 已通过调整 count 加载后续帧)。
+2. **Git Bash curl 无法访问 Cloudflare**：浏览器正常，不影响使用。
+3. **弹幕 CSS 偶尔消失** — transform 加速后待观察。
+4. **webcam 缺帧**：handspinner_004 (无源资产)，tv_005 和 voice_training_007 (v4.4 已通过调整 count 加载后续帧)。
 
 ## 公网部署
 
 | 项 | 状态 |
 |---|:--:|
 | CORS / 注入防御 / sanitizer | ✅ |
-| Cloudflare Tunnel 主链路 | 🟢 Locally-Managed，浏览器验证通过 |
-| Cloudflare Tunnel 备用链路 | 🟡 DNS 传播中 |
-| 老电脑服务 | 🟢 NSSM 已重启，cloudflared Locally-Managed |
-| 双机 fallback | 🟢 主链路上线，备链路等 DNS |
+| Cloudflare Tunnel 主链路 | 🟢 |
+| Cloudflare Tunnel 备用链路 | 🟢 DNS 已生效 |
+| 老电脑服务 | 🟢 NSSM + cloudflared Locally-Managed |
+| 双机 fallback | 🟢 主备就绪 |
 | IP 限频 | 🟡 默认关闭，部署设 `RATE_LIMIT_ENABLED=1` |
 | Turnstile | 🟡 前端已集成，部署时填 `TURNSTILE_SITE_KEY` |
 | 全链路重启验证 | ⏳ |

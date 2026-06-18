@@ -2486,6 +2486,7 @@ function renderJineChatUnified(timelineItems) {
                 if (_shownReceipts[keyS]) {
                     html += '<div class="jine-read-receipt show" style="opacity:0.85">已读</div>';
                 } else {
+                    _shownReceipts[keyS] = true;  // mark immediately: survive innerHTML rewrites
                     html += '<div class="jine-read-receipt" data-rkey="' + keyS + '">已读</div>';
                     newReceiptKeys.push(keyS);
                 }
@@ -2498,6 +2499,7 @@ function renderJineChatUnified(timelineItems) {
                 if (_shownReceipts[keyT]) {
                     html += '<div class="jine-read-receipt show" style="opacity:0.85">已读</div>';
                 } else {
+                    _shownReceipts[keyT] = true;  // mark immediately: survive innerHTML rewrites
                     html += '<div class="jine-read-receipt" data-rkey="' + keyT + '">已读</div>';
                     newReceiptKeys.push(keyT);
                 }
@@ -2521,7 +2523,7 @@ function renderJineChatUnified(timelineItems) {
                     setTimeout(function() {
                         var el = container.querySelector('.jine-read-receipt[data-rkey="' + key + '"]');
                         if (el) { el.classList.add('show'); }
-                        _shownReceipts[key] = true;
+                        // _shownReceipts already set in render (prevents innerHTML overwrite bug)
                     }, delay);
                 })(newReceiptKeys[rj], rj * 400);
             }
