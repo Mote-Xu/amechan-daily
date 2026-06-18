@@ -1933,7 +1933,11 @@ function _refillPool(isInitial) {
 function updatePoolCount() {
     var info = SaveManager.poolRemaining();
     var el = document.getElementById('f7-count');
-    if (el) el.textContent = info.pairs > 0 ? '(' + info.pairs + ' 次可用)' : '(空了..)';
+    if (_isRefilling) {
+        if (el) el.textContent = '(补货中...)';
+    } else {
+        if (el) el.textContent = info.pairs > 0 ? '(' + info.pairs + ' 次可用)' : '(空了..)';
+    }
     poolRemaining = info.pairs;
     // Auto-refill proactively — refill when ≤2 pairs left (4→2→refill→4)
     if (info.pairs <= 2 && !_isRefilling) {
@@ -1964,11 +1968,19 @@ window.doRelease = function() {
     var entries = SaveManager.releaseFromPool();
     if (entries.length === 0) {
         btn.classList.remove('shaking');
-        btn.disabled = false;
-        btn.textContent = '[ F7 ] 戳一戳 ✨';
-        // Silent refill — no alert, just refill in background
+        btn.textContent = '补货中... ⏳';
+        // Refill in background, restore button when done
         if (!_isRefilling) _refillPool(false);
         updatePoolCount();
+        // Poll until pool has items or refill fails
+        var pollRefill = setInterval(function() {
+            if (!_isRefilling || SaveManager.poolRemaining().pairs > 0) {
+                clearInterval(pollRefill);
+                btn.disabled = false;
+                btn.textContent = SaveManager.poolRemaining().pairs > 0 ? '[ F7 ] 戳一戳 ✨' : '[ F7 ] 戳一戳 ✨';
+                updatePoolCount();
+            }
+        }, 500);
         return;
     }
     console.log('[doRelease] released from localStorage:', entries.map(function(e){return e.layer;}));

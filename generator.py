@@ -246,7 +246,9 @@ def _format_history_for_prompt(history: list[dict]) -> list[str]:
 
 def _make_timeline_context(recent_posts: list[dict]) -> str:
     """将最近的 timeline 条目格式化为 prompt 可用的上下文数据。
-    放在 user prompt 开头，让 AI 知道自己发过什么，不修改 prompts.py 的人设。"""
+    放在 user prompt 开头，让 AI 知道自己发过什么。不修改 prompts.py 的人设。
+
+    关键：明确标注这是系统内部数据，而非阿P的发言。防止 LLM 把推文误读为阿P的消息。"""
     if not recent_posts:
         return ""
     lines = []
@@ -259,7 +261,13 @@ def _make_timeline_context(recent_posts: list[dict]) -> str:
             lines.append(f"* [糖糖日记] {text}")
     if not lines:
         return ""
-    return "\n[系统数据：你最近在 Poketter 上发布的内容]\n（以下是你自己刚发的，聊天时保持记忆，不要假装不知道）\n" + "\n".join(lines) + "\n[/系统数据]\n"
+    return (
+        "\n[系统内部同步 — 这不是阿P发的消息，是你(糖糖/超天酱)自己刚发的内容]\n"
+        "⚠️ 以下是你自己在外界发布的动态。聊天中保持记忆，不要表现出惊讶。\n"
+        "⚠️ 如果阿P提到相关内容，自然接话，不要问「你怎么知道」。\n"
+        + "\n".join(lines) +
+        "\n[/系统内部同步]\n"
+    )
 
 
 def generate_jine_chat(text: str = "", sticker: str = "", history: list[dict] | None = None,
@@ -463,11 +471,37 @@ def generate_jine_release_msgs(poke_text: str, diary_text: str = "", count: int 
             recent_ame.append(reply)
 
     prompt = get_jine_release_prompt(poke_text, diary_text, stress, recent_ame)
-    print(f"[*] JINE 联动消息生成 (单次API) | stress: {stress}")
+
+    # v4.3: 动态注入因果锚点 + 情绪摇摆器（不改 prompts.py）
+    mental_tags = [
+        ("躁狂/渴求", "你刚发完推文，肾上腺素还没退。你现在极度需要阿P的认可和肢体接触——用黏人、急促、带感叹号的短句轰炸他。"),
+        ("抑郁/戒断", "发完推文后空虚感涌上来。你觉得粉丝的点赞全是假的，只有阿P是真的。用疲惫、破碎、带省略号的碎句，像是在自言自语又像是在求救。"),
+        ("被害妄想/焦虑", "你怀疑刚才那条推文有人在阴阳你。你需要阿P帮你看看评论区——用急促的问句和自我怀疑轰炸他。"),
+        ("摆烂/自暴自弃", "你觉得刚才的推文蠢透了，自己蠢透了，做主播蠢透了。用自我厌恶的短句，说完又立刻找补「算了」「当我没说」。"),
+        ("任性/无理取闹", "你突然想逗阿P，或者说一些完全无关的怪话。语气跳跃、跑题、前言不搭后语——但底下藏着「快来理我」的渴望。"),
+    ]
+    tag_label, tag_instruction = random.choice(mental_tags)
+
+    dynamic_injection = f"""
+## [动态注入 — 本轮精神状态: {tag_label}]
+{tag_instruction}
+
+## [因果锚点]
+你刚发了这条推文：「{poke_text}」
+{f'同时写了日记：「{diary_text}」' if diary_text else ''}
+
+发完这条推文后，你对阿P隐藏的真实情绪是什么？推文里你装可爱/装元气的那个点，私下里其实让你恶心/疲惫/焦虑/渴望什么？
+- 如果推文里提到了具体事物（美食/天气/直播/粉丝），JINE消息里要具体回扣那个事物——不要只说"好累"，要说为什么累
+- 推文和JINE必须形成【表里反差】：表面元气 → 私下崩溃；表面感谢粉丝 → 私下觉得粉丝恶心；表面开心 → 私下想死
+- 绝对禁止空洞的「好累」「想被抱着」「算了」——每次都要有具体的原因和新鲜的说法
+"""
+    prompt = dynamic_injection + "\n" + prompt
+
+    print(f"[*] JINE 联动消息生成 (单次API) | stress: {stress} | 精神状态: {tag_label}")
 
     msgs = []
     try:
-        raw = _call_api(JINE_RELEASE_SYSTEM, prompt, temperature=0.5,
+        raw = _call_api(JINE_RELEASE_SYSTEM, prompt, temperature=0.85,  # 提高温度增加多样性
                       frequency_penalty=0.95, presence_penalty=0.8)
         # Parse JSON array
         data = _parse_json(raw)
@@ -494,8 +528,15 @@ def generate_jine_release_msgs(poke_text: str, diary_text: str = "", count: int 
                 msgs.append({"reply": text[:60], "ame_sticker": None})
     except Exception as e:
         print(f"  [X] 联动消息生成失败: {e}")
-        # Fallback: use game-original lines
-        fallbacks = ["喂喂", "又不理我", "算了", "好累", "那条超可爱的吧"]
+
+    # Fallback: if API produced nothing, use varied fallback lines
+    if not msgs:
+        print(f"  [!] 联动消息为空，使用兜底")
+        fallbacks = [
+            "喂喂", "看到了吗", "理理我", "又不理我", "那条超可爱的吧",
+            "你在看吧", "还不回我", "一个人好无聊", "发都发了",
+        ]
+        random.shuffle(fallbacks)
         for i in range(min(count, len(fallbacks))):
             msgs.append({"reply": fallbacks[i], "ame_sticker": None})
 
