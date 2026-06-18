@@ -45,7 +45,7 @@ def _call_api(system_prompt: str, user_prompt: str, temperature: float = 0.85,
                 {"role": "user", "content": user_prompt},
             ],
             temperature=temperature,
-            max_tokens=MAX_TOKENS * 5,  # v2 timeline + hidden_pool needs ~1500 tokens
+            max_tokens=4096,  # timeline + hidden_pool ~18 items, need headroom to avoid JSON truncation
             frequency_penalty=frequency_penalty,   # 惩罚高频重复词汇 (0.0-2.0)
             presence_penalty=presence_penalty,      # 鼓励引入新话题 (0.0-2.0)
         )

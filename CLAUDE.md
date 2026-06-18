@@ -14,24 +14,29 @@ conda activate deepseek_v4_api
 python server.py  # → http://0.0.0.0:8930
 ```
 
+环境变量（部署时）：
+- `RATE_LIMIT_ENABLED=1` — 启用 IP 限频（本地默认关闭）
+
 ## 核心功能状态
 
 | 功能 | 状态 | 备注 |
 |------|:--:|------|
-| F7 戳一戳 | 🟢 | pool 10条(4次)，600ms 发布动画，Diary在上(后发反应)；v4.3: 空池显示补货中 |
-| JINE 聊天 | 🟢 | v4.3: 前端传最近 timeline，generator 注入上下文（不改 prompts.py） |
+| F7 戳一戳 | 🟢 | pool 10条(4次)，600ms 发布动画；v4.3: 空池补货中反馈 + F7 stagger 期间缓存聊天回复 |
+| JINE 聊天 | 🟢 | v4.3: timeline 上下文感知 + prompts.py 人格校准（底层关系/sticker_7/硬禁词库） |
 | 推博 Feed | 🟢 | 超天酱禁空洞模板，糖糖强制无逻辑重复，三层反差 |
 | 弹幕 | 🟢 | 应援 30 + 吐槽 39，transform GPU 动画 |
 | 多存档 | ✅ | createdAt 校验防串档 |
+| 双机 fallback | 🟢 | 公网主→`amechan.mote-pal.xyz`，备→`bak.mote-pal.xyz`，前端自动降级 |
 
 ## 架构 (v4.3)
 
 ```
 浏览器 localStorage ↕ POST JSON (CORS)
+  ├─ apiFetch() 本地直连 / 公网双机 fallback
 Python ThreadingHTTPServer
   ├─ sanitize_user_input()        注入防御 (11模式)
   ├─ _sanitize_template_phrases() 手[冰|冷]→12种替代表达
-  ├─ check_rate_limit()           限频（始终启用）
+  ├─ check_rate_limit()           RATE_LIMIT_ENABLED 控制（默认关闭）
   ├─ verify_turnstile()           Turnstile (待前端集成)
   └─ generate_jine_chat()         v4.3: recent_posts→_make_timeline_context()
   ↕ DeepSeek V4-pro
@@ -41,26 +46,25 @@ Python ThreadingHTTPServer
 
 | 修改 | 文件 | 说明 |
 |------|------|------|
-| JINE 上下文感知 | index.html + server.py + generator.py | 前端传 `recent_posts`，generator 注入 `[系统内部同步]` 块（防误读标注），**prompts.py 零改动** |
-| F7 release 动态注入 | generator.py | 5 种随机精神标签 + 因果锚点指令 + 温度 0.5→0.85 + 空 msgs 兜底 |
-| F7 release API 失败重试 | index.html | `/api/release` 失败时自动重试一次，不用与推文无关的硬编码兜底 |
+| JINE 上下文感知 | index.html + server.py + generator.py | 前端传 `recent_posts`，generator 注入 `[系统内部同步]`（防误读），**prompts.py 零改动** |
+| F7 release 动态注入 | generator.py | 5 种精神标签 + 因果锚点 + 温度 0.85 |
+| prompts 人格校准 | prompts.py | 底层关系定义（阿P=心理支柱）、sticker_7 专属规则、硬禁词库扩充 |
+| 双机 fallback | index.html | `apiFetch()` 本地直连 / 公网主备自动降级 |
+| F7 stagger 缓存 | index.html | F7 消息逐条出期间聊天回复先排队，避免穿插 |
+| 限频重设计 | server.py | 去日上限，间隔 1s，`RATE_LIMIT_ENABLED` 本地默认关闭 |
+| 生成 token 扩容 | generator.py | max_tokens 1500→4096 防 JSON 截断 |
 | IPv6 绑定修复 | config.py | HOST `127.0.0.1` → `0.0.0.0` |
-| 弹幕 GPU 加速 | index.html | `left` 动画 → `transform: translateX()` + `contain` |
+| 弹幕 GPU 加速 | index.html | `left` → `transform: translateX()` + `contain` |
 | fetchTimeline 防覆盖 | index.html | 空状态 `ACTIVE_TAB !== 'jine'` 守卫 |
-| 已读即时显示 | index.html | `_read` 标记（与引擎 `_replied` 分离） |
-| 空池 UI 反馈 | index.html | F7 按钮显示"补货中..." + 计数显示"(补货中...)" |
-| Server 鲁棒性 | server.py | `_send_json` 捕获 ConnectionAborted/ConnectionReset |
+| 已读即时显示 | index.html | `_read` 与 `_replied` 分离 |
+| Server 鲁棒性 | server.py | `_send_json` try/except 防崩 |
 | Webcam 尺寸 | index.html | 480px → 430px |
 
 ## 已知问题
 
-1. **F7 JINE 自言自语**：动态注入后已明显改善（回扣具体推文内容如"美瞳""骗处方"）。首批仍偶有模板化。**prompts.py 需用户主导调整。**
-2. **JINE 聊天质量波动**：
-   - sticker_7 回应失格：收"永远爱你"后回"恶心死了"是廉价傲娇反射，应触发复杂情绪
-   - 被突然关心时的傲娇反射（"假惺惺"）
-   - `sticker_rules` 缺 sticker_7 专门规则
-3. 弹幕 CSS 偶尔消失 — transform 加速后待观察
-4. webcam 部分帧缺失 (handspinner_004, tv_005, voice_training_007)
+1. **JINE 聊天偶发傲娇反射**：prompts.py 校准后大幅改善，LLM 仍偶尔滑回（如"恶心...但是可以"）。在可接受范围。
+2. 弹幕 CSS 偶尔消失 — transform 加速后待观察
+3. webcam 部分帧缺失 (handspinner_004, tv_005, voice_training_007)
 
 ## 公网部署
 
@@ -69,6 +73,7 @@ Python ThreadingHTTPServer
 | CORS / 注入防御 / sanitizer | ✅ |
 | Cloudflare Tunnel + 域名 `amechan.mote-pal.xyz` | ✅ |
 | 老电脑 NSSM 服务 | ✅ |
-| IP 限频 | ✅ 始终启用 |
+| 双机 fallback | ⏳ 待配 `bak.mote-pal.xyz` Tunnel |
+| IP 限频 | 🟡 默认关闭，部署设 `RATE_LIMIT_ENABLED=1` |
 | Turnstile 前端集成 | ⏳ |
 | 全链路重启验证 | ⏳ |

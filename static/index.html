@@ -932,7 +932,19 @@ body {
 
 <script>
 (function() {
-var API = window.location.origin;
+// v4.3: 双机 fallback — 本地直连，公网主服务器优先，挂了自动降级老家
+var API_PRIMARY = 'https://amechan.mote-pal.xyz';
+var API_BACKUP  = 'https://bak.mote-pal.xyz';
+var API_LOCAL = window.location.origin;
+function apiFetch(path, opts) {
+    if (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') {
+        return fetch(API_LOCAL + path, opts);
+    }
+    return fetch(API_PRIMARY + path, opts).catch(function() {
+        console.warn('[api] 主力失联 → 降级老家');
+        return fetch(API_BACKUP + path, opts);
+    });
+}
 var CONTAINER = document.getElementById('feed-container');
 var ACTIVE_TAB = 'all';
 var knownBatches = {};
@@ -995,10 +1007,27 @@ var _batchWindowMs = 0;          // current window duration (random 300-1200ms)
 var _batchSentIdx = 0;           // last index sent to API (prevents re-processing)
 var _f7Timers = [];              // pending F7 JINE message timers (cleared on save switch)
 var _shownReceipts = {};          // tracks which messages already showed "已读"
+var _f7StaggerPending = 0;        // count of F7 stagger messages still queued (>0 = stagger active)
+var _f7StaggerCache = [];         // chat replies cached during F7 stagger
 
 function _cancelF7Timers() {
     for (var i = 0; i < _f7Timers.length; i++) clearTimeout(_f7Timers[i]);
     _f7Timers = [];
+    // Flush any cached chat replies before clearing stagger state
+    if (_f7StaggerCache.length > 0) _flushStaggerCache();
+    _f7StaggerPending = 0;
+    _f7StaggerCache = [];
+}
+
+function _flushStaggerCache() {
+    if (_f7StaggerCache.length === 0) return;
+    var cache = _f7StaggerCache.slice();
+    _f7StaggerCache = [];
+    for (var ci = 0; ci < cache.length; ci++) {
+        jineChatMsgs.push(cache[ci]);
+        SaveManager.addJineMessage(cache[ci]);
+    }
+    if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
 }
 
 // Danmaku pools — 应援 and 吐槽 (color-independent)
@@ -1898,7 +1927,7 @@ function _refillPool(isInitial) {
     if (_isRefilling) return;
     _isRefilling = true;
     console.log('[pool] refilling...');
-    fetch(API + '/api/generate', { method: 'POST', body: '{}' }).then(function(r) { return r.json(); }).then(function(data) {
+    apiFetch('/api/generate', { method: 'POST', body: '{}' }).then(function(r) { return r.json(); }).then(function(data) {
         _isRefilling = false;
         if (data.ok) {
             var timeline = data.timeline || [];
@@ -2021,7 +2050,7 @@ window.doRelease = function() {
     var pokeEntry = entries.find(function(e){return e.layer==='poketter';});
     var diaryEntry = entries.find(function(e){return e.layer==='diary';});
     showAmeTyping();
-    fetch(API + '/api/release', {
+    apiFetch('/api/release', {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({
@@ -2032,7 +2061,7 @@ window.doRelease = function() {
         if (!data.ok || !data.jine_msgs || data.jine_msgs.length === 0) {
             // API failed — retry once
             console.warn('[doRelease] JINE API failed, retrying...');
-            fetch(API + '/api/release', {
+            apiFetch('/api/release', {
                 method: 'POST',
                 headers: {'Content-Type':'application/json'},
                 body: JSON.stringify({
@@ -2057,16 +2086,19 @@ window.doRelease = function() {
 
     function _showJineRelease(data) {
         var jineMsgs = data.jine_msgs || [];
-        if (jineMsgs.length === 0) return;
+        if (jineMsgs.length === 0) {
+            jineMsgs = [{ reply: '发了……', time: ('0'+new Date().getHours()).slice(-2)+':'+('0'+new Date().getMinutes()).slice(-2) }];
+        }
         _cancelF7Timers();
+        _f7StaggerPending = jineMsgs.length;
         var _f7SlotId = SaveManager.getCurrentSlot().id;
         var _f7SlotCreatedAt = SaveManager.data.slots[_f7SlotId] ? SaveManager.data.slots[_f7SlotId].createdAt : null;
         var t1 = setTimeout(function(){
             jineMsgs.forEach(function(msg,i){
                 var t2 = setTimeout(function(){
                     var slot = SaveManager.data.slots[_f7SlotId];
-                    if (!slot) return;
-                    if (slot.createdAt !== _f7SlotCreatedAt) return;
+                    if (!slot) { _f7StaggerPending = Math.max(0, _f7StaggerPending - 1); _flushStaggerCache(); return; }
+                    if (slot.createdAt !== _f7SlotCreatedAt) { _f7StaggerPending = Math.max(0, _f7StaggerPending - 1); _flushStaggerCache(); return; }
                     var chatMsg = {
                         time: msg.time||'', reply: msg.reply||'',
                         ame_sticker: msg.ame_sticker||null, player_text:'', sticker:''
@@ -2079,6 +2111,8 @@ window.doRelease = function() {
                         jineChatMsgs.push(chatMsg);
                         if (ACTIVE_TAB==='jine') renderJineChatMsgs();
                     }
+                    _f7StaggerPending--;
+                    if (_f7StaggerPending <= 0) _flushStaggerCache();
                 }, i*1000+300);
                 _f7Timers.push(t2);
             });
@@ -2221,7 +2255,7 @@ function _executeReply() {
         recent_posts: recentPosts
     };
 
-    fetch(API + '/api/jine/chat', {
+    apiFetch('/api/jine/chat', {
         method: 'POST', headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(requestBody),
         signal: _pendingController.signal
@@ -2249,11 +2283,16 @@ function _executeReply() {
                 reply: replyText, ame_sticker: data.ame_sticker || null,
                 recall: false
             };
-            jineChatMsgs.push(replyMsg);
             _batchSentIdx = jineChatMsgs.length;  // advance past this reply
             for (var bi = 0; bi < batchMsgs.length; bi++) { batchMsgs[bi]._replied = true; }
-            SaveManager.addJineMessage(replyMsg);
-            if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
+            if (_f7StaggerPending > 0) {
+                // F7 stagger active → cache reply, flush after stagger ends
+                _f7StaggerCache.push(replyMsg);
+            } else {
+                jineChatMsgs.push(replyMsg);
+                SaveManager.addJineMessage(replyMsg);
+                if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
+            }
             // Check if new messages arrived during API — if so, start fresh window
             if (_checkUnreplied()) {
                 startAmeResponse();
@@ -2281,9 +2320,13 @@ function _executeReply() {
             endAmeResponse();
             var fb = { time: ('0'+new Date().getHours()).slice(-2)+':'+('0'+new Date().getMinutes()).slice(-2),
                 reply: ['...','嗯','知道了','哼'][Math.floor(Math.random()*4)], recall: false };
-            jineChatMsgs.push(fb);
-            _batchSentIdx = jineChatMsgs.length;  // advance past fallback reply
-            SaveManager.addJineMessage(fb);
+            _batchSentIdx = jineChatMsgs.length;
+            if (_f7StaggerPending > 0) {
+                _f7StaggerCache.push(fb);
+            } else {
+                jineChatMsgs.push(fb);
+                SaveManager.addJineMessage(fb);
+            }
             if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
         }, remainWait);
     });

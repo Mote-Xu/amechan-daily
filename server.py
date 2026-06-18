@@ -25,19 +25,17 @@ from generator import generate_timeline, generate_jine_chat, generate_jine_relea
 # 频率限制（内存，重启清零）
 # ============================================================
 _ip_last_request: dict[str, float] = defaultdict(float)
-_ip_daily_count: dict[str, int] = defaultdict(int)
-RATE_INTERVAL = 2       # 同一 IP 两次请求最小间隔（秒）
-RATE_DAILY_CAP = 200    # 同一 IP 每天最大 POST 次数
+RATE_INTERVAL = 1.0     # 同一 IP 两次请求最小间隔（秒）
+RATE_LIMIT_ENABLED = os.environ.get("RATE_LIMIT_ENABLED", "").lower() in ("1", "true", "yes")
 
 
 def check_rate_limit(client_ip: str) -> bool:
+    if not RATE_LIMIT_ENABLED:
+        return True
     now = time.time()
     if now - _ip_last_request[client_ip] < RATE_INTERVAL:
         return False
-    if _ip_daily_count[client_ip] >= RATE_DAILY_CAP:
-        return False
     _ip_last_request[client_ip] = now
-    _ip_daily_count[client_ip] += 1
     return True
 
 
@@ -328,7 +326,7 @@ def main():
     print(f"       POST /api/generate    -> 生成 + 返回 JSON（不写盘）")
     print(f"       POST /api/release     -> F7 JINE 消息（无状态）")
     print(f"       POST /api/jine/chat   -> F8 聊天回复（无状态）")
-    print(f"  安全: IP 限频 {RATE_INTERVAL}s/{RATE_DAILY_CAP}次每天")
+    print(f"  安全: IP 限频 {'已启用 (' + str(RATE_INTERVAL) + 's)' if RATE_LIMIT_ENABLED else '已关闭（本地开发）'}")
     print("=" * 50)
 
     server = ThreadingHTTPServer((HOST, PORT), AmechanHandler)
