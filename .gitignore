@@ -24,6 +24,9 @@ static/img/webcam/
 _patch*.py
 _smoke*.py
 
+# Cloudflared binary (54MB, not needed in repo)
+cloudflared.exe
+
 # OS
 .DS_Store
 Thumbs.db

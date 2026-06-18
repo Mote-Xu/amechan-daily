@@ -851,8 +851,12 @@ body {
 .webcam-state-menu .state-opt.current::before{content:"● ";color:#00ff88;}
 .pixel-cat,.ame-pixel{display:none;}.sticker-png.error~.pixel-cat,.sticker-png.error~.ame-pixel{display:block;}
 </style>
+<!-- Cloudflare Turnstile (部署时配置 TURNSTILE_SITE_KEY) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" defer></script>
 </head>
 <body class="crt">
+<!-- Turnstile 隐式验证容器 -->
+<div id="turnstile-widget" style="display:none;"></div>
 <div class="app">
 <div class="container">
 
@@ -937,6 +941,14 @@ var API_PRIMARY = 'https://amechan.mote-pal.xyz';
 var API_BACKUP  = 'https://bak.mote-pal.xyz';
 var API_LOCAL = window.location.origin;
 function apiFetch(path, opts) {
+    // v4.3: 注入 Turnstile token（若可用）
+    if (opts && opts.body && _turnstileToken) {
+        try {
+            var _b = JSON.parse(opts.body);
+            _b.cf_token = _turnstileToken;
+            opts.body = JSON.stringify(_b);
+        } catch(_e) {}
+    }
     if (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') {
         return fetch(API_LOCAL + path, opts);
     }
@@ -945,6 +957,39 @@ function apiFetch(path, opts) {
         return fetch(API_BACKUP + path, opts);
     });
 }
+
+// ============================================================
+// Turnstile 隐式验证（部署时配置 TURNSTILE_SITE_KEY）
+// ============================================================
+var TURNSTILE_SITE_KEY = '';
+var _turnstileToken = null;
+var _turnstileWidgetId = null;
+
+function initTurnstile() {
+    if (!TURNSTILE_SITE_KEY) return;
+    if (typeof turnstile === 'undefined') {
+        setTimeout(initTurnstile, 500);
+        return;
+    }
+    _turnstileWidgetId = turnstile.render('#turnstile-widget', {
+        sitekey: TURNSTILE_SITE_KEY,
+        callback: function(token) { _turnstileToken = token; },
+        'expired-callback': function() {
+            _turnstileToken = null;
+            turnstile.reset(_turnstileWidgetId);
+        },
+        'error-callback': function() { _turnstileToken = null; }
+    });
+    console.log('[turnstile] 已初始化');
+}
+
+function refreshTurnstileToken() {
+    if (!_turnstileWidgetId) return;
+    try { turnstile.reset(_turnstileWidgetId); } catch(_e) {}
+}
+// Token 每 240s 自动刷新（有效期 300s，留 60s 缓冲）
+setInterval(refreshTurnstileToken, 240000);
+
 var CONTAINER = document.getElementById('feed-container');
 var ACTIVE_TAB = 'all';
 var knownBatches = {};
@@ -1070,8 +1115,8 @@ var _stressFromDanmaku = 0;  // accumulated stress delta from danmaku
                 henoji:{count:2,interval:500,label:'Henji'}, henoji_dark:{count:2,interval:500,label:'Dark Henji'},
                 movie:{count:5,interval:250,label:'Movie'}, nail:{count:5,interval:300,label:'Nail Biting'},
                 selfie:{count:6,interval:300,label:'Selfie'}, sleep:{count:9,interval:400,label:'Sleeping'},
-                smile:{count:3,interval:350,label:'Smile'}, tv:{count:7,interval:250,label:'TV'},
-                voice_training:{count:8,interval:200,label:'Voice Training'}
+                smile:{count:3,interval:350,label:'Smile'}, tv:{count:8,interval:250,label:'TV'},
+                voice_training:{count:9,interval:200,label:'Voice Training'}
             },
 
             init: function() {
@@ -2559,6 +2604,7 @@ initDanmaku();
 jiggleLive();
 jiggleStats();
 setInterval(jiggleStats, 15000);
+initTurnstile();
 fetchTimeline();
 // Poll for new content every 30s (empty-feed fast poll handled inside fetchTimeline)
 if (!isStaticMode) {

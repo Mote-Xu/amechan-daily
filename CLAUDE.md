@@ -1,7 +1,7 @@
 # amechan-daily — 超天酱日常推文小站
 
 > DeepSeek V4 驱动的超天酱模拟账号。
-> 最后更新：2026-06-18 (v4.3)
+> 最后更新：2026-06-18 (v4.4)
 >
 > **🔒 角色还原优先于功能开发。见 `PRIVATE.md`（不上传远程仓库）。**
 >
@@ -16,6 +16,8 @@ python server.py  # → http://0.0.0.0:8930
 
 环境变量（部署时）：
 - `RATE_LIMIT_ENABLED=1` — 启用 IP 限频（本地默认关闭）
+- `TURNSTILE_SECRET_KEY=...` — Turnstile 验证密钥
+- 前端: `TURNSTILE_SITE_KEY=...` — 部署前在 `index.html` 中填入
 
 ## 核心功能状态
 
@@ -26,23 +28,45 @@ python server.py  # → http://0.0.0.0:8930
 | 推博 Feed | 🟢 | 超天酱禁空洞模板，糖糖强制无逻辑重复，三层反差 |
 | 弹幕 | 🟢 | 应援 30 + 吐槽 39，transform GPU 动画 |
 | 多存档 | ✅ | createdAt 校验防串档 |
-| 双机 fallback | 🟡 | 前端 apiFetch 已就绪，部署受阻于 Zero Trust Dashboard（需绑卡） |
+| 双机 fallback | 🟢 | v4.4: Locally-Managed Tunnel 绕过 Zero Trust，主备 DNS 已路由，浏览器验证通过 |
+| Turnstile | 🟡 | 前端 widget + token 注入已就绪，部署时填 `TURNSTILE_SITE_KEY` |
 
-## 架构 (v4.3)
+## 架构 (v4.4)
 
 ```
 浏览器 localStorage ↕ POST JSON (CORS)
-  ├─ apiFetch() 本地直连 / 公网双机 fallback（待 Dashboard 配置）
+  ├─ apiFetch() 本地直连 / 公网双机 fallback + Turnstile token 注入
 Python ThreadingHTTPServer
   ├─ sanitize_user_input()        注入防御 (11模式)
   ├─ _sanitize_template_phrases() 手[冰|冷]→12种替代表达
   ├─ check_rate_limit()           RATE_LIMIT_ENABLED 控制（默认关闭）
-  ├─ verify_turnstile()           Turnstile (待前端集成)
+  ├─ verify_turnstile()           Turnstile (前端已集成，部署时启用)
   └─ generate_jine_chat()         v4.3: recent_posts→_make_timeline_context()
   ↕ DeepSeek V4-pro
 ```
 
-## v4.3 修改记录 (2026-06-18)
+### 双机部署架构
+
+```
+用户 → amechan.mote-pal.xyz → Cloudflare → Tunnel 87fc0324 → 本地:8930 (主)
+       bak.mote-pal.xyz      → Cloudflare → Tunnel 51cc70a8 → 老电脑:8930 (备)
+前端 apiFetch 主失败 → 自动降级备用
+```
+
+Cloudflared 使用 **Locally-Managed** 模式（`config.yml` + `route dns`），无需 Zero Trust Dashboard / 信用卡。
+
+## v4.4 修改记录 (2026-06-18)
+
+| 修改 | 文件 | 说明 |
+|------|------|------|
+| Cloudflared 本地管理 | .cloudflared/*.yml, deploy/ | 切到 Locally-Managed 绕过 Zero Trust 绑卡；双机 ingress 分离；`route dns -f` 切主域名到本地 |
+| 双机 fallback 上线 | — | 主 `amechan.mote-pal.xyz`→本地，备 `bak.mote-pal.xyz`→老电脑；浏览器验证通过 |
+| 部署脚本包 | deploy/ | daemon_server.vbs + daemon_cloudflared.vbs + Task Scheduler 指南 + README |
+| Turnstile 前端 | index.html | widget 容器 + token 管理 + apiFetch 注入 cf_token；每 240s 自动刷新 |
+| Webcam 帧计数 | index.html | tv 7→8 (加载 007), voice_training 8→9 (加载 008), handspinner 保持 12 |
+| cloudflared.exe | 项目根 | v2026.6.0 完整版 (54MB)，配合 `gitignore` 排除 |
+
+## v4.3 修改记录
 
 | 修改 | 文件 | 说明 |
 |------|------|------|
@@ -62,20 +86,21 @@ Python ThreadingHTTPServer
 
 ## 已知问题
 
-1. **JINE 聊天偶发傲娇反射**：prompts.py 校准后大幅改善，LLM 仍偶尔滑回（如"恶心...但是可以"）。在可接受范围。
-2. **双机 fallback 部署受阻**：Zero Trust Dashboard 需绑银行卡才能管理 Public Hostname。`apiFetch` 前端代码已就绪，Cloudflare API Token 可操作 DNS 但无法绕过 Zero Trust 的 Tunnel hostname 锁定。
-3. **老电脑运维**：NSSM server 需管理员重启才能加载新代码；cloudflared 手动窗口不稳定，待服务化。
-4. 弹幕 CSS 偶尔消失 — transform 加速后待观察
-5. webcam 部分帧缺失 (handspinner_004, tv_005, voice_training_007)
+1. **JINE 聊天偶发傲娇反射**：prompts.py 校准后大幅改善，LLM 仍偶尔滑回。在可接受范围。
+2. **`bak.mote-pal.xyz` DNS 等待传播**：老电脑 `route dns` 已成功，新域名全球生效需等待。
+3. **Git Bash curl 无法访问 Cloudflare**：浏览器正常，不影响使用。
+4. **弹幕 CSS 偶尔消失** — transform 加速后待观察。
+5. **webcam 缺帧**：handspinner_004 (无源资产)，tv_005 和 voice_training_007 (v4.4 已通过调整 count 加载后续帧)。
 
 ## 公网部署
 
 | 项 | 状态 |
 |---|:--:|
 | CORS / 注入防御 / sanitizer | ✅ |
-| Cloudflare Tunnel + 域名 `amechan.mote-pal.xyz` | 🟡 Tunnel 正常，老电脑待管理员重启 |
-| 老电脑 NSSM 服务 | 🟡 代码已更新，待 `nssm restart`（需管理员） |
-| 双机 fallback | 🔴 受阻于 Zero Trust Dashboard |
+| Cloudflare Tunnel 主链路 | 🟢 Locally-Managed，浏览器验证通过 |
+| Cloudflare Tunnel 备用链路 | 🟡 DNS 传播中 |
+| 老电脑服务 | 🟢 NSSM 已重启，cloudflared Locally-Managed |
+| 双机 fallback | 🟢 主链路上线，备链路等 DNS |
 | IP 限频 | 🟡 默认关闭，部署设 `RATE_LIMIT_ENABLED=1` |
-| Turnstile 前端集成 | ⏳ |
+| Turnstile | 🟡 前端已集成，部署时填 `TURNSTILE_SITE_KEY` |
 | 全链路重启验证 | ⏳ |

@@ -1,6 +1,6 @@
 # 需求文档 — 超天酱日常推文小站
 
-> 版本：v4.3 · 2026-06-18
+> 版本：v4.4 · 2026-06-18
 
 ---
 
@@ -27,13 +27,24 @@
 |----|------|:--:|
 | S1 | CORS | ✅ |
 | S2 | Prompt Injection 防御 | ✅ 11种模式 + system_warning |
-| S3 | Turnstile | 🟡 后端框架已搭建 |
+| S3 | Turnstile | 🟡 前端已集成（widget + token注入），部署时填 `TURNSTILE_SITE_KEY` |
 | S4 | 频率限制 | 🟡 本地默认关闭，部署 `RATE_LIMIT_ENABLED=1` |
 | S5 | HTTPS | ✅ Cloudflare Tunnel |
 | S6 | API Key 保护 | ✅ 后端直连 |
-| S7 | 固定域名 | ✅ `amechan.mote-pal.xyz` |
-| S8 | 7×24 服务器 | 🟡 老电脑代码已更新，待管理员重启；cloudflared 手动窗口不稳定 |
-| S9 | 双机 fallback | 🔴 前端已就绪，受阻于 Zero Trust Dashboard（需绑卡管理 Public Hostname） |
+| S7 | 固定域名 | ✅ `amechan.mote-pal.xyz` (主) + `bak.mote-pal.xyz` (备) |
+| S8 | 7×24 服务器 | 🟢 NSSM 已重启 + cloudflared Locally-Managed |
+| S9 | 双机 fallback | 🟢 Locally-Managed Tunnel 绕过 Zero Trust，主链路上线，备链路等 DNS 传播 |
+
+## v4.4 修改 (2026-06-18)
+
+| 问题 | 修复 | 文件 |
+|------|------|------|
+| Zero Trust Dashboard 绑卡墙 | 切到 Locally-Managed Tunnel + `route dns -f` 覆盖 DNS | .cloudflared/*.yml + cloudflared.exe |
+| 双机 fallback 无法部署 | 主链路 `amechan.mote-pal.xyz`→本地已验证通过；备链路 `bak.mote-pal.xyz` DNS 传播中 | — |
+| 老电脑 cloudflared 不稳定 | Locally-Managed 替代 remotely-managed；VBS 守护脚本备用 | deploy/ |
+| Turnstile 前端未集成 | widget + token 管理 + apiFetch 注入 cf_token | index.html |
+| Webcam 缺帧 | tv 7→8, voice_training 8→9 | index.html |
+| 老电脑 server 未更新 | 用户 NSSM restart | — |
 
 ## v4.3 修改 (2026-06-18)
 
@@ -52,13 +63,12 @@
 | 已读延迟 | _read / _replied 分离 | index.html |
 | Server 客户端断开崩溃 | _send_json try/except | server.py |
 | Webcam 遮挡 | 480→430px | index.html |
-| 公网单点故障（双机） | apiFetch 双机 fallback（前端就绪，部署受阻） | index.html |
+| 公网单点故障（双机） | apiFetch 双机 fallback | index.html |
 
 ## 残余
 
 1. JINE 聊天偶发傲娇反射 — 可接受范围
-2. 双机 fallback 部署 — 需 Zero Trust Dashboard 或替代方案
-3. 老电脑 server 重启 + cloudflared 服务化 — 需管理员
-4. webcam 缺帧 (handspinner_004, tv_005, voice_training_007)
-5. Turnstile 前端集成
-6. 全链路重启验证
+2. `bak.mote-pal.xyz` DNS 等待全球传播
+3. webcam 缺帧 handspinner_004 (无源资产)，tv_005 和 voice_training_007 (v4.4 已调整 count 加载后续帧)
+4. Turnstile 部署：填 `TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY`
+5. 全链路重启验证
