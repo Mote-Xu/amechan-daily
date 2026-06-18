@@ -2698,8 +2698,11 @@ jiggleStats();
     function _scheduleAutoPoke() {
         if (_autoPokeTimer) clearTimeout(_autoPokeTimer);
         var delay = (AUTO_POKE_MIN + Math.random() * (AUTO_POKE_MAX - AUTO_POKE_MIN)) * 60000;
+        var nextAt = new Date(Date.now() + delay);
+        console.log('[auto-poke] 下次自动戳一戳: ' + nextAt.toLocaleTimeString());
         _autoPokeTimer = setTimeout(function() {
             if (isStaticMode) return;
+            console.log('[auto-poke] 触发!');
             doRelease();
             localStorage.setItem('ame_last_auto_poke', Date.now());
             _scheduleAutoPoke();
