@@ -19,7 +19,7 @@
 | C2 | 推博 Feed | 🟢 | 超天酱禁止空洞模板；糖糖日记强制无逻辑重复+核心词汇；timeline三层表里反差；hidden_pool扩至10条 |
 | C3 | 弹幕 | 🟢 | 应援 30+吐槽 39；v4.3: transform GPU动画 |
 | C4 | F7 JINE 自言自语 | 🟡 | v4.3: 动态注入精神标签+因果锚点，第二批次明显改善；偶发模板化。prompts.py 待用户调 |
-| C5 | JINE 聊天单条质量 | 🟡 | 偶发模板回复（如被夸时"恶不恶心"）。prompts.py few-shot 缺此 pattern |
+| C5 | JINE 聊天单条质量 | 🟡 | 偶发模板回复（被夸时、sticker_7时）。sticker_7 缺专门触发规则，LLM 降级为傲娇反射 |
 
 ## P2：公网部署 🟢 已上线
 

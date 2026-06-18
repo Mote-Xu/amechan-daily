@@ -45,7 +45,7 @@
 ## 四、残余问题
 
 1. **F7 JINE 自言自语**：动态注入后第二批次明显改善（回扣具体推文内容），但首批仍偶有模板化。需 prompts.py 配合调整。
-2. **JINE 聊天偶发单条模板**：如被突然夸奖时回"突然说这种话恶不恶心"，用词单一。prompts.py few-shot 缺少此 pattern。
+2. **JINE 聊天质量波动**：偶发模板回复（被夸时"恶不恶心"）；**sticker_7（永远爱你）回应失格**——连续收到后回"你发什么神经…恶心死了"是廉价傲娇反射，sticker_7 应触发复杂情绪（恐慌+暗喜+嘴硬破功），`sticker_rules` 缺 sticker_7 专门规则。
 3. 公网 JINE 502：待重启验证 IPv6 修复
 4. 老电脑 cloudflared 非服务自启
 5. webcam 部分帧缺失 (handspinner_004, tv_005, voice_training_007)
