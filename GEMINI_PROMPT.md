@@ -1,79 +1,50 @@
-# 超天酱模拟账号 — Gemini 全面审查 v4.4
+# 超天酱模拟账号 — Gemini 紧急救援
 
-> v4.4 收工：双机 fallback 全线上线 + prompts 同居设定强化 + 已读标记修复。
-> **当前卡点：Turnstile 部署配置；全链路重启验证。**
+> **当前卡死点：双机备站 `bak.amechan.mote-pal.xyz` 无法公网访问。Turso 云端存档已完成。主站正常。**
 
 ---
 
-## 一、项目概览
+## 已完成的 v4.5 改动
 
-模拟《主播女孩重度依赖》糖糖/超天酱的社交媒体。纯前端 HTML + Python http.server 后端，DeepSeek V4-pro。
-三层内容：Poketter 推博 + 糖糖日记 + JINE 私聊 + 弹幕。
-
-## 二、架构（v4.4）
-
-- 前端 localStorage 管理所有数据
-- `apiFetch()` 本地直连 / 公网双机 fallback + Turnstile token 注入
-- 后端纯计算：sanitize → prompt → DeepSeek → sanitize → 返回 JSON
-- ThreadingHTTPServer + CORS + 限频 + Turnstile 验证（可选）
-- Prompt Injection 防御：11种正则 + system_warning
-- JINE 上下文感知 + 人格校准 + F7 动态注入 + stagger 缓存
-
-### 双机部署架构（✅ 已上线）
-
-```
-用户 → amechan.mote-pal.xyz → Cloudflare → Tunnel 87fc0324 → 本地:8930 (主)
-       bak.mote-pal.xyz      → Cloudflare → Tunnel 51cc70a8 → 老电脑:8930 (备)
-前端 apiFetch 主失败 → 自动降级备用
-```
-
-Cloudflared Locally-Managed 模式，完全绕过 Zero Trust Dashboard / 信用卡。
-
-## 三、v4.4 完成清单
-
-| 修改 | 说明 |
+| 改动 | 说明 |
 |------|------|
-| Locally-Managed Tunnel | `route dns -f` 覆盖 DNS，主备域名均已路由生效 |
-| 双机 fallback | 主备链路均可公网访问，前端 apiFetch 自动降级待实测 |
-| 同居设定强化 | prompts.py 两处硬约束：同床共枕、禁止「你家/我家」分离 |
-| 已读标记修复 | `_shownReceipts[key]` 提前标记，防止 innerHTML 重写导致公网丢已读 |
-| Turnstile 前端 | widget + 240s token 刷新 + apiFetch 注入 cf_token |
-| 部署脚本包 | `deploy/`: VBS 守护 + Task Scheduler 指南 |
-| Webcam 帧计数 | tv 7→8, voice_training 8→9 |
+| Turso 云端存档 | `apiFetch` 带 UUID，`POST /api/save`/`GET /api/load`/`DELETE /api/save/delete`，3s debounce 自动上传 |
+| 云恢复 | `syncFromCloudOnBoot()` 启动时比对时间戳，云端更新则覆盖本地 |
+| 前端降级 | `apiFetch` 主站失败自动切 `bak.amechan.mote-pal.xyz` |
+| 切存档修复 | `reloadFromSlot` 重置 reply 引擎状态 |
 
-## 四、残余
+## 当前部署拓扑
 
-1. JINE 偶发傲娇反射（可接受范围）
-2. webcam 缺帧 handspinner_004 (无源资产)
-3. Turnstile 部署时填 key
-4. 双机切换全链路测试 — 关主 server，验证浏览器自动降级到 bak
-5. 老电脑 VBS 守护部署（当前仍用 NSSM）
+```
+主站: amechan.mote-pal.xyz → CNAME → 87fc0324.cfargotunnel.com → 本地 cloudflared (locally-managed, amechan-local)
+      状态: 🟢 手机4G可访问
 
-## 五、请 Gemini 重点审查
+备站: bak.amechan.mote-pal.xyz → CNAME → 51cc70a8.cfargotunnel.com → 老电脑 cloudflared (amechan)
+      状态: 🔴 手机4G打不开
+```
 
-1. **当前架构的长期稳定性**：Locally-Managed Tunnel + 双机 fallback 是否有单点风险？老电脑 NSSM 是否需要替换为 VBS 守护？
+## 备站故障详情
 
-2. **已读标记修复方案是否合理**：把 `_shownReceipts` 标记提前到 render 时而非 stagger 回调中，解决了频繁 innerHTML 重写丢状态的问题。是否还有其他边界情况？
+**老电脑环境**：
+- Win10, Python server.py 在跑 (127.0.0.1:8930 正常响应)
+- cloudflared tunnel (51cc70a8) 4条QUIC连接在线
+- config.yml: `hostname: bak.amechan.mote-pal.xyz → service: http://127.0.0.1:8930`
+- `cloudflared tunnel route dns -f` 已执行，DNS CNAME 指向 tunnel UUID
 
-3. **Turnstile 的松耦合设计**：前后端均已就绪，部署时填 key 即可启用。这种设计适合长期维护吗？
+**尝试过的方法（均失败）**：
+1. 新建 tunnel `amechan-bak` (fe6dcab0) + `route dns` → 不通
+2. 用 Cloudflare API 删旧 DNS 重建 CNAME → 不通
+3. 切回旧 tunnel `51cc70a8` + `route dns -f` → 不通
+4. cloudflared 日志里看不到任何 ingress 请求（说明流量根本没到 tunnel）
 
-4. **【重头戏】localStorage → 数据库迁移方案（第二轮深度评审）**
+**已知事实**：
+- 旧 tunnel `51cc70a8` 是 Zero Trust 时期创建的（非 locally-managed），可能残留 Dashboard 绑定
+- 本地 tunnel `87fc0324` 是 locally-managed，`route dns -f` 后正常工作
+- cert.pem 从本地复制到老电脑，tunnel 能正常连接 Cloudflare edge
+- 没有 Zero Trust Dashboard 权限（需绑信用卡）
 
-   **背景**：当前全部数据在浏览器 localStorage。动机：清缓存就丢数据、不能跨设备、没有备份。
+## 请 Gemini 诊断
 
-   **已有分析**（上次审查）：如果主备各有独立 SQLite，切换时会变成"平行宇宙"——老电脑不知道主力机的聊天记录。
-
-   **已排除的方案**：
-   - Supabase/Neon 免费版：闲置休眠，首次访问 5-10s 唤醒，响应速度不可接受
-   - Litestream 实时同步：Windows 环境运维复杂，文件锁冲突风险高
-
-   **核心约束（不可妥协）**：
-   - ❌ 不能出现"平行世界"：主备切换后数据必须一致
-   - ❌ 不能影响响应速度：API 调用延迟不能超过现有水平（~2s 聊天回复）
-   - ✅ 数据不丢：清浏览器缓存也不怕
-   - ✅ 保留双机 fallback 架构
-
-   **请在这组硬约束下重新设计方案**。是否还有我们漏掉的第四种方案？比如：
-   - 前端 localStorage 依然做主运行时存储，后端 SQLite 只在存档时写，切换时不读取——纯粹做"云存档备份"而非实时数据源？
-   - 用 Cloudflare Workers KV / D1（免费额度，CDN 边缘，无休眠）作为主备之间的共享存储层？
-   - 其他我们没想到的架构？
+1. 为什么 `route dns -f` 对旧 tunnel 51cc70a8 不生效？流量能到 Cloudflare edge 但进不了 tunnel
+2. 是否需要删除旧 tunnel 51cc70a8、重新在本地创建 locally-managed tunnel、把凭证拷到老电脑？
+3. 还是 DNS/proxy 层面的问题（orange cloud 和 tunnel 的 hostname 注册冲突）？
