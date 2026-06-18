@@ -26,13 +26,13 @@ python server.py  # → http://0.0.0.0:8930
 | 推博 Feed | 🟢 | 超天酱禁空洞模板，糖糖强制无逻辑重复，三层反差 |
 | 弹幕 | 🟢 | 应援 30 + 吐槽 39，transform GPU 动画 |
 | 多存档 | ✅ | createdAt 校验防串档 |
-| 双机 fallback | 🟢 | 公网主→`amechan.mote-pal.xyz`，备→`bak.mote-pal.xyz`，前端自动降级 |
+| 双机 fallback | 🟡 | 前端 apiFetch 已就绪，部署受阻于 Zero Trust Dashboard（需绑卡） |
 
 ## 架构 (v4.3)
 
 ```
 浏览器 localStorage ↕ POST JSON (CORS)
-  ├─ apiFetch() 本地直连 / 公网双机 fallback
+  ├─ apiFetch() 本地直连 / 公网双机 fallback（待 Dashboard 配置）
 Python ThreadingHTTPServer
   ├─ sanitize_user_input()        注入防御 (11模式)
   ├─ _sanitize_template_phrases() 手[冰|冷]→12种替代表达
@@ -63,17 +63,19 @@ Python ThreadingHTTPServer
 ## 已知问题
 
 1. **JINE 聊天偶发傲娇反射**：prompts.py 校准后大幅改善，LLM 仍偶尔滑回（如"恶心...但是可以"）。在可接受范围。
-2. 弹幕 CSS 偶尔消失 — transform 加速后待观察
-3. webcam 部分帧缺失 (handspinner_004, tv_005, voice_training_007)
+2. **双机 fallback 部署受阻**：Zero Trust Dashboard 需绑银行卡才能管理 Public Hostname。`apiFetch` 前端代码已就绪，Cloudflare API Token 可操作 DNS 但无法绕过 Zero Trust 的 Tunnel hostname 锁定。
+3. **老电脑运维**：NSSM server 需管理员重启才能加载新代码；cloudflared 手动窗口不稳定，待服务化。
+4. 弹幕 CSS 偶尔消失 — transform 加速后待观察
+5. webcam 部分帧缺失 (handspinner_004, tv_005, voice_training_007)
 
 ## 公网部署
 
 | 项 | 状态 |
 |---|:--:|
 | CORS / 注入防御 / sanitizer | ✅ |
-| Cloudflare Tunnel + 域名 `amechan.mote-pal.xyz` | ✅ |
-| 老电脑 NSSM 服务 | ✅ |
-| 双机 fallback | ⏳ 待配 `bak.mote-pal.xyz` Tunnel |
+| Cloudflare Tunnel + 域名 `amechan.mote-pal.xyz` | 🟡 Tunnel 正常，老电脑待管理员重启 |
+| 老电脑 NSSM 服务 | 🟡 代码已更新，待 `nssm restart`（需管理员） |
+| 双机 fallback | 🔴 受阻于 Zero Trust Dashboard |
 | IP 限频 | 🟡 默认关闭，部署设 `RATE_LIMIT_ENABLED=1` |
 | Turnstile 前端集成 | ⏳ |
 | 全链路重启验证 | ⏳ |

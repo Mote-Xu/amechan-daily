@@ -15,13 +15,13 @@
 
 | ID | 领域 | 状态 | 已做 |
 |----|------|:--:|------|
-| C1 | JINE 聊天 | 🟢 | 语境判断；身体依赖表达；sticker_rules情绪绑定；名字固化；注入防御；v4.3: timeline上下文 + 人格校准（底层关系/sticker_7/硬禁词库） |
+| C1 | JINE 聊天 | 🟢 | 语境判断；身体依赖表达；sticker_rules情绪绑定；名字固化；注入防御；v4.3: timeline上下文 + 人格校准 |
 | C2 | 推博 Feed | 🟢 | 禁空洞模板；糖糖强制无逻辑重复；三层表里反差；hidden_pool 10条 |
 | C3 | 弹幕 | 🟢 | 应援 30+吐槽 39；transform GPU动画 |
-| C4 | F7 JINE 自言自语 | 🟢 | 动态注入精神标签+因果锚点，质量明显改善（回扣具体推文内容） |
+| C4 | F7 JINE 自言自语 | 🟢 | 动态注入精神标签+因果锚点，质量明显改善 |
 | C5 | JINE 聊天质量 | 🟡 | prompts.py 校准后大幅改善，LLM 偶发傲娇反射在可接受范围 |
 
-## P2：公网部署 🟢 已上线
+## P2：公网部署
 
 | ID | 需求 | 状态 |
 |----|------|:--:|
@@ -32,8 +32,8 @@
 | S5 | HTTPS | ✅ Cloudflare Tunnel |
 | S6 | API Key 保护 | ✅ 后端直连 |
 | S7 | 固定域名 | ✅ `amechan.mote-pal.xyz` |
-| S8 | 7×24 服务器 | ✅ 老家 i5-6500 · NSSM + cloudflared |
-| S9 | 双机 fallback | ⏳ 前端已就绪，待配 `bak.mote-pal.xyz` |
+| S8 | 7×24 服务器 | 🟡 老电脑代码已更新，待管理员重启；cloudflared 手动窗口不稳定 |
+| S9 | 双机 fallback | 🔴 前端已就绪，受阻于 Zero Trust Dashboard（需绑卡管理 Public Hostname） |
 
 ## v4.3 修改 (2026-06-18)
 
@@ -52,12 +52,13 @@
 | 已读延迟 | _read / _replied 分离 | index.html |
 | Server 客户端断开崩溃 | _send_json try/except | server.py |
 | Webcam 遮挡 | 480→430px | index.html |
-| 公网单点故障 | apiFetch 双机 fallback | index.html |
+| 公网单点故障（双机） | apiFetch 双机 fallback（前端就绪，部署受阻） | index.html |
 
 ## 残余
 
-1. JINE 聊天偶发傲娇反射 — prompts.py 校准后大幅降低，可接受
-2. webcam 缺帧 (handspinner_004, tv_005, voice_training_007)
-3. Turnstile 前端集成
-4. 全链路重启验证 + `bak.mote-pal.xyz` Tunnel 配置
-5. cloudflared 服务化
+1. JINE 聊天偶发傲娇反射 — 可接受范围
+2. 双机 fallback 部署 — 需 Zero Trust Dashboard 或替代方案
+3. 老电脑 server 重启 + cloudflared 服务化 — 需管理员
+4. webcam 缺帧 (handspinner_004, tv_005, voice_training_007)
+5. Turnstile 前端集成
+6. 全链路重启验证
