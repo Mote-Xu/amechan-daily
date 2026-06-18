@@ -1,5 +1,5 @@
 """
-HTTP 服务器 v4 — 完全无状态 + 多线程 + 频率限制
+HTTP 服务器 v4.5 — 双机边缘网关 + Turso 云端存档
 """
 import json
 import os
@@ -10,7 +10,8 @@ import time
 from collections import defaultdict
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import urlparse, unquote
+import urllib.request
 
 try:
     sys.stdout.reconfigure(encoding="utf-8")
@@ -19,6 +20,58 @@ except Exception:
 
 from config import HOST, PORT, STATIC_DIR, DATA_DIR, ROOT_DIR
 from generator import generate_timeline, generate_jine_chat, generate_jine_release_msgs
+
+# ============================================================
+# Turso 云端数据库（libsql — 边缘 SQLite，无休眠）
+# ============================================================
+TURSO_URL = os.environ.get("TURSO_URL", "")
+TURSO_TOKEN = os.environ.get("TURSO_TOKEN", "")
+_turso_client = None
+
+
+def _turso_execute(sql: str, params: tuple = ()) -> list:
+    """通过 Turso HTTP API 执行 SQL（无需额外依赖）。"""
+    if not TURSO_URL or not TURSO_TOKEN:
+        return []
+    import urllib.request
+    # Turso HTTP API 要求参数带类型标注，但不能传空 args
+    stmt = {"sql": sql}
+    if params:
+        stmt["args"] = [{"type": "text", "value": str(v)} for v in params]
+    url = TURSO_URL.replace("libsql://", "https://") + "/v2/pipeline"
+    body = json.dumps({"requests": [{"type": "execute", "stmt": stmt}]}).encode()
+    req = urllib.request.Request(url, data=body,
+        headers={"Authorization": "Bearer " + TURSO_TOKEN, "Content-Type": "application/json"}, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read())
+            results = data.get("results", [])
+            if results and "response" in results[0]:
+                return results[0]["response"].get("result", {}).get("rows", [])
+    except Exception as e:
+        print(f"  [!] Turso HTTP 异常: {e}")
+    return []
+
+
+def _turso_init():
+    """首次连接时建表（幂等）。"""
+    _turso_execute("""
+        CREATE TABLE IF NOT EXISTS user_game_saves (
+            user_id TEXT NOT NULL,
+            slot_id TEXT NOT NULL,
+            timestamp REAL NOT NULL,
+            save_data TEXT NOT NULL,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (user_id, slot_id)
+        )
+    """)
+
+
+def _extract_user_uuid(headers) -> str | None:
+    auth = headers.get("Authorization", "")
+    if auth.startswith("Bearer "):
+        return auth[7:].strip()
+    return None
 
 
 # ============================================================
@@ -175,6 +228,25 @@ class AmechanHandler(SimpleHTTPRequestHandler):
         elif path == "/api/jine/chat":
             # v4: frontend manages JINE via localStorage
             self._send_json({"chat": []})
+        elif path == "/api/load":
+            # v4.5: Turso 云端加载存档（返回该用户所有存档槽）
+            user_id = _extract_user_uuid(self.headers)
+            if not user_id:
+                self._send_json({"ok": False, "error": "missing auth"}, status=401)
+                return
+            if not TURSO_URL or not TURSO_TOKEN:
+                self._send_json({"ok": True, "saves": None, "note": "Turso not configured"})
+                return
+            rows = _turso_execute(
+                "SELECT slot_id, timestamp, save_data FROM user_game_saves WHERE user_id=? ORDER BY timestamp DESC",
+                (user_id,))
+            saves = {}
+            for row in rows:
+                sid = row[0].get("value") if isinstance(row[0], dict) else row[0]
+                ts  = row[1].get("value") if isinstance(row[1], dict) else row[1]
+                sd  = row[2].get("value") if isinstance(row[2], dict) else row[2]
+                saves[sid] = {"timestamp": float(ts), "save_data": json.loads(sd) if isinstance(sd, str) else sd}
+            self._send_json({"ok": True, "saves": saves if saves else None})
         elif path == "/api/stats":
             self._send_json({"count": 0, "pool": 0, "status": "ok"})
         elif path == "/data/feed.json":
@@ -281,6 +353,40 @@ class AmechanHandler(SimpleHTTPRequestHandler):
                 print(f"  [X] JINE 回复失败: {e}")
                 self._send_json({"ok": False, "error": str(e)}, status=500)
 
+        elif path == "/api/save":
+            # v4.5: Turso 云端存档
+            body_raw = self._read_body()
+            body = self._parse_json(body_raw) if body_raw else {}
+            user_id = _extract_user_uuid(self.headers)
+            if not user_id:
+                self._send_json({"ok": False, "error": "missing auth"}, status=401)
+                return
+            slot_id = body.get("slot_id", "default")
+            timestamp = body.get("timestamp", time.time())
+            save_data = json.dumps(body.get("save_data", {}), ensure_ascii=False)
+            if not TURSO_URL or not TURSO_TOKEN:
+                self._send_json({"ok": True, "note": "Turso not configured"})
+                return
+            _turso_execute(
+                "INSERT INTO user_game_saves (user_id, slot_id, timestamp, save_data) VALUES (?, ?, ?, ?) ON CONFLICT(user_id, slot_id) DO UPDATE SET timestamp=excluded.timestamp, save_data=excluded.save_data, updated_at=CURRENT_TIMESTAMP",
+                (user_id, slot_id, timestamp, save_data))
+            self._send_json({"ok": True})
+
+        elif path == "/api/save/delete":
+            # v4.5: 删除云端存档
+            body_raw = self._read_body()
+            body = self._parse_json(body_raw) if body_raw else {}
+            user_id = _extract_user_uuid(self.headers)
+            if not user_id:
+                self._send_json({"ok": False, "error": "missing auth"}, status=401)
+                return
+            slot_id = body.get("slot_id", "")
+            if not slot_id:
+                self._send_json({"ok": False, "error": "missing slot_id"}, status=400)
+                return
+            _turso_execute("DELETE FROM user_game_saves WHERE user_id=? AND slot_id=?", (user_id, slot_id))
+            self._send_json({"ok": True})
+
         elif path == "/api/clear":
             # v4 stateless: no-op
             print("\n[*] /api/clear — no-op (stateless)")
@@ -317,6 +423,7 @@ class AmechanHandler(SimpleHTTPRequestHandler):
 
 def main():
     DATA_DIR.mkdir(parents=True, exist_ok=True)
+    _turso_init()  # v4.5: 启动时建表（幂等）
 
     print("=" * 50)
     print("  + Poketter v4.0 — Stateless + Threading + Rate Limiter +")

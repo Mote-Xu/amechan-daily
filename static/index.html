@@ -940,9 +940,17 @@ body {
 var API_PRIMARY = 'https://amechan.mote-pal.xyz';
 var API_BACKUP  = 'https://bak.mote-pal.xyz';
 var API_LOCAL = window.location.origin;
+// v4.5: 匿名身份令牌
+function getDeviceUUID() {
+    var uuid = localStorage.getItem('ame_device_uuid');
+    if (!uuid) { uuid = crypto.randomUUID(); localStorage.setItem('ame_device_uuid', uuid); }
+    return uuid;
+}
 function apiFetch(path, opts) {
-    // v4.3: 注入 Turnstile token（若可用）
-    if (opts && opts.body && _turnstileToken) {
+    opts = opts || {};
+    opts.headers = opts.headers || {};
+    opts.headers['Authorization'] = 'Bearer ' + getDeviceUUID();
+    if (opts.body && _turnstileToken) {
         try {
             var _b = JSON.parse(opts.body);
             _b.cf_token = _turnstileToken;
@@ -1162,6 +1170,7 @@ var _stressFromDanmaku = 0;  // accumulated stress delta from danmaku
                 }
                 if (this.animId) cancelAnimationFrame(this.animId);
                 if (this.smileTimer) { clearTimeout(this.smileTimer); this.smileTimer = null; }
+                if (this._autoCycleTimer) { clearTimeout(this._autoCycleTimer); this._autoCycleTimer = null; }
                 this.loopCount = 0; this.lastTick = 0;
                 this._tick();
                 this._updateMenuHighlight();
@@ -1207,16 +1216,15 @@ var _stressFromDanmaku = 0;  // accumulated stress delta from danmaku
             _typingMode: false,  // set true while 糖糖 is typing a reply
 
             _autoCycleState: function() {
-                if (this._typingMode) { this.loopCount = 0; return; }  // don't interrupt typing
+                if (this._typingMode) { this.loopCount = 0; return; }
                 var self = this; this.loopCount = 0;
-                // Common pool (90% chance)
                 var common = ['smile','selfie','tv','voice_training','egosearching','comic','handspinner','headphone','henoji','movie','nail','sleep'];
-                // Rare pool — hair variants (10% chance)
                 var rare = ['hair_drill','hair_long','hair_poney','hair_side','henoji_dark','egosearching_ura'];
                 var pool = Math.random() < 0.10 ? rare : common;
                 var next = pool[Math.floor(Math.random() * pool.length)];
-                if (next === this.currentState) next = common[0];  // fallback to smile
-                setTimeout(function() { self.switchState(next); }, 500 + Math.random() * 1500);
+                if (next === this.currentState) next = common[0];
+                if (this._autoCycleTimer) clearTimeout(this._autoCycleTimer);
+                this._autoCycleTimer = setTimeout(function() { self.switchState(next); }, 500 + Math.random() * 1500);
             },
 
             _onCanvasClick: function(e) {
@@ -1396,7 +1404,15 @@ var SaveManager = {
         };
     },
 
-    _persist: function() { localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.data)); },
+    _persist: function() { localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.data)); this._markDirty(); },
+    _markDirty: function() {
+        if (this._cloudPaused) return;
+        var self = this;
+        if (this._dirtyTimer) clearTimeout(this._dirtyTimer);
+        this._dirtyTimer = setTimeout(function() {
+            if (!self._cloudPaused) self.cloudUpload(self.data.currentSlot);
+        }, 3000);
+    },
 
     // v4: Pool management — frontend owns the hidden pool
     getPool: function() {
@@ -1477,7 +1493,7 @@ var SaveManager = {
             var others = keys.filter(function(k) { return k !== id; });
             this.data.currentSlot = others[0];
         }
-        delete this.data.slots[id]; this._persist(); return true;
+        delete this.data.slots[id]; this._persist(); this.cloudDelete(id); return true;
     },
 
     getJineChat: function() { var s = this.getCurrentSlot(); return s.data ? s.data.jineChat.slice() : []; },
@@ -1530,8 +1546,74 @@ var SaveManager = {
         });
         if (added > 0) { slot.updatedAt = new Date().toISOString(); this._persist(); }
         return added;
+    },
+
+    // v4.5: 云端存档上传（异步，不影响本地速度）
+    cloudUpload: function(slotId) {
+        var slot = this.data.slots[slotId];
+        if (!slot) return;
+        var copy = JSON.parse(JSON.stringify(slot));
+        delete copy.updatedAt;
+        apiFetch('/api/save', {
+            method: 'POST',
+            body: JSON.stringify({
+                slot_id: slotId,
+                timestamp: Date.now() / 1000,
+                save_data: copy
+            })
+        }).then(function(r) {
+            if (r.ok) console.log('[cloud] 存档同步成功:', slotId);
+        }).catch(function() { /* 静默失败，本地存档不受影响 */ });
+    },
+
+    // v4.5: 删除云端存档
+    cloudDelete: function(slotId) {
+        apiFetch('/api/save/delete', {
+            method: 'POST',
+            body: JSON.stringify({ slot_id: slotId })
+        }).then(function(r) {
+            if (r.ok) console.log('[cloud] 云端存档已删除:', slotId);
+        }).catch(function() {});
     }
 };
+
+// v4.5: 启动时从云端恢复存档
+function syncFromCloudOnBoot() {
+    console.log('[cloud] syncFromCloudOnBoot 启动...');
+    SaveManager._cloudPaused = true;
+    apiFetch('/api/load').then(function(r) { return r.json(); }).then(function(r) {
+        console.log('[cloud] /api/load 返回:', r);
+        if (!r.ok || !r.saves || Object.keys(r.saves).length === 0) {
+            SaveManager._cloudPaused = false;
+            return;
+        }
+        var cloudSaves = r.saves;
+        var recovered = false;
+        Object.keys(cloudSaves).forEach(function(sid) {
+            var localSlot = SaveManager.data.slots[sid];
+            var localTs = localSlot ? new Date(localSlot.updatedAt).getTime() / 1000 : 0;
+            var cloudTs = cloudSaves[sid].timestamp;
+            if (cloudTs > localTs) {
+                console.log('[cloud] 恢复存档:', sid);
+                var cloudData = cloudSaves[sid].save_data;
+                cloudData.updatedAt = new Date().toISOString();
+                cloudData.createdAt = cloudData.createdAt || new Date().toISOString();
+                SaveManager.data.slots[sid] = cloudData;
+                recovered = true;
+            }
+        });
+        if (recovered) {
+            var bestSlot = Object.keys(cloudSaves).reduce(function(a, b) { return cloudSaves[a].timestamp > cloudSaves[b].timestamp ? a : b; });
+            SaveManager.data.currentSlot = bestSlot;
+            SaveManager._cloudPaused = false;
+            SaveManager._persist();
+            reloadFromSlot();
+            showToast('☁️ 已从云端恢复存档');
+        } else {
+            SaveManager._cloudPaused = false;
+        }
+    }).catch(function() { SaveManager._cloudPaused = false; });
+}
 
 // UI functions
 function updateSaveIndicator() {
@@ -1543,9 +1625,15 @@ function updateSaveIndicator() {
 }
 
 function reloadFromSlot() {
-    _cancelF7Timers();  // kill pending F7 JINE timers from old save
+    _cancelF7Timers();
+    // 重置 reply 引擎状态（防切存档后已读不回）
+    if (_batchTimer) { clearTimeout(_batchTimer); _batchTimer = null; }
+    if (_pendingController) { _pendingController.abort(); _pendingController = null; }
+    _replyPending = false;
+    _batchStartIdx = -1;
+    _batchSentIdx = 0;
     jineChatMsgs = SaveManager.getJineChat();
-    cachedTimeline = SaveManager.getTimeline();  // per-slot timeline
+    cachedTimeline = SaveManager.getTimeline();
     knownBatches = {};
     cachedTimeline.forEach(function(e) { knownBatches[e.batch_id] = true; });
     _stressFromDanmaku = 0;
@@ -2582,9 +2670,12 @@ function sendSticker(stickerId) {
 }
 
 // Init
+SaveManager._cloudPaused = true;  // v4.5: 恢复完成前禁止覆盖云端
 SaveManager.init();
 loadStatsFromSlot();
 updateSaveIndicator();
+// v4.5: 启动时检查云端是否有更新存档
+syncFromCloudOnBoot();
 bgmInit();
 // Auto-play on first user interaction (browser policy requires user gesture)
 (function() {
