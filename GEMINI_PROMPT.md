@@ -1,7 +1,6 @@
-# 超天酱模拟账号 — v4.5 收工报告
+# 超天酱模拟账号 — v4.5 最终审查
 
-> v4.5：Turso 云端存档 + 双机共享 Tunnel 容灾 + 多项修复。
-> 结论：双机容灾闭环，云端存档上线。
+> v4.5 收工。Turso上线，双机容灾闭环，自动戳一戳。
 
 ---
 
@@ -10,29 +9,35 @@
 ```
 用户 → amechan.mote-pal.xyz → Cloudflare → Tunnel 87fc0324 ─┬─ 本地:8930
                                                              └─ 老电脑:8930
-Cloudflare 自动轮询，本地关机→老电脑独扛，无感知切换
+共享Tunnel，CF自动轮询。关机后老电脑独扛。
 ```
 
-- 前端 localStorage 主运行存储 + Turso 云端存档（3s debounce，启动恢复）
-- 匿名 UUID 认证，无需登录
-- 后端纯计算 + Turso HTTP API（无 lib 依赖）
-- prompts.py 人格校准（底层关系/sticker_7/硬禁词库）
-- JINE 上下文感知（generator 注入，不改 prompts）
+---
 
-## v4.5 新增
+## v4.5 完整清单
 
-| 改动 | 说明 |
+| 功能 | 说明 |
 |------|------|
-| Turso 云端存档 | `POST /api/save` (upsert), `GET /api/load` (全存档), `DELETE /api/save/delete` |
-| 匿名身份 | `crypto.randomUUID()` → localStorage → apiFetch Bearer header |
-| 云恢复 | `syncFromCloudOnBoot()` 启动比对时间戳，`_cloudPaused` 防空覆盖 |
-| 双机共享 Tunnel | 主备同用 `87fc0324`，CF 自动轮询，放弃独立 bak 域名（Zero Trust ghost lock） |
-| 切存档修复 | `reloadFromSlot` 加 reply 引擎重置 |
-| Webcam 修复 | `_autoCycleTimer` 存储引用，`switchState` 清除 |
+| Turso 云端存档 | UUID匿名，3s debounce上传，启动云恢复，删档同步删 |
+| 双机共享Tunnel | 本地+老电脑同用87fc0324，CF轮询，不搞独立域名 |
+| 自动戳一戳 | 开着的窗口每15~30分钟随机自动F7，关标签页停 |
+| prompts 人格校准 | 底层关系(sticker_7)/硬禁词库/jine上下文感知 |
+| F7 release 动态注入 | 精神标签+因果锚点，温度0.85 |
+| 切存档修复 | reloadFromSlot重置reply引擎 |
+| Webcam竞态修复 | _autoCycleTimer存引用 |
+| 限频重设计 | 本地默认关闭，部署RATE_LIMIT_ENABLED=1 |
+| 已读即时显示 | _read与_replied分离 |
+
+## 请审查
+
+1. **自动戳一戳逻辑**：`setTimeout` 循环，关标签页即停。只触发当前存档。池空自动补货。是否有遗漏？
+
+2. **Turso 云端存档**：`POST /api/save` (upsert), `GET /api/load` (全存档), `DELETE /api/save/delete`。启动恢复逻辑：`_cloudPaused` 防新建空存档覆盖云端。是否合理？
+
+3. **架构稳定性**：共享Tunnel双机 + Turso云端 + localStorage运行时。有没有单点风险？
 
 ## 残余
 
-1. JINE 偶发傲娇反射 — 可接受
-2. Turnstile — 前端就绪，缺 Site Key
-3. cloudflared 服务化 — 老电脑可用 `cloudflared service install`
-4. webcam 缺帧 handspinner_004
+1. JINE 偶发傲娇可接受
+2. Turnstile待填key
+3. cloudflared服务化（长期）
