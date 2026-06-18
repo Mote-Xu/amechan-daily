@@ -1580,10 +1580,7 @@ function syncFromCloudOnBoot() {
     SaveManager._cloudPaused = true;
     apiFetch('/api/load').then(function(r) { return r.json(); }).then(function(r) {
         console.log('[cloud] /api/load 返回:', r);
-        if (!r.ok || !r.saves || Object.keys(r.saves).length === 0) {
-            SaveManager._cloudPaused = false;
-            return;
-        }
+        if (!r.ok || !r.saves || Object.keys(r.saves).length === 0) return;
         var cloudSaves = r.saves;
         var recovered = false;
         Object.keys(cloudSaves).forEach(function(sid) {
@@ -1606,10 +1603,10 @@ function syncFromCloudOnBoot() {
             SaveManager._persist();
             reloadFromSlot();
             showToast('☁️ 已从云端恢复存档');
-        } else {
-            SaveManager._cloudPaused = false;
         }
-    }).catch(function() { SaveManager._cloudPaused = false; });
+    }).catch(function() {}).finally(function() {
+        SaveManager._cloudPaused = false;
+    });
 }
 
 // UI functions
