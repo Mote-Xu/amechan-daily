@@ -98,9 +98,10 @@ Cloudflared 使用 **Locally-Managed** 模式（`config.yml` + `route dns`），
 |---|:--:|
 | CORS / 注入防御 / sanitizer | ✅ |
 | Cloudflare Tunnel 主链路 | 🟢 |
-| Cloudflare Tunnel 备用链路 | 🟢 DNS 已生效 |
-| 老电脑服务 | 🟢 NSSM + cloudflared Locally-Managed |
-| 双机 fallback | 🟢 主备就绪 |
+| Cloudflare Tunnel 备用链路 | 🔴 bak.amechan.mote-pal.xyz DNS已指但流量不进tunnel |
+| 老电脑服务 | 🟢 NSSM + cloudflared (旧Zero Trust tunnel) |
+| 双机 fallback | 🟡 主站通，备站不通，前端apiFetch已就绪 |
+| Turso 云端存档 | 🟢 上传/恢复/删除全链路通 |
 | IP 限频 | 🟡 默认关闭，部署设 `RATE_LIMIT_ENABLED=1` |
 | Turnstile | 🟡 前端已集成，部署时填 `TURNSTILE_SITE_KEY` |
 | 全链路重启验证 | ⏳ |
