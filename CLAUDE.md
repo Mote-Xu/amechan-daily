@@ -43,6 +43,7 @@ Python ThreadingHTTPServer
 |------|------|------|
 | JINE 上下文感知 | index.html + server.py + generator.py | 前端传 `recent_posts`，generator 注入 `[系统内部同步]` 块（防误读标注），**prompts.py 零改动** |
 | F7 release 动态注入 | generator.py | 5 种随机精神标签 + 因果锚点指令 + 温度 0.5→0.85 + 空 msgs 兜底 |
+| F7 release API 失败重试 | index.html | `/api/release` 失败时自动重试一次，不用与推文无关的硬编码兜底 |
 | IPv6 绑定修复 | config.py | HOST `127.0.0.1` → `0.0.0.0` |
 | 弹幕 GPU 加速 | index.html | `left` 动画 → `transform: translateX()` + `contain` |
 | fetchTimeline 防覆盖 | index.html | 空状态 `ACTIVE_TAB !== 'jine'` 守卫 |

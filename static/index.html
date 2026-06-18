@@ -2029,44 +2029,64 @@ window.doRelease = function() {
             diary_text: diaryEntry ? diaryEntry.text : ''
         })
     }).then(function(r){return r.json();}).then(function(data){
-        if (data.ok) {
-            var jineMsgs = data.jine_msgs || [];
-            if (jineMsgs.length > 0) {
-                _cancelF7Timers();
-                var _f7SlotId = SaveManager.getCurrentSlot().id;
-                var _f7SlotCreatedAt = SaveManager.data.slots[_f7SlotId] ? SaveManager.data.slots[_f7SlotId].createdAt : null;
-                var t1 = setTimeout(function(){
-                    jineMsgs.forEach(function(msg,i){
-                        var t2 = setTimeout(function(){
-                            var slot = SaveManager.data.slots[_f7SlotId];
-                            if (!slot) return;
-                            if (slot.createdAt !== _f7SlotCreatedAt) return;
-                            var chatMsg = {
-                                time: msg.time||'', reply: msg.reply||'',
-                                ame_sticker: msg.ame_sticker||null, player_text:'', sticker:''
-                            };
-                            slot.jineChat.push(chatMsg);
-                            if (slot.jineChat.length>60) slot.jineChat = slot.jineChat.slice(-60);
-                            slot.updatedAt = new Date().toISOString();
-                            SaveManager._persist();
-                            if (SaveManager.getCurrentSlot().id === _f7SlotId) {
-                                jineChatMsgs.push(chatMsg);
-                                if (ACTIVE_TAB==='jine') renderJineChatMsgs();
-                            }
-                        }, i*1000+300);
-                        _f7Timers.push(t2);
-                    });
-                }, 300);
-                _f7Timers.push(t1);
-            }
+        if (!data.ok || !data.jine_msgs || data.jine_msgs.length === 0) {
+            // API failed — retry once
+            console.warn('[doRelease] JINE API failed, retrying...');
+            fetch(API + '/api/release', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({
+                    poke_text: pokeEntry ? pokeEntry.text : '',
+                    diary_text: diaryEntry ? diaryEntry.text : ''
+                })
+            }).then(function(r2){return r2.json();}).then(function(data2){
+                _showJineRelease(data2);
+            }).catch(function(err2){
+                console.error('[doRelease] JINE retry also failed:', err2);
+                hideAmeTyping();
+                setTimeout(function(){ btn.textContent = '[ F7 ] 戳一戳 ✨'; }, 2000);
+            });
+            return;
         }
-        hideAmeTyping();
-        setTimeout(function(){ btn.textContent = '[ F7 ] 戳一戳 ✨'; }, 2000);
+        _showJineRelease(data);
     }).catch(function(err){
         hideAmeTyping();
         console.error('[doRelease] JINE error:', err);
         setTimeout(function(){ btn.textContent = '[ F7 ] 戳一戳 ✨'; }, 2000);
     });
+
+    function _showJineRelease(data) {
+        var jineMsgs = data.jine_msgs || [];
+        if (jineMsgs.length === 0) return;
+        _cancelF7Timers();
+        var _f7SlotId = SaveManager.getCurrentSlot().id;
+        var _f7SlotCreatedAt = SaveManager.data.slots[_f7SlotId] ? SaveManager.data.slots[_f7SlotId].createdAt : null;
+        var t1 = setTimeout(function(){
+            jineMsgs.forEach(function(msg,i){
+                var t2 = setTimeout(function(){
+                    var slot = SaveManager.data.slots[_f7SlotId];
+                    if (!slot) return;
+                    if (slot.createdAt !== _f7SlotCreatedAt) return;
+                    var chatMsg = {
+                        time: msg.time||'', reply: msg.reply||'',
+                        ame_sticker: msg.ame_sticker||null, player_text:'', sticker:''
+                    };
+                    slot.jineChat.push(chatMsg);
+                    if (slot.jineChat.length>60) slot.jineChat = slot.jineChat.slice(-60);
+                    slot.updatedAt = new Date().toISOString();
+                    SaveManager._persist();
+                    if (SaveManager.getCurrentSlot().id === _f7SlotId) {
+                        jineChatMsgs.push(chatMsg);
+                        if (ACTIVE_TAB==='jine') renderJineChatMsgs();
+                    }
+                }, i*1000+300);
+                _f7Timers.push(t2);
+            });
+        }, 300);
+        _f7Timers.push(t1);
+        hideAmeTyping();
+        setTimeout(function(){ btn.textContent = '[ F7 ] 戳一戳 ✨'; }, 2000);
+    }
 };
 
 // F7 keyboard shortcut

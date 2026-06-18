@@ -34,6 +34,7 @@
 |------|------|
 | JINE 上下文割裂 | 前端传 `recent_posts`，generator 注入 `[系统内部同步]`（防误读标注） |
 | F7 release 质量低 | 动态注入精神标签 + 因果锚点指令 + 温度 0.85 + 空 msgs 兜底 |
+| F7 release API 偶尔失败无消息 | 前端自动重试一次 |
 | 公网 JINE 潜在 IPv6 问题 | HOST → `0.0.0.0` |
 | 弹幕 CSS 偶尔消失 | `left` → `transform: translateX()` GPU 动画 |
 | fetchTimeline 覆盖 JINE 屏幕 | `ACTIVE_TAB !== 'jine'` 守卫 |

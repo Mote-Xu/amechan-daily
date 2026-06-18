@@ -41,6 +41,7 @@
 |------|------|------|
 | JINE 上下文割裂 | 前端传 `recent_posts`，generator 注入 `[系统内部同步]` 块 + 防误读标注 | index.html + server.py + generator.py |
 | F7 release 质量低 | 动态注入 5 种精神标签 + 因果锚点 + 温度 0.85 + 空 msgs 兜底 | generator.py |
+| F7 release API 偶尔失败无消息 | 前端自动重试一次，不用硬编码兜底 | index.html |
 | 公网 JINE 潜在 IPv6 问题 | HOST `127.0.0.1` → `0.0.0.0` | config.py |
 | 弹幕 CSS 偶尔消失 | `left` → `transform: translateX()` + `contain` | index.html |
 | fetchTimeline 覆盖 JINE 屏幕 | `ACTIVE_TAB !== 'jine'` 守卫 | index.html |
