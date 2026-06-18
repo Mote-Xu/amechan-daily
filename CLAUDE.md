@@ -53,10 +53,11 @@ Python ThreadingHTTPServer
 
 ## 已知问题
 
-1. **F7 JINE 自言自语**：动态注入后第二批次已改善（回扣推文内容），首批仍偶有模板化。**prompts.py 需用户主导调整。**
+1. **F7 JINE 自言自语**：动态注入后已明显改善（回扣具体推文内容如"美瞳""骗处方"）。首批仍偶有模板化。**prompts.py 需用户主导调整。**
 2. **JINE 聊天质量波动**：
-   - 偶发单条模板（如被夸时"恶不恶心"）— few-shot 缺 pattern
-   - **sticker_7 回应失格**：连续收到"永远爱你"后回"你发什么神经…恶心死了"是廉价傲娇反射。sticker_7 是「最想听也最怕听的话」，应触发复杂情绪（恐慌+暗喜+嘴硬破功），不是简单骂人。`sticker_rules` 缺 sticker_7 专门规则
+   - sticker_7 回应失格：收"永远爱你"后回"恶心死了"是廉价傲娇反射，应触发复杂情绪
+   - 被突然关心时的傲娇反射（"假惺惺"）
+   - `sticker_rules` 缺 sticker_7 专门规则
 3. 弹幕 CSS 偶尔消失 — transform 加速后待观察
 4. webcam 部分帧缺失 (handspinner_004, tv_005, voice_training_007)
 
