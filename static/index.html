@@ -1083,6 +1083,40 @@ function _flushStaggerCache() {
     if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
 }
 
+// v4.6: Shared stagger helper — pushes JINE messages to chat one at a time.
+// Extracted from _showJineRelease so both API and void-pool paths share it.
+function _staggerJineMsgsToChat(msgs, forcedSlotId) {
+    _cancelF7Timers();
+    _f7StaggerPending = msgs.length;
+    var _f7SlotId = forcedSlotId || SaveManager.getCurrentSlot().id;
+    var _f7SlotCreatedAt = SaveManager.data.slots[_f7SlotId] ? SaveManager.data.slots[_f7SlotId].createdAt : null;
+    var t1 = setTimeout(function(){
+        msgs.forEach(function(msg,i){
+            var t2 = setTimeout(function(){
+                var slot = SaveManager.data.slots[_f7SlotId];
+                if (!slot) { _f7StaggerPending = Math.max(0, _f7StaggerPending - 1); _flushStaggerCache(); return; }
+                if (slot.createdAt !== _f7SlotCreatedAt) { _f7StaggerPending = Math.max(0, _f7StaggerPending - 1); _flushStaggerCache(); return; }
+                var chatMsg = {
+                    time: msg.time||'', reply: msg.reply||'',
+                    ame_sticker: msg.ame_sticker||null, player_text:'', sticker:''
+                };
+                slot.jineChat.push(chatMsg);
+                if (slot.jineChat.length>60) slot.jineChat = slot.jineChat.slice(-60);
+                slot.updatedAt = new Date().toISOString();
+                SaveManager._persist();
+                if (SaveManager.getCurrentSlot().id === _f7SlotId) {
+                    jineChatMsgs.push(chatMsg);
+                    if (ACTIVE_TAB==='jine') renderJineChatMsgs();
+                }
+                _f7StaggerPending--;
+                if (_f7StaggerPending <= 0) _flushStaggerCache();
+            }, i*1000+300);
+            _f7Timers.push(t2);
+        });
+    }, 300);
+    _f7Timers.push(t1);
+}
+
 // Danmaku pools — 应援 and 吐槽 (color-independent)
 var DANMAKU_OEN = [
     '✟升天✟','小天使请安','超天酱贴贴！','kirakira💖','888888','守护','好可爱',
@@ -1101,6 +1135,17 @@ var DANMAKU_TUCAO = [
     '这算直播事故吧','剪辑素材来了','建议报警','人设崩了','绷',
     '截图了','已经传到群里了','笑死','优雅','这是在干什么','典中典中典'
 ];
+
+// v4.6: 兜底虚无池 — 事件池耗尽时，不调 LLM，直接用简单短句求关注
+var VOID_JINE_POOL = [
+    "喂", "……", "还在呼吸吗", "看我", "好冷",
+    "在干嘛", "理理我", "又不理我", "睡了？", "吱一声",
+    "阿P", "唉", "烦", "算了", "当我没说",
+    "今天好安静", "？", "在不在", "活着吗",
+    "（发送了一个表情包）", "（戳了戳你）",
+    "冷死了", "又不说话", "行吧", "哼"
+];
+
 var DANMAKU_COLORS = ['c-pink','c-cyan','c-green','c-yellow'];
 var danmakuWraps = [];
 var trashCount = 0;
@@ -2119,6 +2164,7 @@ window.doRelease = function() {
     btn.classList.add('shaking');
     btn.textContent = '...';
     btn.disabled = true;
+    var _releaseSlotId = SaveManager.getCurrentSlot().id;  // v4.6: lock slot before async API
 
     // Release from localStorage pool (instant — no network)
     var entries = SaveManager.releaseFromPool();
@@ -2128,6 +2174,10 @@ window.doRelease = function() {
         // Refill in background, restore button when done
         if (!_isRefilling) _refillPool(false);
         updatePoolCount();
+        // v4.6: Void pool — when event pool is exhausted, inject simple
+        // attention-seeking phrases directly into JINE without calling LLM.
+        // Gemini: 池子干了之后她就是纯粹的"求关注"状态，不需要大模型消耗算力
+        _showVoidJineRelease(_releaseSlotId);
         // Poll until pool has items or refill fails
         var pollRefill = setInterval(function() {
             if (!_isRefilling || SaveManager.poolRemaining().pairs > 0) {
@@ -2196,7 +2246,7 @@ window.doRelease = function() {
                     diary_text: diaryEntry ? diaryEntry.text : ''
                 })
             }).then(function(r2){return r2.json();}).then(function(data2){
-                _showJineRelease(data2);
+                _showJineRelease(data2, _releaseSlotId);
             }).catch(function(err2){
                 console.error('[doRelease] JINE retry also failed:', err2);
                 hideAmeTyping();
@@ -2204,48 +2254,41 @@ window.doRelease = function() {
             });
             return;
         }
-        _showJineRelease(data);
+        _showJineRelease(data, _releaseSlotId);
     }).catch(function(err){
         hideAmeTyping();
         console.error('[doRelease] JINE error:', err);
         setTimeout(function(){ btn.textContent = '[ F7 ] 戳一戳 ✨'; }, 2000);
     });
 
-    function _showJineRelease(data) {
+    function _showJineRelease(data, slotId) {
         var jineMsgs = data.jine_msgs || [];
         if (jineMsgs.length === 0) {
             jineMsgs = [{ reply: '发了……', time: ('0'+new Date().getHours()).slice(-2)+':'+('0'+new Date().getMinutes()).slice(-2) }];
         }
-        _cancelF7Timers();
-        _f7StaggerPending = jineMsgs.length;
-        var _f7SlotId = SaveManager.getCurrentSlot().id;
-        var _f7SlotCreatedAt = SaveManager.data.slots[_f7SlotId] ? SaveManager.data.slots[_f7SlotId].createdAt : null;
-        var t1 = setTimeout(function(){
-            jineMsgs.forEach(function(msg,i){
-                var t2 = setTimeout(function(){
-                    var slot = SaveManager.data.slots[_f7SlotId];
-                    if (!slot) { _f7StaggerPending = Math.max(0, _f7StaggerPending - 1); _flushStaggerCache(); return; }
-                    if (slot.createdAt !== _f7SlotCreatedAt) { _f7StaggerPending = Math.max(0, _f7StaggerPending - 1); _flushStaggerCache(); return; }
-                    var chatMsg = {
-                        time: msg.time||'', reply: msg.reply||'',
-                        ame_sticker: msg.ame_sticker||null, player_text:'', sticker:''
-                    };
-                    slot.jineChat.push(chatMsg);
-                    if (slot.jineChat.length>60) slot.jineChat = slot.jineChat.slice(-60);
-                    slot.updatedAt = new Date().toISOString();
-                    SaveManager._persist();
-                    if (SaveManager.getCurrentSlot().id === _f7SlotId) {
-                        jineChatMsgs.push(chatMsg);
-                        if (ACTIVE_TAB==='jine') renderJineChatMsgs();
-                    }
-                    _f7StaggerPending--;
-                    if (_f7StaggerPending <= 0) _flushStaggerCache();
-                }, i*1000+300);
-                _f7Timers.push(t2);
-            });
-        }, 300);
-        _f7Timers.push(t1);
+        _staggerJineMsgsToChat(jineMsgs, slotId);
         hideAmeTyping();
+        setTimeout(function(){ btn.textContent = '[ F7 ] 戳一戳 ✨'; }, 2000);
+    }
+
+    // v4.6: Void pool release — inject simple attention-seeking phrases
+    function _showVoidJineRelease(slotId) {
+        var count = 2 + Math.floor(Math.random() * 2); // 2-3 messages
+        var pool = VOID_JINE_POOL.slice();
+        // Fisher-Yates shuffle
+        for (var i = pool.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var tmp = pool[i]; pool[i] = pool[j]; pool[j] = tmp;
+        }
+        var now = new Date();
+        var hh = ('0'+now.getHours()).slice(-2);
+        var mm = ('0'+now.getMinutes()).slice(-2);
+        var msgs = [];
+        for (var i = 0; i < count; i++) {
+            msgs.push({ reply: pool[i], time: hh+':'+mm, ame_sticker: null });
+        }
+        console.log('[void-pool] injecting ' + count + ' void messages into JINE');
+        _staggerJineMsgsToChat(msgs, slotId);
         setTimeout(function(){ btn.textContent = '[ F7 ] 戳一戳 ✨'; }, 2000);
     }
 };
@@ -2724,6 +2767,9 @@ fetchTimeline();
 if (!isStaticMode) {
     setInterval(fetchTimeline, 30000);
 }
+// v4.6: Expose for debugging/testing
+window.SaveManager = SaveManager;
+window.VOID_JINE_POOL = VOID_JINE_POOL;
 console.log('+ Poketter v2.7.2 ready +');
 })();
 </script>

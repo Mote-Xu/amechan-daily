@@ -1,7 +1,7 @@
 # amechan-daily — 超天酱日常推文小站
 
 > DeepSeek V4 驱动的超天酱模拟账号。
-> 最后更新：2026-06-19 (v4.5)
+> 最后更新：2026-06-19 (v4.6)
 >
 > **🔒 角色还原优先于功能开发。见 `PRIVATE.md`（不上传远程仓库）。**
 >
@@ -18,16 +18,16 @@ python server.py  # → http://0.0.0.0:8930
 
 | 功能 | 状态 | 备注 |
 |------|:--:|------|
-| F7 戳一戳 | 🟢 | pool 10条(4次)，600ms 发布动画；v4.3: 空池补货中反馈 + F7 stagger 缓存 |
-| JINE 聊天 | 🟢 | v4.3: timeline 上下文感知 + prompts.py 人格校准（底层关系/sticker_7/硬禁词库） |
+| F7 戳一戳 | 🟢 | pool 10条(5对)；v4.6: 兜底虚无池防耗尽 |
+| JINE 聊天 | 🟢 | v4.6: timeline 上下文感知；presence_penalty 0.85 防同义重复 |
 | 推博 Feed | 🟢 | 超天酱禁空洞模板，糖糖强制无逻辑重复，三层反差 |
 | 弹幕 | 🟢 | 应援 30 + 吐槽 39，transform GPU 动画 |
 | 多存档 | ✅ | createdAt 校验防串档 |
-| 自动戳一戳 | 🟢 | 每15~30分自动F7，关标签页停 |
+| 自动戳一戳 | 🟢 | 每15~30分自动F7，关标签页停；v4.6: 空池走虚无池 |
 | 双机容灾 | 🟢 | 共享 Tunnel，Cloudflare 自动轮询 |
 | Turso 云端存档 | 🟢 | 匿名 UUID，3s debounce 自动上传，启动时云恢复 |
 
-## 架构 (v4.5)
+## 架构 (v4.6)
 
 ```
 用户 → amechan.mote-pal.xyz → Cloudflare → Tunnel 87fc0324 ─┬─ 本地:8930
@@ -45,6 +45,15 @@ Python ThreadingHTTPServer
   └─ _turso_execute()             v4.5: Turso HTTP API 云端存档
   ↕ DeepSeek V4-pro
 ```
+
+## v4.6 修改记录 (2026-06-19)
+
+| 修改 | 文件 | 说明 |
+|------|------|------|
+| F7 兜底虚无池 | index.html | VOID_JINE_POOL 24条简单短句，事件池耗尽时直接注入JINE，不调LLM |
+| Stagger 重构 | index.html | 提取 `_staggerJineMsgsToChat()`，API和虚无池共用 |
+| presence_penalty 上调 | generator.py | JINE chat: 0.6→0.85, release: 0.8→1.0；治长对话同义重复 |
+| 正向重定向 | prompts.py + generator.py | 禁点评+命令狂+透视眼；自信自卑分界；叠字宅宅；上下文排序；release炸弹标记+记忆校准 |
 
 ## v4.5 修改记录 (2026-06-19)
 

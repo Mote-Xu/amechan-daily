@@ -17,7 +17,6 @@ from openai import OpenAI
 from config import API_KEY, BASE_URL, MODEL, MAX_TOKENS, MAX_RETRIES
 from prompts import get_timeline_prompt, get_kangel_user_prompt, get_ame_user_prompt, get_jine_reply_prompt, get_jine_text_prompt, get_jine_release_prompt
 from prompts import KANGEL_SYSTEM_PROMPT, AME_SYSTEM_PROMPT, JINE_REPLY_SYSTEM, JINE_TEXT_REPLY_SYSTEM, JINE_RELEASE_SYSTEM, AME_STAMP_POOL, STICKER_ACTION
-from feed import get_jine_chat  # stub: returns [] in stateless mode
 
 client = OpenAI(api_key=API_KEY, base_url=BASE_URL)
 
@@ -172,7 +171,7 @@ _STICKER_STRESS_DELTA = {
 def _calc_stress_from_history(history: list[dict]) -> int:
     """
     基于前端传来的 JINE 聊天记录计算糖糖的情绪压力值 (0-100)。
-    v2.8: 接受前端传来的 history 列表，不再读取 feed.json。
+    v2.8: 接受前端传来的 history 列表。
     """
     stress = 50
     if not history:
@@ -240,7 +239,10 @@ def _format_history_for_prompt(history: list[dict]) -> list[str]:
         elif msg.get("player_text"):
             lines.append(f"阿P: {msg['player_text']}")
         if msg.get("reply"):
-            lines.append(f"糖糖: {msg['reply']}")
+            # v4.6: mark release/bombardment messages (no player input)
+            is_release = not msg.get("player_text") and not msg.get("sticker")
+            prefix = "糖糖(连发/未读):" if is_release else "糖糖:"
+            lines.append(f"{prefix} {msg['reply']}")
     return lines
 
 
@@ -309,7 +311,8 @@ def generate_jine_chat(text: str = "", sticker: str = "", history: list[dict] | 
 
     try:
         system = JINE_REPLY_SYSTEM if is_pure_sticker else JINE_TEXT_REPLY_SYSTEM
-        raw = _call_api(system, prompt, temperature=temperature)
+        raw = _call_api(system, prompt, temperature=temperature,
+                      frequency_penalty=0.9, presence_penalty=0.85)  # v4.7: raised to fight repetition
         raw = raw.strip().strip('"').strip("'").strip('"').strip('「').strip('」')
 
         reply_text, ame_sticker = _parse_stamp_reply(raw)
@@ -370,7 +373,7 @@ def generate_jine_reply(sticker_id: str) -> tuple[str, str | None]:
     [DEPRECATED] 旧版贴图回复。v2.8 请用 generate_jine_chat()。
     保留以支持 F7 release 消息生成（generate_jine_release_msgs 内部调用）。
     """
-    chat_history = get_jine_chat(limit=10)
+    chat_history = []  # v4 stateless: frontend owns history
     stress = _calc_stress_from_history(chat_history)
     recent = _format_history_for_prompt(chat_history)
     prompt = get_jine_reply_prompt(sticker_id, recent, stress)
@@ -414,7 +417,7 @@ def generate_jine_text_reply(player_text: str) -> tuple[str, str | None]:
     """
     [DEPRECATED] 旧版文字回复。v2.8 请用 generate_jine_chat()。
     """
-    chat_history = get_jine_chat(limit=10)
+    chat_history = []  # v4 stateless: frontend owns history
     stress = _calc_stress_from_history(chat_history)
     recent = _format_history_for_prompt(chat_history)
     prompt = get_jine_text_prompt(player_text, recent, stress)
@@ -460,7 +463,7 @@ def generate_jine_release_msgs(poke_text: str, diary_text: str = "", count: int 
     v2.7.1: 单次 API 调用返回 JSON 数组，彻底消除同批重复。
     返回 [{"reply": str, "ame_sticker": str|None}, ...]
     """
-    chat_history = get_jine_chat(limit=10)
+    chat_history = []  # v4 stateless: frontend owns history
     stress = _calc_stress_from_history(chat_history)
 
     # Extract recent ame replies for cross-batch anti-repeat
@@ -501,8 +504,8 @@ def generate_jine_release_msgs(poke_text: str, diary_text: str = "", count: int 
 
     msgs = []
     try:
-        raw = _call_api(JINE_RELEASE_SYSTEM, prompt, temperature=0.85,  # 提高温度增加多样性
-                      frequency_penalty=0.95, presence_penalty=0.8)
+        raw = _call_api(JINE_RELEASE_SYSTEM, prompt, temperature=0.85,
+                      frequency_penalty=1.0, presence_penalty=1.0)  # v4.7: max diversity for release
         # Parse JSON array
         data = _parse_json(raw)
         if isinstance(data, list):

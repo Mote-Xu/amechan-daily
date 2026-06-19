@@ -249,9 +249,6 @@ class AmechanHandler(SimpleHTTPRequestHandler):
             self._send_json({"ok": True, "saves": saves if saves else None})
         elif path == "/api/stats":
             self._send_json({"count": 0, "pool": 0, "status": "ok"})
-        elif path == "/data/feed.json":
-            # Static fallback
-            self._send_json({"timeline": [], "hidden_pool": [], "jine_chat": []})
         else:
             super().do_GET()
 

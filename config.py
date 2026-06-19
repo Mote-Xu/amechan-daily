@@ -70,11 +70,7 @@ GENERAL_TOPICS = [
 
 # --- 文件路径 ---
 DATA_DIR = ROOT_DIR / "data"
-FEED_FILE = DATA_DIR / "feed.json"
 STATIC_DIR = ROOT_DIR / "static"
-
-# --- Feed 约束 ---
-MAX_FEED_ITEMS = 50
 
 # --- 服务器配置 ---
 HOST = "0.0.0.0"
