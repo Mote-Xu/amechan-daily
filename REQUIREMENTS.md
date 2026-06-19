@@ -44,6 +44,9 @@
 | Stagger 逻辑重复 | 提取 `_staggerJineMsgsToChat()`，API和虚无池共用 | index.html |
 | 长对话同义重复（"像血又不像"反复出现）| presence_penalty 0.6→0.85 (chat) / 0.8→1.0 (release) | generator.py |
 | 傲娇点评 + 上下文 + 措辞 | 正向重定向 + 命令狂 + 透视眼 + 自信自卑分界 + 叠字限制 + 宅宅态度 | prompts.py |
+| F7 release 跨存档串数据 | 锁 slot ID 防 async 竞态 | index.html |
+| 代码残留 + 过期配置 | 删 feed.py/json，去 API_BACKUP，统一 Tunnel | 多文件 |
+| 自拍图重复/偏离 | 每条推博独立轮换 + per-save 随机偏移 | index.html |
 
 ## v4.5 修改 (2026-06-19)
 

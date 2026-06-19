@@ -53,7 +53,10 @@ Python ThreadingHTTPServer
 | F7 兜底虚无池 | index.html | VOID_JINE_POOL 24条简单短句，事件池耗尽时直接注入JINE，不调LLM |
 | Stagger 重构 | index.html | 提取 `_staggerJineMsgsToChat()`，API和虚无池共用 |
 | presence_penalty 上调 | generator.py | JINE chat: 0.6→0.85, release: 0.8→1.0；治长对话同义重复 |
-| 正向重定向 | prompts.py + generator.py | 禁点评+命令狂+透视眼；自信自卑分界；叠字宅宅；上下文排序；release炸弹标记+记忆校准 |
+| 正向重定向 | prompts.py + generator.py | 禁点评+命令狂+透视眼；自信自卑分界；叠字宅宅；上下文排序；release炸弹标记+记忆校准+接梗规则 |
+| F7 release slot 竞态 | index.html | 锁 `_releaseSlotId`，防跨存档灌消息 |
+| 代码清理 | generator.py/server.py/config.py | 删除 feed.py/feed.json，去 API_BACKUP fallback，统一共享 Tunnel |
+| 自拍图修复 | index.html | 每条推博独立轮换 + per-save 随机起始偏移 |
 
 ## v4.5 修改记录 (2026-06-19)
 
