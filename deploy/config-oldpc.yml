@@ -1,10 +1,10 @@
-# 老电脑 — 备用服务器
+# 老电脑 — 与主力机共享 Tunnel 87fc0324
+# Cloudflare 自动轮询，关机后主力独扛
 # 使用方式: cloudflared tunnel --config config.yml run
-# DNS (首次执行): cloudflared tunnel route dns 51cc70a8 bak.mote-pal.xyz
-tunnel: 51cc70a8-6e03-41b1-95f1-2d328dff6fdf
-credentials-file: C:\Users\admin\.cloudflared\51cc70a8-6e03-41b1-95f1-2d328dff6fdf.json
+tunnel: 87fc0324-d76a-4bdf-91a6-1873ae14bb7d
+credentials-file: C:\Users\admin\.cloudflared\87fc0324-d76a-4bdf-91a6-1873ae14bb7d.json
 
 ingress:
-  - hostname: bak.mote-pal.xyz
+  - hostname: amechan.mote-pal.xyz
     service: http://localhost:8930
   - service: http_status:404

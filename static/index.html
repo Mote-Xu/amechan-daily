@@ -936,9 +936,8 @@ body {
 
 <script>
 (function() {
-// v4.3: 双机 fallback — 本地直连，公网主服务器优先，挂了自动降级老家
+// // v4.6: 双机共享 Tunnel 87fc0324，Cloudflare 自动轮询
 var API_PRIMARY = 'https://amechan.mote-pal.xyz';
-var API_BACKUP  = 'https://backup.amechan.mote-pal.xyz';
 var API_LOCAL = window.location.origin;
 // v4.5: 匿名身份令牌
 function getDeviceUUID() {
@@ -960,12 +959,8 @@ function apiFetch(path, opts) {
     if (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') {
         return fetch(API_LOCAL + path, opts);
     }
-    return fetch(API_PRIMARY + path, opts).catch(function() {
-        console.warn('[api] 主力失联 → 降级老家');
-        return fetch(API_BACKUP + path, opts);
-    });
+    return fetch(API_PRIMARY + path, opts);
 }
-
 // ============================================================
 // Turnstile 隐式验证（部署时配置 TURNSTILE_SITE_KEY）
 // ============================================================
