@@ -1437,6 +1437,7 @@ var SaveManager = {
             name: name, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
             jineChat: [], releasedEntries: [], timeline: [], feedCursor: 0,
             hiddenPool: [],  // v4: frontend-owned pool
+            selfieOffset: Math.floor(Math.random() * 9),  // v4.6: random start img per save
             stats: { followers: 980, stress: 42, affection: 78, darkness: 55 }, trashCount: 0
         };
     },
