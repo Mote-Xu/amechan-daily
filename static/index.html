@@ -2028,7 +2028,7 @@ function renderFeed(items) {
 	        if (absIdx < 0) absIdx = i;
 	        var dayN = Math.max(1, Math.ceil((cachedTimeline.length - absIdx) / 3));
         if (e.layer === 'poketter') {
-            var selfie = 'img/' + pickSelfie(choSelfies, absIdx) + '.png';
+            var selfie = 'img/' + pickSelfie(choSelfies, dayN - 1) + '.png';
             var likes = Math.floor(dayN * 12 + Math.random() * 30);
             var rts = Math.floor(dayN * 4 + Math.random() * 15);
             html += '<div class="tweet-pair"><div class="card-kangel kangel-card">' +
