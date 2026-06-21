@@ -2664,6 +2664,9 @@ window.sendText = function() {
     if (!input) { console.warn('[sendText] no input element'); return; }
     var text = input.value.trim();
     if (!text) return;
+            // v4.6: hard-reset stuck reply state before each send
+            _replyPending = false; _pendingController = null;
+            if (_batchTimer) { clearTimeout(_batchTimer); _batchTimer = null; }
     input.value = '';
     console.log('[sendText] sending:', text.slice(0,30));
     startAmeResponse();
@@ -2695,6 +2698,9 @@ function sendSticker(stickerId) {
 
     var now = new Date();
     var timeStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+        // v4.6: hard-reset stuck reply state
+        _replyPending = false; _pendingController = null;
+        if (_batchTimer) { clearTimeout(_batchTimer); _batchTimer = null; }
     var stickerMsg = { time: timeStr, sticker: stickerId, reply: '', recall: false, _read: true };
     jineChatMsgs.push(stickerMsg);
     SaveManager.addJineMessage(stickerMsg);
