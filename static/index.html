@@ -1048,7 +1048,7 @@ function findSticker(id) {
 var jineChatMsgs = [];
 var jineSending = false;
 var _replyPending = false;       // true while waiting for 糖糖's reply
-var _pendingController = null;   // AbortController for current request
+var _pendingController = null; _batchStartIdx = -1; _batchSentIdx = 0;   // AbortController for current request
 var _batchTimer = null;          // setTimeout ID for aggregation window
 var _batchStartIdx = -1;         // index of first msg when batch window started
 var _batchWindowMs = 0;          // current window duration (random 300-1200ms)
@@ -1662,8 +1662,8 @@ function updateSaveIndicator() {
 function reloadFromSlot() {
     _cancelF7Timers();
     // 重置 reply 引擎状态（防切存档后已读不回）
-    if (_batchTimer) { clearTimeout(_batchTimer); _batchTimer = null; }
-    if (_pendingController) { _pendingController.abort(); _pendingController = null; }
+    if (_batchTimer) { clearTimeout(_batchTimer); _batchTimer = null; _batchStartIdx = -1; _batchSentIdx = 0; }
+    if (_pendingController) { _pendingController.abort(); _pendingController = null; _batchStartIdx = -1; _batchSentIdx = 0; }
     _replyPending = false;
     _batchStartIdx = -1;
     _batchSentIdx = 0;
@@ -2347,10 +2347,10 @@ function _scheduleReply(isNewMsg) {
     if (_replyPending && _pendingController) {
         _pendingController.abort();
         _replyPending = false;
-        _pendingController = null;
+        _pendingController = null; _batchStartIdx = -1; _batchSentIdx = 0;
     }
     // Clear existing batch timer
-    if (_batchTimer) { clearTimeout(_batchTimer); _batchTimer = null; }
+    if (_batchTimer) { clearTimeout(_batchTimer); _batchTimer = null; _batchStartIdx = -1; _batchSentIdx = 0; }
 
     // Record first unreplied index when starting a fresh batch
     if (isNewMsg) {
@@ -2426,11 +2426,11 @@ function _executeReply() {
         body: JSON.stringify(requestBody),
         signal: _pendingController.signal
     }).then(function(r) { return r.json(); }).then(function(data) {
-        _replyPending = false; _pendingController = null;
+        _replyPending = false; _pendingController = null; _batchStartIdx = -1; _batchSentIdx = 0;
         clearTimeout(fetchTimeout);
 
         if (!data.ok) {
-            _replyPending = false; _pendingController = null;
+            _replyPending = false; _pendingController = null; _batchStartIdx = -1; _batchSentIdx = 0;
             hideAmeTyping(); endAmeResponse();
             showToast(data.error || '糖糖正在忙，稍等一下哦～');
             return;
@@ -2472,7 +2472,7 @@ function _executeReply() {
             return;  // _scheduleReply already called by the new input
         }
         console.warn('[reply] error:', err.name || err.message);
-        _replyPending = false; _pendingController = null;
+        _replyPending = false; _pendingController = null; _batchStartIdx = -1; _batchSentIdx = 0;
         // Show toast for rate limit
         try {
             if (err.message && err.message.indexOf('429') >= 0) {
@@ -2664,9 +2664,9 @@ window.sendText = function() {
     if (!input) { console.warn('[sendText] no input element'); return; }
     var text = input.value.trim();
     if (!text) return;
-            // v4.6: hard-reset stuck reply state before each send
-            _replyPending = false; _pendingController = null;
-            if (_batchTimer) { clearTimeout(_batchTimer); _batchTimer = null; }
+            // v4.6: hard-reset stuck reply engine
+            _replyPending = false; _pendingController = null; _batchStartIdx = -1; _batchSentIdx = 0;
+            if (_batchTimer) { clearTimeout(_batchTimer); _batchTimer = null; _batchStartIdx = -1; _batchSentIdx = 0; }
     input.value = '';
     console.log('[sendText] sending:', text.slice(0,30));
     startAmeResponse();
@@ -2699,8 +2699,8 @@ function sendSticker(stickerId) {
     var now = new Date();
     var timeStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
         // v4.6: hard-reset stuck reply state
-        _replyPending = false; _pendingController = null;
-        if (_batchTimer) { clearTimeout(_batchTimer); _batchTimer = null; }
+        _replyPending = false; _pendingController = null; _batchStartIdx = -1; _batchSentIdx = 0;
+        if (_batchTimer) { clearTimeout(_batchTimer); _batchTimer = null; _batchStartIdx = -1; _batchSentIdx = 0; }
     var stickerMsg = { time: timeStr, sticker: stickerId, reply: '', recall: false, _read: true };
     jineChatMsgs.push(stickerMsg);
     SaveManager.addJineMessage(stickerMsg);
