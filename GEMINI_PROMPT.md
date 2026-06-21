@@ -9,7 +9,8 @@
 ```
 用户 → amechan.mote-pal.xyz → Cloudflare → Tunnel 87fc0324 ─┬─ 本地:8930 (主)
                                                              └─ 老电脑:8930 (备)
-共享Tunnel，CF自动轮询。Turso 云端存档。
+⚠️ 共享Tunnel双cloudflared不是容灾：CF只看tunnel连接不看server死活，
+一台server崩 → 50%请求丢失。短期单机cloudflared当冷备。
 ```
 
 ---
