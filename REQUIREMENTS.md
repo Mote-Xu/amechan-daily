@@ -47,6 +47,7 @@
 | F7 release 跨存档串数据 | 锁 slot ID 防 async 竞态 | index.html |
 | 代码残留 + 过期配置 | 删 feed.py/json，去 API_BACKUP，统一 Tunnel | 多文件 |
 | 自拍图重复/偏离 | 每条推博独立轮换 + per-save 随机偏移 | index.html |
+| JINE 挂机后渲染停止 | renderJineChatUnified 强制同步存档；上限 60→300 | index.html |
 
 ## v4.5 修改 (2026-06-19)
 

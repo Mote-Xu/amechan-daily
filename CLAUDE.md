@@ -55,6 +55,7 @@ Python ThreadingHTTPServer
 | presence_penalty 上调 | generator.py | JINE chat: 0.6→0.85, release: 0.8→1.0；治长对话同义重复 |
 | 正向重定向 | prompts.py + generator.py | 禁点评+命令狂+透视眼；自信自卑分界；叠字宅宅；上下文排序；release炸弹标记+记忆校准+接梗规则 |
 | F7 release slot 竞态 | index.html | 锁 `_releaseSlotId`，防跨存档灌消息 |
+| JINE 渲染停止 | index.html | `renderJineChatUnified` 开头强制从存档同步；上限 60→300 |
 | 代码清理 | generator.py/server.py/config.py | 删除 feed.py/feed.json，去 API_BACKUP fallback，统一共享 Tunnel |
 | 自拍图修复 | index.html | 每条推博独立轮换 + per-save 随机起始偏移 |
 
