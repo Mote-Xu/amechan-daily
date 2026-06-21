@@ -84,9 +84,10 @@ Python ThreadingHTTPServer
 
 ## 已知问题
 
-1. **JINE 聊天偶发傲娇反射**：prompts.py 校准后大幅改善，LLM 偶尔滑回。可接受。
-2. 弹幕 CSS 偶尔消失 — transform 加速后待观察
-3. webcam 缺帧 handspinner_004 (无源资产)
+1. **共享 Tunnel 双机不是容灾**：CF 只看 tunnel 连接不看 server 死活，一台 server 崩 → 50% 请求丢。短期：只在一台跑 cloudflared 当单机。
+2. **JINE 聊天偶发傲娇反射**：prompts.py 校准后大幅改善，LLM 偶尔滑回。可接受。
+3. 弹幕 CSS 偶尔消失 — transform 加速后待观察
+4. webcam 缺帧 handspinner_004/tv_005/voice_training_007 (源资产空号)
 
 ## 公网部署
 
