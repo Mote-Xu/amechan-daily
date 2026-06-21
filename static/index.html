@@ -1096,7 +1096,7 @@ function _staggerJineMsgsToChat(msgs, forcedSlotId) {
                     ame_sticker: msg.ame_sticker||null, player_text:'', sticker:''
                 };
                 slot.jineChat.push(chatMsg);
-                if (slot.jineChat.length>60) slot.jineChat = slot.jineChat.slice(-60);
+                if (slot.jineChat.length>300) slot.jineChat = slot.jineChat.slice(-300);
                 slot.updatedAt = new Date().toISOString();
                 SaveManager._persist();
                 if (SaveManager.getCurrentSlot().id === _f7SlotId) {
