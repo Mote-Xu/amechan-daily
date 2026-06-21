@@ -2549,6 +2549,7 @@ function stickerHTML(stickerId) {
 function renderJineChatMsgs() { renderJineChatUnified([]); }
 
 function renderJineChatUnified(timelineItems) {
+    jineChatMsgs = SaveManager.getJineChat();  // v4.6: sync from save to prevent drift
     var container = document.getElementById('jine-chat-msgs');
     if (!container) return;
 
