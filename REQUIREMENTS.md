@@ -33,7 +33,7 @@
 | S6 | API Key 保护 | ✅ 后端直连 |
 | S7 | 固定域名 | ✅ `amechan.mote-pal.xyz` |
 | S8 | 7×24 服务器 | 🟢 NSSM + cloudflared 共享 Tunnel |
-| S9 | 双机容灾 | 🟡 共享 Tunnel 但 CF 不看 server 死活，一台崩=50%丢包；短期单机 cloudflared |
+| S9 | 双机容灾 | 🟢 共享 87fc0324；理论风险：CF 不管 server 死活，待上 Worker 健康检查 |
 | S10 | 云端存档 | 🟢 Turso UUID + 3s debounce + 启动恢复 |
 
 ## v4.6 修改 (2026-06-19)

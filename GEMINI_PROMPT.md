@@ -1,7 +1,7 @@
 # 超天酱模拟账号 — v4.6 全量上线
 
 > v4.6 已实装：虚无池 + 正向重定向 + 命令狂/透视眼禁令 + JINE轰炸模式 + identity fix + 代码清理。
-> 当前问题：共享Tunnel双机不是容灾（见架构），老电脑server崩导致50%请求丢失。
+> 当前问题：疑似浏览器缓存旧JS导致部分客户端API不通，已修复。共享Tunnel容灾为理论风险，待上Worker。
 
 ---
 
@@ -10,8 +10,7 @@
 ```
 用户 → amechan.mote-pal.xyz → Cloudflare → Tunnel 87fc0324 ─┬─ 本地:8930 (主)
                                                              └─ 老电脑:8930 (备)
-⚠️ 共享Tunnel双cloudflared不是容灾：CF只看tunnel连接不看server死活，
-一台server崩 → 50%请求丢失。短期单机cloudflared当冷备。
+⚠️ 共享Tunnel理论风险：CF不管server死活。实际操作中未确认触发（更像浏览器缓存旧JS）。待上Worker方案根治。
 ```
 
 ---
@@ -539,5 +538,3 @@ else:
 
 ## 请 Gemini 审查
 
-1. **共享 Tunnel 容灾方案**：当前两台机器共享 Tunnel 87fc0324，CF 平均分配流量但不检测 server 死活。一台崩=50%丢包。不改架构的前提下有没有妙解？
-2. **当前生成质量**：见上方样本和约束清单，还有哪处措辞可以打磨？
