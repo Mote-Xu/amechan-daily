@@ -207,7 +207,11 @@ class AmechanHandler(SimpleHTTPRequestHandler):
 
     def log_message(self, format, *args):
         ts = time.strftime("%H:%M:%S")
-        print(f"[{ts}] {args[0]}")
+        client_ip = self._get_client_ip()
+        method = self.command
+        path = self.path
+        ua = self.headers.get("User-Agent", "")[:50]
+        print(f"[{ts}] {client_ip} | {method} {path} | {ua}")
 
     def do_OPTIONS(self):
         self.send_response(204)
@@ -220,6 +224,13 @@ class AmechanHandler(SimpleHTTPRequestHandler):
 
         if path == "/" or path == "/index.html":
             self._send_html("index.html")
+        elif path == "/api/health":
+            import socket
+            self._send_json({
+                "ok": True,
+                "hostname": socket.gethostname(),
+                "time": time.strftime("%Y-%m-%d %H:%M:%S"),
+            })
         elif path == "/api/timeline":
             # v4: stateless — frontend manages timeline via localStorage
             self._send_json({"count": 0, "pool_remaining": 0, "timeline": []})
@@ -419,12 +430,15 @@ class AmechanHandler(SimpleHTTPRequestHandler):
 
 
 def main():
+    import socket
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     _turso_init()  # v4.5: 启动时建表（幂等）
 
+    hostname = socket.gethostname()
     print("=" * 50)
     print("  + Poketter v4.0 — Stateless + Threading + Rate Limiter +")
     print("=" * 50)
+    print(f"  机器: {hostname}")
     print(f"  地址: http://{HOST}:{PORT}")
     print(f"  API:  GET  /api/timeline   -> 空（前端 localStorage）")
     print(f"       POST /api/generate    -> 生成 + 返回 JSON（不写盘）")

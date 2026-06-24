@@ -2769,6 +2769,15 @@ fetchTimeline();
 // Poll for new content every 30s (empty-feed fast poll handled inside fetchTimeline)
 if (!isStaticMode) {
     setInterval(fetchTimeline, 30000);
+        // v4.6: periodic JINE sync — brute-force display fix
+        setInterval(function() {
+            if (ACTIVE_TAB !== 'jine') return;
+            var fresh = SaveManager.getJineChat();
+            if (fresh.length !== jineChatMsgs.length) {
+                jineChatMsgs = fresh;
+                renderJineChatMsgs();
+            }
+        }, 5000);
 }
 // v4.6: Expose for debugging/testing
 window.SaveManager = SaveManager;
