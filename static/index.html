@@ -2728,17 +2728,20 @@ var _sfxPools = {};
         _sfxPools[type].push(a);
     }
 });
+var _sfxIdx = {};
 function playSfx(name) {
     try {
         var pool = _sfxPools[name] || _sfxPools.f7;
-        var a = null;
-        for (var i = 0; i < pool.length; i++) {
-            if (pool[i].paused || pool[i].ended) { a = pool[i]; break; }
-        }
-        if (!a) { a = pool[0]; }  // all busy, steal oldest
-        a.currentTime = 0;  // MUST reset or ended audio.play() silently fails
-        a.play().catch(function(){});
-    } catch(e) {}
+        var idx = _sfxIdx[name] || 0;
+        var a = pool[idx];
+        _sfxIdx[name] = (idx + 1) % pool.length;
+        a.currentTime = 0;
+        a.play().then(function() {
+            console.log('[sfx] ' + name + ' ch' + idx + ' OK');
+        }).catch(function(e) {
+            console.warn('[sfx] ' + name + ' ch' + idx + ' FAILED:', e.message);
+        });
+    } catch(e) { console.error('[sfx] crash:', e); }
 }
 console.log('+ Poketter v2.7.2 ready +');
 })();
