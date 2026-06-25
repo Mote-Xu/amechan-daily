@@ -714,45 +714,31 @@ else:
 
 ---
 
+
 ## 🆘 SFX音效问题 — 求助Gemini
 
 ### 需求
-三个音效，必须独立于BGM静音：
-1. F7戳一戳 → command_execute.wav
-2. 玩家发送消息 → jine_send_stamp.wav  
-3. 收到糖糖消息 → jine_recieve.wav（文字响一声，贴图响一声，两条独立消息各响各的）
+三个音效（独立于BGM静音）：F7戳一戳、玩家发送、收到糖糖消息。
+**核心难题**：糖糖回复文字+贴图时（如"烦死了" + stamp_ame_tsun），这是两条独立JINE消息，需要两声接收音效——但什么方案都试过了，就是出不来两声。
 
-### 已尝试的方案（全失败）
+### 已失败的所有尝试
+1. 同一Audio对象 `currentTime=0; play()` 连调两次 → 只有一声
+2. `cloneNode()` 克隆Audio → 一声
+3. 预加载两个独立Audio对象(A/B toggle) → 一声  
+4. setTimeout错开(0ms/100ms/300ms/600ms) → 两声重叠或第二声延迟过大
+5. 贴图消息stagger 300ms后再push+播音效 → 没用
 
-1. **Audio元素 + currentTime=0重放**：文字+贴图时连调两次playSfx，第二声不响。两个playSfx在同一setTimeout回调连续调用
-2. **cloneNode**：克隆的Audio元素未预加载，播放延迟/失败
-3. **双Audio交替(A/B toggle)**：仍只有一声。怀疑同一event loop tick内两个独立Audio.play()也被浏览器限制
-4. **setTimeout错开**：两声音效重叠(0ms+100ms → 叠在一起；0ms+600ms → 贴图音效延迟太大)
-
-### 当前代码
+### 当前代码（最新失败版本）
 ```javascript
-var _sfxJineRecv = new Audio('sfx/jine_recieve.wav');
-var _sfxJineRecvB = new Audio('sfx/jine_recieve.wav');
-// ... preloaded ...
-var _recvToggle = false;
-function playSfx(name) {
-    var a; 
-    if (name === 'jine_recv') { a = _recvToggle ? _sfxJineRecvB : _sfxJineRecv; _recvToggle = !_recvToggle; }
-    // ...
-    a.currentTime = 0; a.play();
-}
-
-// 回复回调里：
-if (replyText) { /* push text msg */ }
-if (data.ame_sticker) { /* push sticker msg */ }
-playSfx('jine_recv');  // text sound
-if (data.ame_sticker) setTimeout(function() { playSfx('jine_recv'); }, 600);  // sticker sound, delayed
+// 回复回调setTimeout里：
+if (replyText) { pushTextMsg(); playSfx('jine_recv'); }
+if (data.ame_sticker) { setTimeout(function(){ pushStickerMsg(); playSfx('jine_recv'); }, 300); }
 ```
 
-### 关键约束
-- 贴图消息不能延迟渲染——必须和文字同时显示在JINE里
-- 两声音效必须分明可辨，不能重叠
-- 不依赖Web Audio API（之前试过，用户要求回退）
+### 约束
+- 贴图和文字必须作为两条独立消息显示在JINE中
+- 不依赖Web Audio API（用户要求用Audio元素）
+- wav文件已预加载，单次播放正常
 
-### 请审查
-如何在保证贴图消息即时渲染的前提下，让两声接收音效清晰分开？
+### 问题
+为什么两个独立的预加载Audio元素、两个不同的event loop tick，浏览器就是不让播两次？是Chrome的Audio并发限制还是代码有其他问题？
