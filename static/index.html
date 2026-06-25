@@ -2707,7 +2707,7 @@ _sfxJineSend.preload = 'auto'; _sfxJineSend.load();
 _sfxJineRecv.preload = 'auto'; _sfxJineRecv.load();
 _sfxF7Poke.preload = 'auto'; _sfxF7Poke.load();
 function playSfx(name) {
-    try { var a = name === 'jine_send' ? _sfxJineSend : (name === 'jine_recv' ? _sfxJineRecv : _sfxF7Poke); a.currentTime = 0; a.play(); } catch(e) {}
+    try { var a = name === 'jine_send' ? _sfxJineSend : (name === 'jine_recv' ? _sfxJineRecv : _sfxF7Poke); a.currentTime = 0; var p = a.play(); if (p && p.catch) p.catch(function(e) { console.warn('[sfx] ' + name + ' play blocked:', e.message); }); } catch(e) {}
 }
 console.log('+ Poketter v2.7.2 ready +');
 })();
