@@ -2410,14 +2410,12 @@ function _executeReply() {
                 if (_f7StaggerPending > 0) _f7StaggerCache.push(m);
                 else { jineChatMsgs.push(m); SaveManager.addJineMessage(m); playSfx('jine_recv'); }
             }
-            // Push sticker with stagger delay so text+sticker don't overlap visually or audibly
-            var _pushSticker = function() {
-                if (data.ame_sticker) {
-                    var s = { time: t, ame_sticker: data.ame_sticker, recall: false };
-                    if (_f7StaggerPending > 0) _f7StaggerCache.push(s);
-                    else { jineChatMsgs.push(s); SaveManager.addJineMessage(s); playSfx('jine_recv'); }
-                }
-                if (!_f7StaggerPending && ACTIVE_TAB === 'jine') renderJineChatMsgs();
+            if (data.ame_sticker) {
+                var s = { time: t, ame_sticker: data.ame_sticker, recall: false };
+                if (_f7StaggerPending > 0) _f7StaggerCache.push(s);
+                else { jineChatMsgs.push(s); SaveManager.addJineMessage(s); playSfx('jine_recv'); }
+            }
+            if (!_f7StaggerPending && ACTIVE_TAB === 'jine') renderJineChatMsgs();
             };
             if (_f7StaggerPending > 0) { _pushSticker(); }
             else {
@@ -2719,17 +2717,29 @@ window.SaveManager = SaveManager;
 window.VOID_JINE_POOL = VOID_JINE_POOL;
 
 // v4.7: JINE sound effects
-var _sfxJineSend = new Audio('sfx/jine_send_stamp.wav');
-var _sfxJineRecv = new Audio('sfx/jine_recieve.wav');
-var _sfxJineRecvB = new Audio('sfx/jine_recieve.wav');
-var _sfxF7Poke = new Audio('sfx/command_execute.wav');
-_sfxJineSend.preload = 'auto'; _sfxJineSend.load();
-_sfxJineRecv.preload = 'auto'; _sfxJineRecv.load();
-_sfxJineRecvB.preload = 'auto'; _sfxJineRecvB.load();
-_sfxF7Poke.preload = 'auto'; _sfxF7Poke.load();
-var _recvToggle = false;
+// v4.7: Audio pool — each SFX type gets 3 channels for concurrency
+var _sfxPools = {};
+['jine_send','jine_recv','f7'].forEach(function(type) {
+    var urls = { jine_send: 'sfx/jine_send_stamp.wav', jine_recv: 'sfx/jine_recieve.wav', f7: 'sfx/command_execute.wav' };
+    _sfxPools[type] = [];
+    for (var i = 0; i < 3; i++) {
+        var a = new Audio(urls[type]);
+        a.preload = 'auto'; a.volume = 0.8; a.load();
+        _sfxPools[type].push(a);
+    }
+});
 function playSfx(name) {
-    try { var a; if (name === 'jine_send') a = _sfxJineSend; else if (name === 'jine_recv') { a = _recvToggle ? _sfxJineRecvB : _sfxJineRecv; _recvToggle = !_recvToggle; } else a = _sfxF7Poke; a.currentTime = 0; a.play(); } catch(e) {}
+    try {
+        var pool = _sfxPools[name] || _sfxPools.f7;
+        // find idle channel (paused or ended)
+        var a = null;
+        for (var i = 0; i < pool.length; i++) {
+            if (pool[i].paused || pool[i].ended) { a = pool[i]; break; }
+        }
+        // all busy — steal oldest
+        if (!a) { a = pool[0]; a.currentTime = 0; }
+        a.play().catch(function(){});
+    } catch(e) {}
 }
 console.log('+ Poketter v2.7.2 ready +');
 })();
