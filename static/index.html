@@ -2703,6 +2703,9 @@ window.VOID_JINE_POOL = VOID_JINE_POOL;
 var _sfxJineSend = new Audio('sfx/jine_send_stamp.wav');
 var _sfxJineRecv = new Audio('sfx/jine_recieve.wav');
 var _sfxF7Poke = new Audio('sfx/command_execute.wav');
+_sfxJineSend.preload = 'auto'; _sfxJineSend.load();
+_sfxJineRecv.preload = 'auto'; _sfxJineRecv.load();
+_sfxF7Poke.preload = 'auto'; _sfxF7Poke.load();
 function playSfx(name) {
     try { var a = name === 'jine_send' ? _sfxJineSend : (name === 'jine_recv' ? _sfxJineRecv : _sfxF7Poke); a.currentTime = 0; a.play(); } catch(e) {}
 }
