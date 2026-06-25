@@ -554,3 +554,35 @@ else:
 1. 这个批量引擎是否过度设计？对于单用户对话场景，去掉批处理改用直接同步请求会不会更稳？
 2. 5 秒轮询作为兜底方案有没有潜在的副作用？
 3. server.py 加了 `/api/health` 端点，给 Worker 健康检查用。上 Worker 方案一之前还有什么准备工作？
+
+---
+
+## ✅ Gemini 审查：JINE 渲染停止 bug + Worker 路线图
+
+### 诊断
+
+批量回复引擎的三个并发问题：
+1. **闭包锁死**：`_replyPending` 变为 true 后 API 异常时解锁逻辑未触发
+2. **F7 Release 绕过了锁**：release 单向注入不受 `_replyPending` 约束，与正常聊天路径竞争
+3. **3s debounce + batch timer 撞车**：localStorage 写入与渲染队列脱节
+
+### 手术方案
+
+**1. 去掉批量引擎，换成 Promise 队列**
+- 删除 `_batchStartIdx`、`_batchSentIdx` 维护
+- FIFO 队列：有新消息推入 → 依次处理 → 处理完停
+- 即使后端崩，只卡当前消息，不会阻塞后续发送
+
+**2. 去掉 5 秒轮询**
+- 副作用：覆盖用户刚发的消息、DOM 重绘 300 条记录、掩盖真实 bug
+- 改为事件驱动：只有收到回复、用户发送、F7 触发时才渲染
+
+**3. 加死锁保险丝**
+- 如果 `_replyPending` 超过 15 秒，强制解锁 + 刷新渲染
+- 每次交互更新 `_lastActionTime` 时间戳
+
+### Worker 方案一准备
+- 双机拆成独立 Tunnel（主 `main-xxx` + 备 `backup-xxx`）
+- 隐藏子域名，Worker 作为唯一入口做健康检查
+- Turso `/api/load` 不走本地缓存，必须直读 Turso
+
