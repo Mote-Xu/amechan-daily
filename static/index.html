@@ -2593,13 +2593,13 @@ window.sendText = function() {
     var text = input.value.trim();
     if (!text) return;
     input.value = '';
+    playSfx('jine_send');  // play IMMEDIATELY on user action
     console.log('[sendText] sending:', text.slice(0,30));
     startAmeResponse();
     var now = new Date();
     var timeStr = ('0'+now.getHours()).slice(-2) + ':' + ('0'+now.getMinutes()).slice(-2);
 
     var playerMsg = { time: timeStr, player_text: text, reply: '', recall: false, _read: true };
-    playSfx('jine_send');
     jineChatMsgs.push(playerMsg);
     SaveManager.addJineMessage(playerMsg);
     if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
@@ -2622,11 +2622,11 @@ function sendSticker(stickerId) {
     startAmeResponse();
     var sticker = STICKERS.find(function(s) { return s.id === stickerId; });
     if (!sticker) { endAmeResponse(); return; }
+    playSfx('jine_send');  // play IMMEDIATELY on user click
 
     var now = new Date();
     var timeStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
     var stickerMsg = { time: timeStr, sticker: stickerId, reply: '', recall: false, _read: true };
-    playSfx('jine_send');
     jineChatMsgs.push(stickerMsg);
     SaveManager.addJineMessage(stickerMsg);
     if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
