@@ -1,6 +1,6 @@
 # 需求文档 — 超天酱日常推文小站
 
-> 版本：v4.6 · 2026-06-19
+> 版本：v4.6 · 2026-06-25
 
 ---
 
@@ -48,6 +48,8 @@
 | 代码残留 + 过期配置 | 删 feed.py/json，去 API_BACKUP，统一 Tunnel | 多文件 |
 | 自拍图重复/偏离 | 每条推博独立轮换 + per-save 随机偏移 | index.html |
 | JINE 挂机后渲染停止 | 批量引擎重写为 debounce 队列 + 死锁保险丝 | index.html |
+| JINE 音效 | 发送/接收/F7三音效，Audio对象池3通道轮询 | index.html + static/sfx/ |
+| JINE Release 纯独白→轰炸 | 必须用「你」，允许问句，禁"反正你也不会回" | prompts.py |
 
 ## v4.5 修改 (2026-06-19)
 
