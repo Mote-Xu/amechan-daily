@@ -2403,11 +2403,19 @@ function _executeReply() {
         setTimeout(function() {
             hideAmeTyping();
             for (var bi = 0; bi < batch.length; bi++) batch[bi]._replied = true;
-            var replyMsg = { time: data.time || ('0'+new Date().getHours()).slice(-2)+':'+('0'+new Date().getMinutes()).slice(-2), reply: replyText, ame_sticker: data.ame_sticker || null, recall: false };
-            if (_f7StaggerPending > 0) { _f7StaggerCache.push(replyMsg); }
-            else { jineChatMsgs.push(replyMsg); SaveManager.addJineMessage(replyMsg); if (ACTIVE_TAB === 'jine') renderJineChatMsgs(); }
-            playSfx('jine_recv');
-            if (data.ame_sticker && replyText) playSfx('jine_recv');
+            var t = data.time || ('0'+new Date().getHours()).slice(-2)+':'+('0'+new Date().getMinutes()).slice(-2);
+            // Push text and sticker as separate messages (each = 1 sound)
+            if (replyText) {
+                var m = { time: t, reply: replyText, recall: false };
+                if (_f7StaggerPending > 0) _f7StaggerCache.push(m);
+                else { jineChatMsgs.push(m); SaveManager.addJineMessage(m); playSfx('jine_recv'); }
+            }
+            if (data.ame_sticker) {
+                var s = { time: t, ame_sticker: data.ame_sticker, recall: false };
+                if (_f7StaggerPending > 0) _f7StaggerCache.push(s);
+                else { jineChatMsgs.push(s); SaveManager.addJineMessage(s); playSfx('jine_recv'); }
+            }
+            if (!_f7StaggerPending && ACTIVE_TAB === 'jine') renderJineChatMsgs();
             _replyProcessing = false; _replyController = null;
             if (_checkUnreplied()) _debounceReply(true);
         }, wait);
