@@ -589,33 +589,45 @@ else:
 
 ---
 
-## 🔴 待审：server.py 两处改动
 
-### 1. 日志增强
-```python
-# 旧
-print(f"[{ts}] {args[0]}")
+---
 
-# 新
-client_ip = self._get_client_ip()
-method = self.command
-path = self.path
-ua = self.headers.get("User-Agent", "")[:50]
-print(f"[{ts}] {client_ip} | {method} {path} | {ua}")
-```
+## 🔴 JINE 回复引擎重写 — 改动清单与功能验收
 
-### 2. /api/health 端点
-```python
-elif path == "/api/health":
-    import socket
-    self._send_json({
-        "ok": True,
-        "hostname": socket.gethostname(),
-        "time": time.strftime("%Y-%m-%d %H:%M:%S"),
-    })
-```
+### 改了什么（代码层面）
 
-### 请审查
-1. 日志增强会不会影响性能（每个请求都调 `_get_client_ip` + `User-Agent` 截取）？
-2. `/api/health` 端点是否有安全风险（暴露 hostname）？
-3. 给 Worker 健康检查用的话还需要加什么字段？
+**删除的变量**：`_replyPending`、`_pendingController`、`_batchStartIdx`、`_batchSentIdx`、`_batchTimer`、`_batchWindowMs`
+**新增变量**：`_replyProcessing`、`_replyTimer`、`_lastActionTime`
+**新增函数**：`_debounceReply(isContinuation)` — 替代 `_scheduleReply()`
+
+**简化逻辑**：
+- `sendText`/`sendSticker`：去硬重置，直接调 `_debounceReply()`
+- `_executeReply`：去掉下标循环，改为遍历全数组收集未回复消息
+- `_checkUnreplied`：去掉 `_batchSentIdx` 参数，改为从头遍历
+- `reloadFromSlot`：去掉旧 batch 状态重置
+
+**附加改动**：
+- 动态延迟：auto-continue 时 100-400ms，玩家主动发 300-1200ms
+- 打断机制：玩家发消息清 `_f7StaggerCache`
+- 5 秒轮询 → 15 秒死锁保险丝
+
+### 不应改变的用户体验（验收清单）
+
+| 功能 | 描述 | 状态 |
+|------|------|:--:|
+| 单条消息回复 | 玩家发一条，糖糖回复一条，带打字延迟 | 待验 |
+| 连续消息聚合 | 快速发多条，前端收集后合并为一个 API 请求 | 待验 |
+| 打断重发 | 糖糖回复中玩家插话，旧回复被覆盖不显示 | 待验 |
+| F7 release 消息 | 自动戳一戳的 JINE 消息正常 stagger 显示 | 待验 |
+| 打字指示器 | "糖糖正在输入..." 正确显示和隐藏 | 待验 |
+| F7 stagger 缓存 | release 期间玩家消息排队，stagger 结束后统一吐出 | 待验 |
+| 切换存档 | 切存档后回复引擎重置，不残留旧状态 | 待验 |
+
+### 已知风险
+1. 动态延迟的 `isContinuation` 路径未充分测试
+2. 死锁保险丝从未触发过，触发后的恢复体验未知
+3. API 失败时只设置 `_replyProcessing = false`，不重试
+
+### server.py 已改但未审
+1. 日志增强：打印 IP + Method + Path + User-Agent
+2. `/api/health` 端点：返回 hostname + 时间戳
