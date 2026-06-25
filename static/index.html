@@ -1074,6 +1074,7 @@ function _flushStaggerCache() {
         SaveManager.addJineMessage(cache[ci]);
     }
     if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
+    playSfx('jine_recv');
 }
 
 // v4.6: Shared stagger helper — pushes JINE messages to chat one at a time.
@@ -2153,6 +2154,7 @@ window.doRelease = function() {
     btn.textContent = '...';
     btn.disabled = true;
     var _releaseSlotId = SaveManager.getCurrentSlot().id;  // v4.6: lock slot before async API
+    playSfx('f7');
 
     // Release from localStorage pool (instant — no network)
     var entries = SaveManager.releaseFromPool();
@@ -2403,6 +2405,7 @@ function _executeReply() {
             var replyMsg = { time: data.time || ('0'+new Date().getHours()).slice(-2)+':'+('0'+new Date().getMinutes()).slice(-2), reply: replyText, ame_sticker: data.ame_sticker || null, recall: false };
             if (_f7StaggerPending > 0) { _f7StaggerCache.push(replyMsg); }
             else { jineChatMsgs.push(replyMsg); SaveManager.addJineMessage(replyMsg); if (ACTIVE_TAB === 'jine') renderJineChatMsgs(); }
+            playSfx('jine_recv');
             _replyProcessing = false; _replyController = null;
             if (_checkUnreplied()) _debounceReply(true);
         }, wait);
@@ -2586,6 +2589,7 @@ window.sendText = function() {
     var timeStr = ('0'+now.getHours()).slice(-2) + ':' + ('0'+now.getMinutes()).slice(-2);
 
     var playerMsg = { time: timeStr, player_text: text, reply: '', recall: false, _read: true };
+    playSfx('jine_send');
     jineChatMsgs.push(playerMsg);
     SaveManager.addJineMessage(playerMsg);
     if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
@@ -2612,6 +2616,7 @@ function sendSticker(stickerId) {
     var now = new Date();
     var timeStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
     var stickerMsg = { time: timeStr, sticker: stickerId, reply: '', recall: false, _read: true };
+    playSfx('jine_send');
     jineChatMsgs.push(stickerMsg);
     SaveManager.addJineMessage(stickerMsg);
     if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
@@ -2692,6 +2697,14 @@ if (!isStaticMode) {
 // v4.6: Expose for debugging/testing
 window.SaveManager = SaveManager;
 window.VOID_JINE_POOL = VOID_JINE_POOL;
+
+// v4.7: JINE sound effects
+var _sfxJineSend = new Audio('sfx/jine_send_stamp.wav');
+var _sfxJineRecv = new Audio('sfx/jine_recieve.wav');
+var _sfxF7Poke = new Audio('sfx/command_execute.wav');
+function playSfx(name) {
+    try { var a = name === 'jine_send' ? _sfxJineSend : (name === 'jine_recv' ? _sfxJineRecv : _sfxF7Poke); a.currentTime = 0; a.play(); } catch(e) {}
+}
 console.log('+ Poketter v2.7.2 ready +');
 })();
 </script>
