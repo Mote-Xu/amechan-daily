@@ -586,3 +586,36 @@ else:
 - 隐藏子域名，Worker 作为唯一入口做健康检查
 - Turso `/api/load` 不走本地缓存，必须直读 Turso
 
+
+---
+
+## 🔴 待审：server.py 两处改动
+
+### 1. 日志增强
+```python
+# 旧
+print(f"[{ts}] {args[0]}")
+
+# 新
+client_ip = self._get_client_ip()
+method = self.command
+path = self.path
+ua = self.headers.get("User-Agent", "")[:50]
+print(f"[{ts}] {client_ip} | {method} {path} | {ua}")
+```
+
+### 2. /api/health 端点
+```python
+elif path == "/api/health":
+    import socket
+    self._send_json({
+        "ok": True,
+        "hostname": socket.gethostname(),
+        "time": time.strftime("%Y-%m-%d %H:%M:%S"),
+    })
+```
+
+### 请审查
+1. 日志增强会不会影响性能（每个请求都调 `_get_client_ip` + `User-Agent` 截取）？
+2. `/api/health` 端点是否有安全风险（暴露 hostname）？
+3. 给 Worker 健康检查用的话还需要加什么字段？
