@@ -1072,9 +1072,9 @@ function _flushStaggerCache() {
     for (var ci = 0; ci < cache.length; ci++) {
         jineChatMsgs.push(cache[ci]);
         SaveManager.addJineMessage(cache[ci]);
+        playSfx('jine_recv');
     }
     if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
-    playSfx('jine_recv');
 }
 
 // v4.6: Shared stagger helper — pushes JINE messages to chat one at a time.
