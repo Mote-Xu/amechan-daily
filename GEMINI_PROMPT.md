@@ -742,3 +742,13 @@ if (data.ame_sticker) { setTimeout(function(){ pushStickerMsg(); playSfx('jine_r
 
 ### 问题
 为什么两个独立的预加载Audio元素、两个不同的event loop tick，浏览器就是不让播两次？是Chrome的Audio并发限制还是代码有其他问题？
+
+---
+
+## ✅ SFX音效解决
+
+最终方案：Audio对象池(3通道轮询) + 贴图音效500ms延迟
+
+- 每类SFX预加载3个Audio，轮询播放不查paused
+- 收声音369ms，贴图延迟500ms完全错开
+- 发送用独立pool，连点不丢音

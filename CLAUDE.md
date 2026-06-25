@@ -56,6 +56,7 @@ Python ThreadingHTTPServer
 | 正向重定向 | prompts.py + generator.py | 禁点评+命令狂+透视眼；自信自卑分界；叠字宅宅；上下文排序；release炸弹标记+记忆校准+接梗规则 |
 | F7 release slot 竞态 | index.html | 锁 `_releaseSlotId`，防跨存档灌消息 |
 | JINE 引擎重写 | index.html | 批量引擎→debounce队列+死锁保险丝；去 _batchStartIdx/_batchSentIdx |
+| JINE 音效 | index.html + static/sfx/ | 发送/接收/F7三音效，Audio对象池3通道轮询 |
 | 代码清理 | generator.py/server.py/config.py | 删除 feed.py/feed.json，去 API_BACKUP fallback，统一共享 Tunnel |
 | 自拍图修复 | index.html | 每条推博独立轮换 + per-save 随机起始偏移 |
 
