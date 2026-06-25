@@ -2408,13 +2408,17 @@ function _executeReply() {
             if (replyText) {
                 var m = { time: t, reply: replyText, recall: false };
                 if (_f7StaggerPending > 0) _f7StaggerCache.push(m);
-                else { jineChatMsgs.push(m); SaveManager.addJineMessage(m); setTimeout(function(){playSfx('jine_recv');}, 0); }
+                else { jineChatMsgs.push(m); SaveManager.addJineMessage(m); }
             }
             if (data.ame_sticker) {
                 var s = { time: t, ame_sticker: data.ame_sticker, recall: false };
                 if (_f7StaggerPending > 0) _f7StaggerCache.push(s);
-                else { jineChatMsgs.push(s); SaveManager.addJineMessage(s); setTimeout(function(){playSfx('jine_recv');}, 100); }
+                else { jineChatMsgs.push(s); SaveManager.addJineMessage(s); }
             }
+            if (!_f7StaggerPending && ACTIVE_TAB === 'jine') renderJineChatMsgs();
+            // Stagger recv sounds — text now, sticker after 600ms
+            playSfx('jine_recv');
+            if (data.ame_sticker) setTimeout(function() { playSfx('jine_recv'); }, 600);
             if (!_f7StaggerPending && ACTIVE_TAB === 'jine') renderJineChatMsgs();
             _replyProcessing = false; _replyController = null;
             if (_checkUnreplied()) _debounceReply(true);
