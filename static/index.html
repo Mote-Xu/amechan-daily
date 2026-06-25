@@ -2731,13 +2731,12 @@ var _sfxPools = {};
 function playSfx(name) {
     try {
         var pool = _sfxPools[name] || _sfxPools.f7;
-        // find idle channel (paused or ended)
         var a = null;
         for (var i = 0; i < pool.length; i++) {
             if (pool[i].paused || pool[i].ended) { a = pool[i]; break; }
         }
-        // all busy — steal oldest
-        if (!a) { a = pool[0]; a.currentTime = 0; }
+        if (!a) { a = pool[0]; }  // all busy, steal oldest
+        a.currentTime = 0;  // MUST reset or ended audio.play() silently fails
         a.play().catch(function(){});
     } catch(e) {}
 }
