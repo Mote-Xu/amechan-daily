@@ -2412,7 +2412,7 @@ function _executeReply() {
             }
             if (data.ame_sticker) {
                 var s = { time: t, ame_sticker: data.ame_sticker, recall: false };
-                var stickerDelay = replyText ? 300 : 0;
+                var stickerDelay = replyText ? 500 : 0;
                 if (_f7StaggerPending > 0) _f7StaggerCache.push(s);
                 else { jineChatMsgs.push(s); SaveManager.addJineMessage(s); setTimeout(function(){ playSfx('jine_recv'); }, stickerDelay); }
             }
