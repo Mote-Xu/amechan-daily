@@ -2416,14 +2416,6 @@ function _executeReply() {
                 else { jineChatMsgs.push(s); SaveManager.addJineMessage(s); playSfx('jine_recv'); }
             }
             if (!_f7StaggerPending && ACTIVE_TAB === 'jine') renderJineChatMsgs();
-            };
-            if (_f7StaggerPending > 0) { _pushSticker(); }
-            else {
-                if (!replyText || !data.ame_sticker) { _pushSticker(); }
-                else setTimeout(_pushSticker, 300);
-            }
-            if (!_f7StaggerPending && ACTIVE_TAB === 'jine') renderJineChatMsgs();
-            if (!replyText && !data.ame_sticker && !_f7StaggerPending && ACTIVE_TAB === 'jine') renderJineChatMsgs();
             _replyProcessing = false; _replyController = null;
             if (_checkUnreplied()) _debounceReply(true);
         }, wait);
