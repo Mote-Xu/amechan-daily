@@ -2407,7 +2407,7 @@ function _executeReply() {
             if (_f7StaggerPending > 0) { _f7StaggerCache.push(replyMsg); }
             else { jineChatMsgs.push(replyMsg); SaveManager.addJineMessage(replyMsg); if (ACTIVE_TAB === 'jine') renderJineChatMsgs(); }
             playSfx('jine_recv');
-            if (data.ame_sticker && replyText) { var a2 = _sfxJineRecv.cloneNode(); a2.play(); }  // text + sticker = 2 msgs
+            if (data.ame_sticker && replyText) setTimeout(function() { playSfx('jine_recv'); }, 200);
             _replyProcessing = false; _replyController = null;
             if (_checkUnreplied()) _debounceReply(true);
         }, wait);
