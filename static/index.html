@@ -2332,10 +2332,10 @@ function hideAmeTyping() {
 // user types. When window expires, collect ALL unreplied messages
 // and send ONE API request. If new messages arrive during API call,
 // v4.7: Simplified reply engine — debounce + process, no batch indices
-function _debounceReply() {
+function _debounceReply(isContinuation) {
     _lastActionTime = Date.now();
     if (_replyTimer) clearTimeout(_replyTimer);
-    _replyTimer = setTimeout(_executeReply, 300 + Math.random() * 900);
+    _replyTimer = setTimeout(_executeReply, (isContinuation ? 100+Math.random()*300 : 300+Math.random()*900));
 }
 
 function _executeReply() {
@@ -2396,7 +2396,7 @@ function _executeReply() {
             if (_f7StaggerPending > 0) { _f7StaggerCache.push(replyMsg); }
             else { jineChatMsgs.push(replyMsg); SaveManager.addJineMessage(replyMsg); if (ACTIVE_TAB === 'jine') renderJineChatMsgs(); }
             _replyProcessing = false;
-            if (_checkUnreplied()) _debounceReply();
+            if (_checkUnreplied()) _debounceReply(true);
         }, wait);
     }).catch(function(err) {
         _lastActionTime = Date.now();
@@ -2581,6 +2581,7 @@ window.sendText = function() {
     jineChatMsgs.push(playerMsg);
     SaveManager.addJineMessage(playerMsg);
     if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
+    _f7StaggerCache = [];  // v4.7: clear stale replies when player sends
     _debounceReply();
     } catch(e) { console.error('[sendText] crashed:', e); }
 };
@@ -2606,6 +2607,7 @@ function sendSticker(stickerId) {
     jineChatMsgs.push(stickerMsg);
     SaveManager.addJineMessage(stickerMsg);
     if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
+    _f7StaggerCache = [];  // v4.7: clear stale replies when player sends
     _debounceReply();
     } catch(e) { console.error('[sendSticker] crashed:', e); }
 }
