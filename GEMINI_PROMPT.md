@@ -537,5 +537,20 @@ else:
 
 ---
 
-## 请 Gemini 审查
+## 🔴 JINE 前端渲染停止 bug（未根治）
 
+### 现象
+页面开几小时后，服务端正常收发（日志可见），但前端 JINE 不再显示新消息——玩家发出的消息和糖糖的回复都不出现。F7 release 消息仍正常显示。刷新页面后恢复正常，挂几小时复发。
+
+### 已尝试的修复
+1. `renderJineChatUnified` 开头 `jineChatMsgs = SaveManager.getJineChat()` 强制同步存档
+2. `sendText` / `sendSticker` 发出前硬重置 `_replyPending`、`_batchSentIdx`、`_batchStartIdx`、`_batchTimer`
+3. 5 秒定时轮询：检测 `jineChatMsgs.length !== 存档.length` 时强制同步渲染
+
+### 疑点
+批量回复引擎（`_scheduleReply` → `_executeReply` → API 回调 → `renderJineChatMsgs`）在多消息并发 + F7 auto-poke 穿插场景下状态机卡死，闭包变量无法从 Console 读写排查。
+
+### 请审查
+1. 这个批量引擎是否过度设计？对于单用户对话场景，去掉批处理改用直接同步请求会不会更稳？
+2. 5 秒轮询作为兜底方案有没有潜在的副作用？
+3. server.py 加了 `/api/health` 端点，给 Worker 健康检查用。上 Worker 方案一之前还有什么准备工作？
