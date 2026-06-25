@@ -2699,12 +2699,36 @@ window.SaveManager = SaveManager;
 window.VOID_JINE_POOL = VOID_JINE_POOL;
 
 // v4.7: JINE sound effects
-var _sfxJineSend = new Audio('sfx/jine_send_stamp.wav');
-var _sfxJineRecv = new Audio('sfx/jine_recieve.wav');
-var _sfxF7Poke = new Audio('sfx/command_execute.wav');
-function playSfx(name) {
-    try { var a = name === 'jine_send' ? _sfxJineSend : (name === 'jine_recv' ? _sfxJineRecv : _sfxF7Poke); a.currentTime = 0; a.play(); } catch(e) {}
+// v4.7: SFX via Web Audio — bypasses autoplay restrictions
+var _sfxAudioCtx = null;
+function _sfxUnlock() {
+    if (_sfxAudioCtx) return;
+    _sfxAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // preload all SFX buffers on first user interaction
+    ['sfx/jine_send_stamp.wav','sfx/jine_recieve.wav','sfx/command_execute.wav'].forEach(function(url) {
+        fetch(url).then(function(r) { return r.arrayBuffer(); }).then(function(buf) {
+            _sfxAudioCtx.decodeAudioData(buf).then(function(audio) {
+                _sfxCache[url] = audio;
+            }).catch(function(){});
+        }).catch(function(){});
+    });
 }
+var _sfxCache = {};
+function playSfx(name) {
+    try {
+        if (!_sfxAudioCtx) return;
+        var url = name === 'jine_send' ? 'sfx/jine_send_stamp.wav' : (name === 'jine_recv' ? 'sfx/jine_recieve.wav' : 'sfx/command_execute.wav');
+        var buf = _sfxCache[url];
+        if (!buf) return;
+        var src = _sfxAudioCtx.createBufferSource();
+        src.buffer = buf;
+        src.connect(_sfxAudioCtx.destination);
+        src.start(0);
+    } catch(e) {}
+}
+// unlock audio on first user interaction
+document.addEventListener('click', _sfxUnlock, {once: true});
+document.addEventListener('keydown', _sfxUnlock, {once: true});
 console.log('+ Poketter v2.7.2 ready +');
 })();
 </script>
