@@ -2720,14 +2720,13 @@ var _sfxPools = {};
         _sfxPools[type].push(a);
     }
 });
+var _sfxNext = { jine_send:0, jine_recv:0, f7:0 };
 function playSfx(name) {
     try {
         var pool = _sfxPools[name] || _sfxPools.f7;
-        for (var i = 0; i < pool.length; i++) {
-            if (pool[i].paused) { pool[i].currentTime = 0; pool[i].play().catch(function(){}); return; }
-        }
-        // all channels busy — reset oldest and play
-        pool[0].currentTime = 0; pool[0].play().catch(function(){});
+        var i = _sfxNext[name] || 0;
+        _sfxNext[name] = (i + 1) % pool.length;
+        pool[i].currentTime = 0; pool[i].play().catch(function(){});
     } catch(e) {}
 }
 console.log('+ Poketter v2.7.2 ready +');
