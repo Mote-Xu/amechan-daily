@@ -1047,12 +1047,9 @@ function findSticker(id) {
 }
 var jineChatMsgs = [];
 var jineSending = false;
-var _replyPending = false;       // true while waiting for 糖糖's reply
-var _pendingController = null; _batchStartIdx = -1; _batchSentIdx = 0;   // AbortController for current request
-var _batchTimer = null;          // setTimeout ID for aggregation window
-var _batchStartIdx = -1;         // index of first msg when batch window started
-var _batchWindowMs = 0;          // current window duration (random 300-1200ms)
-var _batchSentIdx = 0;           // last index sent to API (prevents re-processing)
+var _replyProcessing = false;    // true while waiting for 糖糖's reply
+var _replyTimer = null;          // debounce timer for reply aggregation
+var _lastActionTime = Date.now();// v4.7: deadlock watchdog
 var _f7Timers = [];              // pending F7 JINE message timers (cleared on save switch)
 var _shownReceipts = {};          // tracks which messages already showed "已读"
 var _f7StaggerPending = 0;        // count of F7 stagger messages still queued (>0 = stagger active)
@@ -1661,12 +1658,7 @@ function updateSaveIndicator() {
 
 function reloadFromSlot() {
     _cancelF7Timers();
-    // 重置 reply 引擎状态（防切存档后已读不回）
-    if (_batchTimer) { clearTimeout(_batchTimer); _batchTimer = null; _batchStartIdx = -1; _batchSentIdx = 0; }
-    if (_pendingController) { _pendingController.abort(); _pendingController = null; _batchStartIdx = -1; _batchSentIdx = 0; }
-    _replyPending = false;
-    _batchStartIdx = -1;
-    _batchSentIdx = 0;
+    _replyProcessing = false; if (_replyTimer) { clearTimeout(_replyTimer); _replyTimer = null; }
     jineChatMsgs = SaveManager.getJineChat();
     cachedTimeline = SaveManager.getTimeline();
     knownBatches = {};
@@ -2122,7 +2114,6 @@ function _refillPool(isInitial) {
         _isRefilling = false;
         console.warn('[pool] refill failed:', err);
         if (isInitial) {
-            setTimeout(function() { _refillPool(true); }, 5000);
         }
     });
 }
@@ -2340,57 +2331,32 @@ function hideAmeTyping() {
 // Strategy: 300-1200ms aggregation window. Continuously reset while
 // user types. When window expires, collect ALL unreplied messages
 // and send ONE API request. If new messages arrive during API call,
-// abort and restart the window.
-
-function _scheduleReply(isNewMsg) {
-    // If API is running, abort it — new input supersedes
-    if (_replyPending && _pendingController) {
-        _pendingController.abort();
-        _replyPending = false;
-        _pendingController = null; _batchStartIdx = -1; _batchSentIdx = 0;
-    }
-    // Clear existing batch timer
-    if (_batchTimer) { clearTimeout(_batchTimer); _batchTimer = null; _batchStartIdx = -1; _batchSentIdx = 0; }
-
-    // Record first unreplied index when starting a fresh batch
-    if (isNewMsg) {
-        _batchStartIdx = -1;
-        for (var i = 0; i < jineChatMsgs.length; i++) {
-            var m = jineChatMsgs[i];
-            if (m.reply || m.ame_sticker || m._replied) continue;
-            if (m.player_text || m.sticker) { _batchStartIdx = i; break; }
-        }
-    }
-
-    // Random window 300-1200ms — simulates human "reading" pause
-    _batchWindowMs = 300 + Math.floor(Math.random() * 900);
-    _batchTimer = setTimeout(_executeReply, _batchWindowMs);
+// v4.7: Simplified reply engine — debounce + process, no batch indices
+function _debounceReply() {
+    _lastActionTime = Date.now();
+    if (_replyTimer) clearTimeout(_replyTimer);
+    _replyTimer = setTimeout(_executeReply, 300 + Math.random() * 900);
 }
 
 function _executeReply() {
-    _batchTimer = null;
-    if (_replyPending) return;
-
-    // Collect NEW unreplied player messages (from _batchSentIdx onward only)
-    var batchMsgs = [];
+    _replyTimer = null;
+    if (_replyProcessing) return;
+    
+    var batch = [];
     var lastTexts = [];
     var lastSticker = null;
-    for (var i = _batchSentIdx; i < jineChatMsgs.length; i++) {
+    for (var i = 0; i < jineChatMsgs.length; i++) {
         var m = jineChatMsgs[i];
         if (m.reply || m.ame_sticker || m._replied) continue;
-        if (m.player_text) { batchMsgs.push(m); lastTexts.push(m.player_text); }
-        if (m.sticker)     { batchMsgs.push(m); lastSticker = m.sticker; var s=findSticker(m.sticker); lastTexts.push('[' + (s?s.label:'贴图') + ']'); }
+        if (m.player_text) { batch.push(m); lastTexts.push(m.player_text); }
+        if (m.sticker) { batch.push(m); lastSticker = m.sticker; var s = findSticker(m.sticker); lastTexts.push('[' + (s?s.label:'贴图') + ']'); }
     }
-    if (batchMsgs.length === 0) return;
-
-    _replyPending = true;
-    var newSentIdx = jineChatMsgs.length;  // track where new messages would start next time
-    var cycleStart = Date.now();
-
-    // Typing indicator
+    if (batch.length === 0) return;
+    
+    _replyProcessing = true;
+    _lastActionTime = Date.now();
     setTimeout(function() { showAmeTyping(); }, 800);
-
-    // Build request — send the aggregated batch + history
+    
     var recentMsgs = jineChatMsgs.slice(-10).map(function(m) {
         var e = {};
         if (m.player_text) e.player_text = m.player_text;
@@ -2399,10 +2365,7 @@ function _executeReply() {
         if (m.ame_sticker) e.ame_sticker = m.ame_sticker;
         return e;
     });
-    _pendingController = new AbortController();
-    var fetchTimeout = setTimeout(function() { if (_pendingController) _pendingController.abort(); }, 20000);
-
-    // v4.3: 收集最近 timeline 条目，让糖糖知道自己发过什么
+    
     var recentPosts = [];
     if (cachedTimeline && cachedTimeline.length > 0) {
         var seen = {};
@@ -2413,94 +2376,38 @@ function _executeReply() {
             recentPosts.push({layer: e.layer, text: e.text, time: e.time || ''});
         }
     }
-
-    var requestBody = {
-        text: lastTexts.join(' | '),
-        sticker: lastSticker || '',
-        history: recentMsgs,
-        recent_posts: recentPosts
-    };
-
-    apiFetch('/api/jine/chat', {
-        method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(requestBody),
-        signal: _pendingController.signal
-    }).then(function(r) { return r.json(); }).then(function(data) {
-        _replyPending = false; _pendingController = null; _batchStartIdx = -1; _batchSentIdx = 0;
-        clearTimeout(fetchTimeout);
-
-        if (!data.ok) {
-            _replyPending = false; _pendingController = null; _batchStartIdx = -1; _batchSentIdx = 0;
-            hideAmeTyping(); endAmeResponse();
-            showToast(data.error || '糖糖正在忙，稍等一下哦～');
-            return;
-        }
+    
+    var requestBody = { text: lastTexts.join(' | '), sticker: lastSticker || '', history: recentMsgs, recent_posts: recentPosts };
+    var cycleStart = Date.now();
+    
+    apiFetch('/api/jine/chat', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(requestBody) })
+    .then(function(r) { return r.json(); }).then(function(data) {
+        _lastActionTime = Date.now();
+        if (!data.ok) { _replyProcessing = false; hideAmeTyping(); return; }
+        
         var replyText = data.reply || '';
         var apiDuration = Date.now() - cycleStart;
-        var expectedTypingTime = 1500 + (replyText.length * 100);
-        expectedTypingTime = Math.min(expectedTypingTime, 7000);
-        var remainWait = Math.max(0, expectedTypingTime - apiDuration);
-
+        var wait = Math.max(0, Math.min(1500 + replyText.length * 100, 7000) - apiDuration);
+        
         setTimeout(function() {
             hideAmeTyping();
-            endAmeResponse();
-            var replyMsg = {
-                time: data.time || ('0'+new Date().getHours()).slice(-2)+':'+('0'+new Date().getMinutes()).slice(-2),
-                reply: replyText, ame_sticker: data.ame_sticker || null,
-                recall: false
-            };
-            _batchSentIdx = jineChatMsgs.length;  // advance past this reply
-            for (var bi = 0; bi < batchMsgs.length; bi++) { batchMsgs[bi]._replied = true; }
-            if (_f7StaggerPending > 0) {
-                // F7 stagger active → cache reply, flush after stagger ends
-                _f7StaggerCache.push(replyMsg);
-            } else {
-                jineChatMsgs.push(replyMsg);
-                SaveManager.addJineMessage(replyMsg);
-                if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
-            }
-            // Check if new messages arrived during API — if so, start fresh window
-            if (_checkUnreplied()) {
-                startAmeResponse();
-                _scheduleReply(false);
-            }
-        }, remainWait);
+            for (var bi = 0; bi < batch.length; bi++) batch[bi]._replied = true;
+            var replyMsg = { time: data.time || ('0'+new Date().getHours()).slice(-2)+':'+('0'+new Date().getMinutes()).slice(-2), reply: replyText, ame_sticker: data.ame_sticker || null, recall: false };
+            if (_f7StaggerPending > 0) { _f7StaggerCache.push(replyMsg); }
+            else { jineChatMsgs.push(replyMsg); SaveManager.addJineMessage(replyMsg); if (ACTIVE_TAB === 'jine') renderJineChatMsgs(); }
+            _replyProcessing = false;
+            if (_checkUnreplied()) _debounceReply();
+        }, wait);
     }).catch(function(err) {
-        clearTimeout(fetchTimeout);
-        if (err.name === 'AbortError') {
-            console.log('[reply] aborted — new input arrived');
-            return;  // _scheduleReply already called by the new input
-        }
-        console.warn('[reply] error:', err.name || err.message);
-        _replyPending = false; _pendingController = null; _batchStartIdx = -1; _batchSentIdx = 0;
-        // Show toast for rate limit
-        try {
-            if (err.message && err.message.indexOf('429') >= 0) {
-                showToast('糖糖被消息淹没了...稍等一下再发哦');
-            }
-        } catch(ignore) {}
-        var elapsed = Date.now() - cycleStart;
-        var remainWait = Math.max(800, 2200 - elapsed);
-        setTimeout(function() {
-            hideAmeTyping();
-            endAmeResponse();
-            var fb = { time: ('0'+new Date().getHours()).slice(-2)+':'+('0'+new Date().getMinutes()).slice(-2),
-                reply: ['...','嗯','知道了','哼'][Math.floor(Math.random()*4)], recall: false };
-            _batchSentIdx = jineChatMsgs.length;
-            if (_f7StaggerPending > 0) {
-                _f7StaggerCache.push(fb);
-            } else {
-                jineChatMsgs.push(fb);
-                SaveManager.addJineMessage(fb);
-            }
-            if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
-        }, remainWait);
+        _lastActionTime = Date.now();
+        if (err.name === 'AbortError') { _jineQueue.unshift(batch); }
+        _replyProcessing = false;
+        hideAmeTyping();
     });
 }
 
-// Check for NEW unreplied player messages (only after _batchSentIdx)
 function _checkUnreplied() {
-    for (var i = _batchSentIdx; i < jineChatMsgs.length; i++) {
+    for (var i = 0; i < jineChatMsgs.length; i++) {
         var m = jineChatMsgs[i];
         if (m.reply || m.ame_sticker || m._replied) continue;
         if (m.player_text || m.sticker) return true;
@@ -2664,9 +2571,6 @@ window.sendText = function() {
     if (!input) { console.warn('[sendText] no input element'); return; }
     var text = input.value.trim();
     if (!text) return;
-            // v4.6: hard-reset stuck reply engine
-            _replyPending = false; _pendingController = null; _batchStartIdx = -1; _batchSentIdx = 0;
-            if (_batchTimer) { clearTimeout(_batchTimer); _batchTimer = null; _batchStartIdx = -1; _batchSentIdx = 0; }
     input.value = '';
     console.log('[sendText] sending:', text.slice(0,30));
     startAmeResponse();
@@ -2677,7 +2581,7 @@ window.sendText = function() {
     jineChatMsgs.push(playerMsg);
     SaveManager.addJineMessage(playerMsg);
     if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
-    _scheduleReply(true);
+    _debounceReply();
     } catch(e) { console.error('[sendText] crashed:', e); }
 };
 
@@ -2698,14 +2602,11 @@ function sendSticker(stickerId) {
 
     var now = new Date();
     var timeStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
-        // v4.6: hard-reset stuck reply state
-        _replyPending = false; _pendingController = null; _batchStartIdx = -1; _batchSentIdx = 0;
-        if (_batchTimer) { clearTimeout(_batchTimer); _batchTimer = null; _batchStartIdx = -1; _batchSentIdx = 0; }
     var stickerMsg = { time: timeStr, sticker: stickerId, reply: '', recall: false, _read: true };
     jineChatMsgs.push(stickerMsg);
     SaveManager.addJineMessage(stickerMsg);
     if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
-    _scheduleReply(true);
+    _debounceReply();
     } catch(e) { console.error('[sendSticker] crashed:', e); }
 }
 
@@ -2763,21 +2664,22 @@ jiggleStats();
         _scheduleAutoPoke();
     }
 })();
-setInterval(jiggleStats, 15000);
 initTurnstile();
 fetchTimeline();
 // Poll for new content every 30s (empty-feed fast poll handled inside fetchTimeline)
 if (!isStaticMode) {
     setInterval(fetchTimeline, 30000);
-        // v4.6: periodic JINE sync — brute-force display fix
+        // v4.7: deadlock watchdog — force unlock if reply stuck >15s
         setInterval(function() {
-            if (ACTIVE_TAB !== 'jine') return;
-            var fresh = SaveManager.getJineChat();
-            if (fresh.length !== jineChatMsgs.length) {
-                jineChatMsgs = fresh;
-                renderJineChatMsgs();
+            if (_replyProcessing && (Date.now() - _lastActionTime > 15000)) {
+                console.warn('[jine] deadlock detected, force unlock');
+                _replyProcessing = false;
+                if (_replyTimer) { clearTimeout(_replyTimer); _replyTimer = null; }
+                hideAmeTyping(); renderJineChatMsgs();
             }
         }, 5000);
+        setInterval(function() {
+            }
 }
 // v4.6: Expose for debugging/testing
 window.SaveManager = SaveManager;
