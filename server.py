@@ -199,10 +199,11 @@ class AmechanHandler(SimpleHTTPRequestHandler):
         self.wfile.write(body)
 
     def _get_client_ip(self) -> str:
-        # 优先取 X-Forwarded-For（Cloudflare 代理后会加）
-        forwarded = self.headers.get("X-Forwarded-For", "")
-        if forwarded:
-            return forwarded.split(",")[0].strip()
+        # cloudflared 本地模式用 CF-Connecting-IP；Zero Trust 用 X-Forwarded-For
+        for hdr in ("CF-Connecting-IP", "X-Forwarded-For"):
+            val = self.headers.get(hdr, "")
+            if val:
+                return val.split(",")[0].strip()
         return self.client_address[0]
 
     def log_message(self, format, *args):
