@@ -2408,7 +2408,7 @@ function _executeReply() {
         }, wait);
     }).catch(function(err) {
         _lastActionTime = Date.now();
-        if (err.name === 'AbortError') { _replyController = null; return; }
+        if (err.name === 'AbortError') { return; }  // _debounceReply already reset state, don't touch
         _replyProcessing = false; _replyController = null;
         hideAmeTyping();
     });
