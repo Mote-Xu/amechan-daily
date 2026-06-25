@@ -2407,6 +2407,7 @@ function _executeReply() {
             if (_f7StaggerPending > 0) { _f7StaggerCache.push(replyMsg); }
             else { jineChatMsgs.push(replyMsg); SaveManager.addJineMessage(replyMsg); if (ACTIVE_TAB === 'jine') renderJineChatMsgs(); }
             playSfx('jine_recv');
+            if (data.ame_sticker && replyText) playSfx('jine_recv');  // text + sticker = 2 separate msgs
             _replyProcessing = false; _replyController = null;
             if (_checkUnreplied()) _debounceReply(true);
         }, wait);
@@ -2700,14 +2701,9 @@ window.SaveManager = SaveManager;
 window.VOID_JINE_POOL = VOID_JINE_POOL;
 
 // v4.7: JINE sound effects
-var _sfxJineSend = new Audio('sfx/jine_send_stamp.wav');
-var _sfxJineRecv = new Audio('sfx/jine_recieve.wav');
-var _sfxF7Poke = new Audio('sfx/command_execute.wav');
-_sfxJineSend.preload = 'auto'; _sfxJineSend.load();
-_sfxJineRecv.preload = 'auto'; _sfxJineRecv.load();
-_sfxF7Poke.preload = 'auto'; _sfxF7Poke.load();
+var _sfxUrls = { jine_send: 'sfx/jine_send_stamp.wav', jine_recv: 'sfx/jine_recieve.wav', f7: 'sfx/command_execute.wav' };
 function playSfx(name) {
-    try { var a = name === 'jine_send' ? _sfxJineSend : (name === 'jine_recv' ? _sfxJineRecv : _sfxF7Poke); a.currentTime = 0; var p = a.play(); if (p && p.catch) p.catch(function(e) { console.warn('[sfx] ' + name + ' play blocked:', e.message); }); } catch(e) {}
+    try { var a = new Audio(_sfxUrls[name] || _sfxUrls.f7); a.play(); } catch(e) {}
 }
 console.log('+ Poketter v2.7.2 ready +');
 })();
