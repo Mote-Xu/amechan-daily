@@ -299,7 +299,7 @@ body {
     flex-shrink: 0;
 }
 .jine-chat-msgs {
-    flex: 1;
+    flex: 1 1 0;
     min-height: 0;
     overflow-y: auto;
     padding: 4px 0;
@@ -2510,7 +2510,8 @@ function renderJineChatUnified(timelineItems) {
         if (msg.ame_sticker) all.push({ type: 'ame-sticker', time: t, sticker: msg.ame_sticker });
         if (msg.reply)       all.push({ type: 'ame-text',  time: t, text: msg.reply });
     });
-    all.sort(function(a, b) { return (a.time||'00:00').localeCompare(b.time||'00:00'); });
+    // v4.8: NO SORT — insertion order is the truth. Time-based sort was
+    // burying chat replies below later-stamped F7 stagger messages.
 
     function toMins(t) { var p = (t||'00:00').split(':'); return parseInt(p[0])*60 + parseInt(p[1]); }
 
