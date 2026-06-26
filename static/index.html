@@ -2583,6 +2583,14 @@ function renderJineChatUnified(timelineItems) {
         window._lastRenderLog = Date.now();
     }
     container.innerHTML = html || '<div class="empty-state"><div class="icon"><img src="img/icon_ame.png"></div><p style="font-size:0.7rem;color:rgba(0,0,0,0.4);">糖糖还没发消息...</p></div>';
+    // v4.8: brute-force visibility diagnostic
+    var lastEls = container.querySelectorAll('.jine-msg');
+    var sampleTexts = [];
+    for (var si = Math.max(0, lastEls.length - 3); si < lastEls.length; si++) {
+        sampleTexts.push(lastEls[si].innerText.slice(0, 30));
+    }
+    var cs = window.getComputedStyle(container);
+    console.log('[jine:diag] last 3 msgs:', sampleTexts, '| container display:', cs.display, 'visibility:', cs.visibility, 'opacity:', cs.opacity, 'height:', cs.height, 'overflow-y:', cs.overflowY);
     // v4.8: scroll to bottom — use scrollTop with large value (browser clamps to max)
     container.scrollTop = 999999;
     requestAnimationFrame(function() {

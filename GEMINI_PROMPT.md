@@ -60,8 +60,53 @@
 
 ---
 
+---
+
+## 🔴 紧急：JINE 渲染停顿 — 前端诊断数据
+
+### 现象
+- 可以发送消息和收消息（音效正常）
+- 但 JINE 聊天区看不到任何新消息（华为浏览器 + Chrome）
+- 硬刷新后 85+ 条旧消息可以看到，发送新消息后看不到新增的
+
+### v4.8 已做的修复（仍无效）
+1. 消息存盘上限 60→300
+2. 云同步异步覆盖锁（`_cloudRestoreDone` guard）
+3. render 不再从 save 同步（避免 capped save 覆盖内存）
+4. 滚动改用 `scrollTop=999999` 钳位
+5. CSS 动画 `fadeInUp` 加 `forwards`
+6. `renderJineChatUnified` 包 try/catch
+
+### 关键诊断输出（`[jine:diag]`）
+```
+85 msgs → 85 items → 17849 chars
+last 3 msgs: ['在干嘛', '哼', '又不说话']  ← F7 auto-poke 消息
+container display: block | visibility: visible | opacity: 1 | height: 363px | overflow-y: auto
+
+89 msgs → 89 items → 18888 chars
+last 3 msgs: ['在干嘛', '哼', '又不说话']  ← 始终是F7消息，新的聊天回复不在末尾
+container display: block | visibility: visible | opacity: 1 | height: 323px
+```
+
+### 矛盾点
+- DOM 子节点数量、文本内容、CSS 全部正常
+- 容器 `display:block` `visibility:visible` `opacity:1` `height:323px`
+- 但用户**完全看不到任何消息**（不是"新消息看不到"，是全部看不到）
+- 容器高度在缩小（363→323→297）
+
+### 可能方向（需 Gemini 判断）
+1. `.jine-screen` flex 布局中，`.jine-chat-msgs` 被 `.jine-interactive` 挤压导致实际可视高度为 0？
+2. `CONTAINER.innerHTML` 被某段代码反复重置（renderFromCache），每次重建 DOM 但滚动位置未恢复？
+3. 华为浏览器渲染引擎 bug（Chromium fork 的 CSS flex + overflow 行为异常）？
+4. 消息排序问题——新聊天消息插入位置不对，被旧 F7 消息覆盖在视图之外？
+5. `scrollTop=999999` 在某些情况下没有触发实际滚动（`overflow-y:auto` 但容器不需要滚动因为内容恰好 fit）？
+
+---
+
 ## 请 Gemini 回答
 
-1. **独立 Tunnel + CF Worker 方案是否值得现在投入？** 当前共享 Tunnel 实际表现可接受吗？还是应该趁老电脑刚重建，一次性把独立 Tunnel + Worker 做完？
+1. **独立 Tunnel + CF Worker 方案是否值得现在投入？** 当前共享 Tunnel 实际表现可接受吗？
 
 2. **Turso 云端存档**目前是单点依赖。如果 Turso 挂了，双机容灾也白搭。有没有必要加一层本地 SQLite 兜底？
+
+3. **🔴 JINE 渲染停顿** — 基于上面的诊断数据，根因是什么？怎么修？
