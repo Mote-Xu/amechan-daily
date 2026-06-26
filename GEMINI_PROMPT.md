@@ -64,6 +64,4 @@
 
 1. **独立 Tunnel + CF Worker 方案是否值得现在投入？** 当前共享 Tunnel 实际表现可接受吗？还是应该趁老电脑刚重建，一次性把独立 Tunnel + Worker 做完？
 
-2. **8GB 老电脑空闲 7.2GB**，amechan-daily 占用 ~20MB。还有余力跑什么轻量服务？（AdGuard Home？filebrowser？）
-
-3. **Turso 云端存档**目前是单点依赖。如果 Turso 挂了，双机容灾也白搭。有没有必要加一层本地 SQLite 兜底？
+2. **Turso 云端存档**目前是单点依赖。如果 Turso 挂了，双机容灾也白搭。有没有必要加一层本地 SQLite 兜底？
