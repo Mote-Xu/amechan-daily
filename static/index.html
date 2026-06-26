@@ -1539,7 +1539,7 @@ var SaveManager = {
     getJineChat: function() { var s = this.getCurrentSlot(); return s.data ? s.data.jineChat.slice() : []; },
     addJineMessage: function(msg) {
         var slot = this.data.slots[this.data.currentSlot]; if (!slot) return;
-        slot.jineChat.push(msg); if (slot.jineChat.length > 60) slot.jineChat = slot.jineChat.slice(-60);
+        slot.jineChat.push(msg); if (slot.jineChat.length > 300) slot.jineChat = slot.jineChat.slice(-300);
         slot.updatedAt = new Date().toISOString(); this._persist();
     },
     addReleasedEntry: function(entry) {
@@ -1618,20 +1618,22 @@ var SaveManager = {
 };
 
 // v4.5: 启动时从云端恢复存档
+var _cloudRestoreDone = false;  // v4.8: guard against mid-session cloud overwrite
 function syncFromCloudOnBoot() {
     console.log('[cloud] syncFromCloudOnBoot 启动...');
     SaveManager._cloudPaused = true;
     apiFetch('/api/load').then(function(r) { return r.json(); }).then(function(r) {
         console.log('[cloud] /api/load 返回:', r);
+        if (_cloudRestoreDone) { console.log('[cloud] 已交互，跳过云端恢复'); return; }
         if (!r.ok || !r.saves || Object.keys(r.saves).length === 0) return;
         var cloudSaves = r.saves;
         var recovered = false;
         Object.keys(cloudSaves).forEach(function(sid) {
             var localSlot = SaveManager.data.slots[sid];
-            var localTs = localSlot ? new Date(localSlot.updatedAt).getTime() / 1000 : 0;
-            var cloudTs = cloudSaves[sid].timestamp;
+            var localTs = localSlot ? new Date(localSlot.updatedAt).getTime() : 0;
+            var cloudTs = (cloudSaves[sid].timestamp || 0) * 1000;
             if (cloudTs > localTs) {
-                console.log('[cloud] 恢复存档:', sid);
+                console.log('[cloud] 恢复存档:', sid, 'cloudTs:', cloudTs, 'localTs:', localTs);
                 var cloudData = cloudSaves[sid].save_data;
                 cloudData.updatedAt = new Date().toISOString();
                 cloudData.createdAt = cloudData.createdAt || new Date().toISOString();
@@ -1647,6 +1649,7 @@ function syncFromCloudOnBoot() {
             reloadFromSlot();
             showToast('☁️ 已从云端恢复存档');
         }
+        _cloudRestoreDone = true;
     }).catch(function() {}).finally(function() {
         SaveManager._cloudPaused = false;
     });
@@ -2616,6 +2619,7 @@ window.sendText = function() {
     if (!text) return;
     input.value = '';
     playSfx('jine_send');  // play IMMEDIATELY on user action
+    _cloudRestoreDone = true;  // v4.8: prevent async cloud sync from overwriting after user interaction
     console.log('[sendText] sending:', text.slice(0,30));
     startAmeResponse();
     var now = new Date();
@@ -2641,6 +2645,7 @@ document.addEventListener('keydown', function(e) {
 
 function sendSticker(stickerId) {
     try {
+    _cloudRestoreDone = true;  // v4.8: same guard as sendText
     startAmeResponse();
     var sticker = STICKERS.find(function(s) { return s.id === stickerId; });
     if (!sticker) { endAmeResponse(); return; }
