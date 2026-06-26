@@ -115,9 +115,10 @@ Python ThreadingHTTPServer
 ## 已知问题
 
 1. **共享 Tunnel 双机容灾**：理论风险——CF 不管 server 死活，一台崩可能丢包。后续上独立 Tunnel + CF Worker 健康检查根治。
-2. **JINE 聊天偶发傲娇反射**：prompts.py 校准后大幅改善，LLM 偶尔滑回。可接受。
-3. 弹幕 CSS 偶尔消失 — transform 加速后待观察
-4. webcam 缺帧 handspinner_004/tv_005/voice_training_007 (源资产空号)
+2. **JINE 渲染停顿**：v4.8 已根治（去 time-sort + CSS flex 护甲 + 云同步覆盖锁 + save 上限 60→300）。
+3. **JINE 聊天偶发傲娇反射**：prompts.py 校准后大幅改善，LLM 偶尔滑回。可接受。
+4. 弹幕 CSS 偶尔消失 — transform 加速后待观察
+5. webcam 缺帧 handspinner_004/tv_005/voice_training_007 (源资产空号)
 
 ## 公网部署
 
