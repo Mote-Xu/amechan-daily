@@ -131,5 +131,5 @@ Python ThreadingHTTPServer
 | 老电脑 SSH | 🟢 仅密钥，禁密码 |
 | Turso 云端存档 | 🟢 |
 | IP 限频 | 🟡 本地默认关闭，部署设 `RATE_LIMIT_ENABLED=1` |
-| Turnstile | ⏳ 前端已集成，缺 Site Key |
+| Turnstile | ✅ Site Key + Secret Key 已配置 |
 | 独立 Tunnel + Worker | ⏳ 待上 |
