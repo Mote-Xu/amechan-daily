@@ -2491,7 +2491,8 @@ function renderJineChatMsgs() { renderJineChatUnified([]); }
 
 function renderJineChatUnified(timelineItems) {
     try {
-    jineChatMsgs = SaveManager.getJineChat();  // v4.6: sync from save to prevent drift
+    // v4.8: render from in-memory ONLY — save sync was overwriting fresh messages
+    // with capped save version (lost 5+ msgs each render cycle)
     var container = document.getElementById('jine-chat-msgs');
     if (!container) { console.warn('[jine:render] container #jine-chat-msgs not found'); return; }
 
