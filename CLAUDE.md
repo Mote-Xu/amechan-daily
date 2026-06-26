@@ -132,4 +132,4 @@ Python ThreadingHTTPServer
 | Turso 云端存档 | 🟢 |
 | IP 限频 | 🟡 本地默认关闭，部署设 `RATE_LIMIT_ENABLED=1` |
 | Turnstile | ✅ Site Key + Secret Key 已配置 |
-| 独立 Tunnel + Worker | ⏳ 待上 |
+| 独立 Tunnel + Worker | 🔒 CF Zero Trust 绑卡墙 |
