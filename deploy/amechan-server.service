@@ -1,0 +1,16 @@
+[Unit]
+Description=amechan-daily server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mote
+WorkingDirectory=/home/mote/amechan-daily
+Environment=PATH=/home/mote/miniconda3/envs/deepseek_v4_api/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/home/mote/miniconda3/envs/deepseek_v4_api/bin/python server.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

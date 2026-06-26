@@ -1,0 +1,14 @@
+[Unit]
+Description=Cloudflare Tunnel
+After=amechan.service
+Requires=amechan.service
+
+[Service]
+Type=simple
+User=mote
+ExecStart=/usr/local/bin/cloudflared tunnel --config /home/mote/.cloudflared/config.yml run
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

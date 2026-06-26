@@ -1,7 +1,7 @@
 # amechan-daily — 超天酱日常推文小站
 
 > DeepSeek V4 驱动的超天酱模拟账号。
-> 最后更新：2026-06-25 (v4.6)
+> 最后更新：2026-06-27 (v4.8)
 >
 > **🔒 角色还原优先于功能开发。见 `PRIVATE.md`（不上传远程仓库）。**
 >
@@ -12,6 +12,20 @@
 ```bash
 conda activate deepseek_v4_api
 python server.py  # → http://0.0.0.0:8930
+```
+
+## 双机节点
+
+| 节点 | 系统 | Hostname | 管理 |
+|------|------|------|------|
+| 本地 | Windows 11 | HaozeのOffice | 直接操作 |
+| 老电脑 | Ubuntu Server 24.04 | mote-home | SSH `mote@100.118.10.0`（Tailscale，免密密钥） |
+
+老电脑 systemd 服务：
+```bash
+systemctl status amechan      # server.py
+systemctl status cloudflared   # CF Tunnel
+systemctl status cockpit       # Web 面板 https://192.168.1.4:9090
 ```
 
 ## 核心功能状态
@@ -27,11 +41,12 @@ python server.py  # → http://0.0.0.0:8930
 | 双机容灾 | 🟢 | 共享 Tunnel，Cloudflare 自动轮询 |
 | Turso 云端存档 | 🟢 | 匿名 UUID，3s debounce 自动上传，启动时云恢复 |
 
-## 架构 (v4.6)
+## 架构 (v4.8)
 
 ```
-用户 → amechan.mote-pal.xyz → Cloudflare → Tunnel 87fc0324 ─┬─ 本地:8930
-                                                             └─ 老电脑:8930
+用户 → amechan.mote-pal.xyz → Cloudflare → Tunnel 87fc0324 ─┬─ 本地 Windows (HaozeのOffice):8930
+                                                             └─ 老电脑 Ubuntu (mote-home):8930
+运维通道: Tailscale 100.118.10.0 (SSH 免密密钥)
 Cloudflare 自动轮询，关机后老电脑独扛
 ```
 
@@ -45,6 +60,19 @@ Python ThreadingHTTPServer
   └─ _turso_execute()             v4.5: Turso HTTP API 云端存档
   ↕ DeepSeek V4-pro
 ```
+
+## v4.8 修改记录 (2026-06-27)
+
+| 修改 | 文件 | 说明 |
+|------|------|------|
+| JINE 渲染停止根治 | index.html | 聊天回复绕过 stagger cache 门控，`_replyProcessing` 在 API 回传后立即释放 |
+| 渲染死锁防护 | index.html | `renderJineChatUnified` 包 try/catch；`_replyProcessing` 不再等 display timer |
+| 事件循环节流 | index.html | `fetchTimeline` 10s 节流，`_refillPool` 30s 节流，防后台标签页定时器聚并发作 |
+| 滚动修复 | index.html | `scrollTop=999999` 钳位滚动，替代冒泡到页面的 `scrollIntoView` |
+| stagger 看门狗修复 | index.html | 改用独立 `_f7StaggerStarted` 时间戳，废弃 `_lastActionTime`（防止闲置误杀） |
+| CSS 动画修复 | index.html | `fadeInUp` 加 `forwards`，防后台标签页卡在 `opacity:0` |
+| 精神标签加权 | generator.py | 被害妄想 20%→10%，躁狂/渴求 25%、抑郁/戒断 25% |
+| 老电脑重建 | mote-home | Ubuntu Server 24.04 重装；HDD 挂载 /mnt/data；systemd 管理服务；SSH 禁密码仅密钥；Cockpit Web 面板 |
 
 ## v4.6 修改记录 (2026-06-19)
 
@@ -86,7 +114,7 @@ Python ThreadingHTTPServer
 
 ## 已知问题
 
-1. **共享 Tunnel 双机容灾**：理论风险——CF 不管 server 死活，一台崩可能丢包。实际操作中未确认触发，更像浏览器缓存旧 JS 导致。后续考虑方案一（Worker 健康检查）。
+1. **共享 Tunnel 双机容灾**：理论风险——CF 不管 server 死活，一台崩可能丢包。后续上独立 Tunnel + CF Worker 健康检查根治。
 2. **JINE 聊天偶发傲娇反射**：prompts.py 校准后大幅改善，LLM 偶尔滑回。可接受。
 3. 弹幕 CSS 偶尔消失 — transform 加速后待观察
 4. webcam 缺帧 handspinner_004/tv_005/voice_training_007 (源资产空号)
@@ -97,7 +125,10 @@ Python ThreadingHTTPServer
 |---|:--:|
 | CORS / 注入防御 / sanitizer | ✅ |
 | Cloudflare Tunnel 共享 | 🟢 `87fc0324` 双机在线 |
-| 老电脑 NSSM | 🟢 |
+| 老电脑 systemd | 🟢 `amechan.service` + `cloudflared.service` 自启 |
+| 老电脑 Cockpit | 🟢 `https://192.168.1.4:9090` |
+| 老电脑 SSH | 🟢 仅密钥，禁密码 |
 | Turso 云端存档 | 🟢 |
-| IP 限频 | 🟡 默认关闭，部署设 `RATE_LIMIT_ENABLED=1` |
+| IP 限频 | 🟡 本地默认关闭，部署设 `RATE_LIMIT_ENABLED=1` |
 | Turnstile | ⏳ 前端已集成，缺 Site Key |
+| 独立 Tunnel + Worker | ⏳ 待上 |

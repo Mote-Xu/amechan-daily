@@ -305,7 +305,7 @@ body {
     padding: 4px 0;
     scroll-behavior: smooth;
 }
-.jine-chat-msgs .jine-msg { animation: fadeInUp 0.25s ease-out; }
+.jine-chat-msgs .jine-msg { animation: fadeInUp 0.25s ease-out forwards; }
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
@@ -1055,6 +1055,7 @@ var _f7Timers = [];              // pending F7 JINE message timers (cleared on s
 var _shownReceipts = {};          // tracks which messages already showed "已读"
 var _f7StaggerPending = 0;        // count of F7 stagger messages still queued (>0 = stagger active)
 var _f7StaggerCache = [];         // chat replies cached during F7 stagger
+var _f7StaggerStarted = 0;        // v4.8: timestamp when current stagger began (for watchdog)
 
 function _cancelF7Timers() {
     for (var i = 0; i < _f7Timers.length; i++) clearTimeout(_f7Timers[i]);
@@ -1082,6 +1083,7 @@ function _flushStaggerCache() {
 function _staggerJineMsgsToChat(msgs, forcedSlotId) {
     _cancelF7Timers();
     _f7StaggerPending = msgs.length;
+    _f7StaggerStarted = Date.now();  // v4.8: own timestamp for watchdog
     var _f7SlotId = forcedSlotId || SaveManager.getCurrentSlot().id;
     var _f7SlotCreatedAt = SaveManager.data.slots[_f7SlotId] ? SaveManager.data.slots[_f7SlotId].createdAt : null;
     var t1 = setTimeout(function(){
@@ -2063,7 +2065,11 @@ function rnd(min,max) { return Math.floor(Math.random()*(max-min+1))+min; }
 
 // Fetch — v4: localStorage-only, no server timeline
 var _fetchRetries = 0;
+var _lastTimelineFetch = 0;
 function fetchTimeline() {
+    var now = Date.now();
+    if (now - _lastTimelineFetch < 10000) return;  // v4.8: throttle — prevent flood from bg tab timer catch-up
+    _lastTimelineFetch = now;
     console.log('[fetchTimeline] v4 localStorage-only');
     cachedTimeline = SaveManager.getTimeline();
     updatePoolCount();
@@ -2086,9 +2092,13 @@ function fetchTimeline() {
 
 // v4: Background pool refill via /api/generate
 var _isRefilling = false;
+var _lastRefillTime = 0;
 function _refillPool(isInitial) {
     if (_isRefilling) return;
+    var now = Date.now();
+    if (!isInitial && now - _lastRefillTime < 30000) return;  // v4.8: throttle — max 1 refill per 30s
     _isRefilling = true;
+    _lastRefillTime = now;
     console.log('[pool] refilling...');
     apiFetch('/api/generate', { method: 'POST', body: '{}' }).then(function(r) { return r.json(); }).then(function(data) {
         _isRefilling = false;
@@ -2394,30 +2404,29 @@ function _executeReply() {
     apiFetch('/api/jine/chat', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(requestBody), signal: _replyController.signal })
     .then(function(r) { return r.json(); }).then(function(data) {
         _lastActionTime = Date.now();
-        if (!data.ok) { _replyProcessing = false; _replyController = null; hideAmeTyping(); return; }
-        
+        _replyProcessing = false; _replyController = null;  // v4.8: release lock immediately — display timer is not concurrency guard
+        console.log('[jine:api] reply received, ok:', data.ok, 'text:', (data.reply||'').slice(0,30), 'stamp:', data.ame_sticker||'none');
+        if (!data.ok) { hideAmeTyping(); return; }
+
         var replyText = data.reply || '';
         var apiDuration = Date.now() - cycleStart;
         var wait = Math.max(0, Math.min(1500 + replyText.length * 100, 7000) - apiDuration);
-        
+
         setTimeout(function() {
             hideAmeTyping();
             for (var bi = 0; bi < batch.length; bi++) batch[bi]._replied = true;
             var t = data.time || ('0'+new Date().getHours()).slice(-2)+':'+('0'+new Date().getMinutes()).slice(-2);
-            // Push text and sticker as separate messages (each = 1 sound)
             if (replyText) {
                 var m = { time: t, reply: replyText, recall: false };
-                if (_f7StaggerPending > 0) _f7StaggerCache.push(m);
-                else { jineChatMsgs.push(m); SaveManager.addJineMessage(m); playSfx('jine_recv'); }
+                jineChatMsgs.push(m); SaveManager.addJineMessage(m); playSfx('jine_recv');
             }
             if (data.ame_sticker) {
                 var s = { time: t, ame_sticker: data.ame_sticker, recall: false };
                 var stickerDelay = replyText ? 500 : 0;
-                if (_f7StaggerPending > 0) _f7StaggerCache.push(s);
-                else { jineChatMsgs.push(s); SaveManager.addJineMessage(s); setTimeout(function(){ playSfx('jine_recv'); }, stickerDelay); }
+                jineChatMsgs.push(s); SaveManager.addJineMessage(s); setTimeout(function(){ playSfx('jine_recv'); }, stickerDelay);
             }
-            if (!_f7StaggerPending && ACTIVE_TAB === 'jine') renderJineChatMsgs();
-            _replyProcessing = false; _replyController = null;
+            console.log('[jine:render] callback — jineChatMsgs:', jineChatMsgs.length, 'ACTIVE_TAB:', ACTIVE_TAB, 'render:', ACTIVE_TAB === 'jine');
+            if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
             if (_checkUnreplied()) _debounceReply(true);
         }, wait);
     }).catch(function(err) {
@@ -2478,15 +2487,17 @@ function stickerHTML(stickerId) {
 function renderJineChatMsgs() { renderJineChatUnified([]); }
 
 function renderJineChatUnified(timelineItems) {
+    try {
     jineChatMsgs = SaveManager.getJineChat();  // v4.6: sync from save to prevent drift
     var container = document.getElementById('jine-chat-msgs');
-    if (!container) return;
+    if (!container) { console.warn('[jine:render] container #jine-chat-msgs not found'); return; }
 
     var all = [];
     (timelineItems || []).forEach(function(e) {
         all.push({ type: e.type === 'system' ? 'recall-tl' : 'ame-text', time: e.time || '', text: e.text || '' });
     });
     var chatMsgs = jineChatMsgs;
+    var renderedCount = 0;
     chatMsgs.forEach(function(msg) {
         var t = msg.time || '';
         if (msg.sticker)     all.push({ type: 'p-sticker', time: t, sticker: msg.sticker, _read: msg._read || msg._replied });
@@ -2562,10 +2573,17 @@ function renderJineChatUnified(timelineItems) {
         }
     }
 
+    // v4.8: log render stats for debugging freeze bug
+    if (!window._lastRenderLog || Date.now() - window._lastRenderLog > 5000) {
+        console.log('[jine:render]', chatMsgs.length, 'msgs →', all.length, 'items →', html.length, 'chars');
+        window._lastRenderLog = Date.now();
+    }
     container.innerHTML = html || '<div class="empty-state"><div class="icon"><img src="img/icon_ame.png"></div><p style="font-size:0.7rem;color:rgba(0,0,0,0.4);">糖糖还没发消息...</p></div>';
-    setTimeout(function() {
-        container.scrollTop = container.scrollHeight;
-    }, 50);
+    // v4.8: scroll to bottom — use scrollTop with large value (browser clamps to max)
+    container.scrollTop = 999999;
+    requestAnimationFrame(function() {
+        container.scrollTop = 999999;
+    });
     // Stagger "已读" only for new receipts
     if (newReceiptKeys.length > 0) {
         setTimeout(function() {
@@ -2579,6 +2597,9 @@ function renderJineChatUnified(timelineItems) {
                 })(newReceiptKeys[rj], rj * 400);
             }
         }, 800);
+    }
+    } catch(e) {
+        console.error('[jine:render] CRASHED:', e.message || e, e.stack);
     }
 }
 function fetchJineChat() {
@@ -2695,13 +2716,28 @@ fetchTimeline();
 // Poll for new content every 30s (empty-feed fast poll handled inside fetchTimeline)
 if (!isStaticMode) {
     setInterval(fetchTimeline, 30000);
-        // v4.7: deadlock watchdog — force unlock if reply stuck >15s
+        // v4.7: deadlock watchdog — force unlock if reply stuck >20s
         setInterval(function() {
-            if (_replyProcessing && (Date.now() - _lastActionTime > 15000)) {
+            if (_replyProcessing && (Date.now() - _lastActionTime > 20000)) {
                 console.warn('[jine] deadlock detected, force unlock');
                 _replyProcessing = false; _replyController = null;
                 if (_replyTimer) { clearTimeout(_replyTimer); _replyTimer = null; }
                 hideAmeTyping(); renderJineChatMsgs();
+            }
+            // v4.8: stagger watchdog — force flush if stagger started >12s ago and still pending
+            if (_f7StaggerPending > 0 && _f7StaggerStarted > 0 && (Date.now() - _f7StaggerStarted > 12000)) {
+                console.warn('[jine] stagger stuck, force flush (pending:', _f7StaggerPending, 'elapsed:', Date.now() - _f7StaggerStarted, 'ms)');
+                _cancelF7Timers();
+                if (ACTIVE_TAB === 'jine') renderJineChatMsgs();
+            }
+            // v4.8: render wellness — periodic sync to catch silent DOM drift
+            if (ACTIVE_TAB === 'jine' && !_replyProcessing && !_f7StaggerPending) {
+                var savedMsgs = SaveManager.getJineChat();
+                if (savedMsgs.length !== jineChatMsgs.length) {
+                    console.warn('[jine] DOM drift detected — save:', savedMsgs.length, 'memory:', jineChatMsgs.length, '— force sync');
+                    jineChatMsgs = savedMsgs;
+                    try { renderJineChatUnified([]); } catch(e) {}
+                }
             }
         }, 5000);
 }

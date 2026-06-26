@@ -483,7 +483,7 @@ def generate_jine_release_msgs(poke_text: str, diary_text: str = "", count: int 
         ("摆烂/自暴自弃", "你觉得刚才的推文蠢透了，自己蠢透了，做主播蠢透了。用自我厌恶的短句，说完又立刻找补「算了」「当我没说」。"),
         ("任性/无理取闹", "你突然想逗阿P，或者说一些完全无关的怪话。语气跳跃、跑题、前言不搭后语——但底下藏着「快来理我」的渴望。"),
     ]
-    tag_label, tag_instruction = random.choice(mental_tags)
+    tag_label, tag_instruction = random.choices(mental_tags, weights=[25, 25, 10, 20, 20], k=1)[0]
 
     dynamic_injection = f"""
 ## [动态注入 — 本轮精神状态: {tag_label}]

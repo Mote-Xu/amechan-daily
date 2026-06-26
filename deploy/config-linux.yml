@@ -1,0 +1,7 @@
+tunnel: 87fc0324-d76a-4bdf-91a6-1873ae14bb7d
+credentials-file: /home/mote/.cloudflared/87fc0324-d76a-4bdf-91a6-1873ae14bb7d.json
+
+ingress:
+  - hostname: amechan.mote-pal.xyz
+    service: http://127.0.0.1:8930
+  - service: http_status:404
