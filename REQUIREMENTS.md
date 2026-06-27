@@ -27,7 +27,7 @@
 |----|------|:--:|
 | S1 | CORS | ✅ |
 | S2 | Prompt Injection 防御 | ✅ 11种模式 + system_warning |
-| S3 | Turnstile | 🟡 前端已集成，缺 Site Key |
+| S3 | Turnstile | ✅ Site Key + Secret Key 已配置 |
 | S4 | 频率限制 | 🟡 本地默认关闭，部署 `RATE_LIMIT_ENABLED=1` |
 | S5 | HTTPS | ✅ Cloudflare Tunnel |
 | S6 | API Key 保护 | ✅ 后端直连 |
@@ -100,5 +100,4 @@
 
 1. JINE 偶发傲娇反射 — 可接受范围
 2. webcam 缺帧 handspinner_004 (无源资产)
-3. Turnstile 部署填 key
 4. 共享 Tunnel 盲轮询 — 待上独立 Tunnel + CF Worker

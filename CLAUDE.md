@@ -56,7 +56,7 @@ Python ThreadingHTTPServer
   ├─ sanitize_user_input()        注入防御 (11模式)
   ├─ _sanitize_template_phrases() 手[冰|冷]→12种替代表达
   ├─ check_rate_limit()           限频（始终启用）
-  ├─ verify_turnstile()           Turnstile (待前端集成)
+  ├─ verify_turnstile()           Turnstile ✅
   └─ _turso_execute()             v4.5: Turso HTTP API 云端存档
   ↕ DeepSeek V4-pro
 ```
@@ -72,7 +72,7 @@ Python ThreadingHTTPServer
 | stagger 看门狗修复 | index.html | 改用独立 `_f7StaggerStarted` 时间戳，废弃 `_lastActionTime`（防止闲置误杀） |
 | CSS 动画修复 | index.html | `fadeInUp` 加 `forwards`，防后台标签页卡在 `opacity:0` |
 | 精神标签加权 | generator.py | 被害妄想 20%→10%，躁狂/渴求 25%、抑郁/戒断 25% |
-| 老电脑重建 | mote-home | Ubuntu Server 24.04 重装；HDD 挂载 /mnt/data；systemd 管理服务；SSH 禁密码仅密钥；Cockpit Web 面板 |
+| 老电脑重建 | mote-home | Ubuntu Server 24.04 重装；SSD 数据盘 /mnt/data；systemd 管理服务；SSH 禁密码仅密钥；Cockpit Web 面板 |
 
 ## v4.6 修改记录 (2026-06-19)
 
