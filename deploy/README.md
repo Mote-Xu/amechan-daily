@@ -18,7 +18,7 @@ Cloudflare 自动轮询，关机后另一台独扛。
 
 ### 1. 首次路由 DNS（只需执行一次）
 ```powershell
-cd C:\Users\Haoze
+cd C:\Users\Mote
 .\cloudflared.exe tunnel route dns 87fc0324-d76a-4bdf-91a6-1873ae14bb7d amechan.mote-pal.xyz
 ```
 
@@ -31,7 +31,7 @@ python server.py
 
 ### 3. 启动 Tunnel（另一个终端）
 ```powershell
-cd C:\Users\Haoze\.cloudflared
+cd C:\Users\Mote\.cloudflared
 ..\cloudflared.exe tunnel --config config-local.yml run
 ```
 
@@ -48,7 +48,7 @@ cd C:\Users\Haoze\.cloudflared
 - `deploy\daemon_cloudflared.vbs` → 老电脑 `E:\amechan-daily\`
 
 #### 2. 路由 DNS（只需执行一次，用主力机的 credentials 文件）
-将主力机 `C:\Users\Haoze\.cloudflared\87fc0324-*.json` 复制到老电脑同路径，然后：
+将主力机 `C:\Users\Mote\.cloudflared\87fc0324-*.json` 复制到老电脑同路径，然后：
 ```powershell
 cd E:\amechan-daily
 .\cloudflared.exe tunnel route dns 87fc0324-d76a-4bdf-91a6-1873ae14bb7d amechan.mote-pal.xyz

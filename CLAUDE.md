@@ -44,8 +44,7 @@ systemctl status cockpit       # Web 面板 https://192.168.1.4:9090
 ## 架构 (v4.8)
 
 ```
-用户 → amechan.mote-pal.xyz → Cloudflare → Tunnel 87fc0324 ─┬─ 本地 Windows (HaozeのOffice):8930
-                                                             └─ 老电脑 Ubuntu (mote-home):8930
+用户 → amechan.mote-pal.xyz → Cloudflare → Tunnel 87fc0324 ─┬─ 老电脑 Ubuntu (mote-home):8930（本地已退役）
 运维通道: Tailscale 100.118.10.0 (SSH 免密密钥)
 Cloudflare 自动轮询，关机后老电脑独扛
 ```
@@ -125,7 +124,7 @@ Python ThreadingHTTPServer
 | 项 | 状态 |
 |---|:--:|
 | CORS / 注入防御 / sanitizer | ✅ |
-| Cloudflare Tunnel 共享 | 🟢 `87fc0324` 双机在线 |
+| Cloudflare Tunnel 共享 | 🟢 `87fc0324` 老电脑单节点 |
 | 老电脑 systemd | 🟢 `amechan.service` + `cloudflared.service` 自启 |
 | 老电脑 Cockpit | 🟢 `https://192.168.1.4:9090` |
 | 老电脑 SSH | 🟢 仅密钥，禁密码 |
