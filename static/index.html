@@ -2409,7 +2409,7 @@ function _executeReply() {
         _lastActionTime = Date.now();
         _replyProcessing = false; _replyController = null;  // v4.8: release lock immediately — display timer is not concurrency guard
         console.log('[jine:api] reply received, ok:', data.ok, 'text:', (data.reply||'').slice(0,30), 'stamp:', data.ame_sticker||'none');
-        if (!data.ok) { hideAmeTyping(); return; }
+        if (!data.ok) { hideAmeTyping(); endAmeResponse(); return; }
 
         var replyText = data.reply || '';
         var apiDuration = Date.now() - cycleStart;
@@ -2417,6 +2417,7 @@ function _executeReply() {
 
         setTimeout(function() {
             hideAmeTyping();
+            endAmeResponse();  // v4.8: restore webcam from typing mode → auto-cycle
             for (var bi = 0; bi < batch.length; bi++) batch[bi]._replied = true;
             var t = data.time || ('0'+new Date().getHours()).slice(-2)+':'+('0'+new Date().getMinutes()).slice(-2);
             if (replyText) {
@@ -2436,7 +2437,7 @@ function _executeReply() {
         _lastActionTime = Date.now();
         if (err.name === 'AbortError') { return; }  // _debounceReply already reset state, don't touch
         _replyProcessing = false; _replyController = null;
-        hideAmeTyping();
+        hideAmeTyping(); endAmeResponse();
     });
 }
 
