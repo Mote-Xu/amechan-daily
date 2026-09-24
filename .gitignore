@@ -30,3 +30,4 @@ cloudflared.exe
 # OS
 .DS_Store
 Thumbs.db
+config.py.bak-*

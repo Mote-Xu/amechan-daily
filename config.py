@@ -30,7 +30,7 @@ if not API_KEY or API_KEY == "your_api_key_here":
     sys.exit(1)
 
 BASE_URL = "https://api.deepseek.com/v1"
-MODEL = "deepseek-v4-pro"
+MODEL = "deepseek-flash"
 MAX_RETRIES = 3
 
 # --- 推文生成参数 ---
